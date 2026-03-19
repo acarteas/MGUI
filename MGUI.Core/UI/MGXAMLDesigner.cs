@@ -212,6 +212,10 @@ namespace MGUI.Core.UI
             ApartmentState State = Thread.CurrentThread.GetApartmentState();
             FilePath = State == ApartmentState.STA ? Browse() : StartSTATask(Browse).Result;
             return !string.IsNullOrEmpty(FilePath);
+#elif OS_LINUX
+            return TryBrowseFilePathLinux(InitialDirectory, out FilePath);
+#elif OS_MAC
+            return TryBrowseFilePathMacOS(out FilePath);
 #else
             //TODO: Implement this
             Debug.WriteLine($"This feature is not implemented on non-Windows platforms: {nameof(MGXAMLDesigner)}.{nameof(TryBrowseFilePath)}");
@@ -220,7 +224,122 @@ namespace MGUI.Core.UI
 #endif
         }
 
+#if OS_LINUX
+        private static bool TryBrowseFilePathLinux(string InitialDirectory, out string FilePath)
+        {
+            if (TryRunFilePickerProcess("zenity", StartInfo =>
+            {
+                StartInfo.ArgumentList.Add("--file-selection");
+                StartInfo.ArgumentList.Add("--title=Select XAML File");
+                StartInfo.ArgumentList.Add("--file-filter=*.xaml");
+
+                if (!string.IsNullOrEmpty(InitialDirectory) && Directory.Exists(InitialDirectory))
+                {
+                    StartInfo.ArgumentList.Add($"--filename={EnsureTrailingDirectorySeparator(InitialDirectory)}");
+                }
+            }, out FilePath))
+            {
+                return true;
+            }
+
+            if (TryRunFilePickerProcess("kdialog", StartInfo =>
+            {
+                StartInfo.ArgumentList.Add("--getopenfilename");
+                StartInfo.ArgumentList.Add(!string.IsNullOrEmpty(InitialDirectory) && Directory.Exists(InitialDirectory) ? InitialDirectory : Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
+                StartInfo.ArgumentList.Add("*.xaml|XAML Files");
+            }, out FilePath))
+            {
+                return true;
+            }
+
+            Debug.WriteLine("Unable to open a Linux file picker for MGXAMLDesigner. Install zenity or kdialog to enable Browse.");
+            FilePath = null;
+            return false;
+        }
+#endif
+
+#if OS_MAC
+        private static bool TryBrowseFilePathMacOS(out string FilePath)
+        {
+            string Script = @"set selectedFile to choose file with prompt ""Select XAML file""
+POSIX path of selectedFile";
+            if (TryRunFilePickerProcess("/usr/bin/osascript", StartInfo =>
+            {
+                StartInfo.ArgumentList.Add("-e");
+                StartInfo.ArgumentList.Add(Script);
+            }, out FilePath))
+            {
+                return true;
+            }
+
+            Debug.WriteLine("Unable to open the macOS file picker for MGXAMLDesigner.");
+            FilePath = null;
+            return false;
+        }
+#endif
+
+        private static bool TryRunFilePickerProcess(string FileName, Action<ProcessStartInfo> ConfigureStartInfo, out string FilePath)
+        {
+            try
+            {
+                ProcessStartInfo StartInfo = new()
+                {
+                    FileName = FileName,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                };
+                ConfigureStartInfo(StartInfo);
+
+                using Process Process = Process.Start(StartInfo);
+                if (Process == null)
+                {
+                    FilePath = null;
+                    return false;
+                }
+
+                string StandardOutput = Process.StandardOutput.ReadToEnd().Trim();
+                string StandardError = Process.StandardError.ReadToEnd().Trim();
+                Process.WaitForExit();
+
+                if (Process.ExitCode == 0 && !string.IsNullOrWhiteSpace(StandardOutput))
+                {
+                    FilePath = StandardOutput;
+                    return true;
+                }
+
+                if (!string.IsNullOrWhiteSpace(StandardError))
+                {
+                    Debug.WriteLine($"{nameof(MGXAMLDesigner)} file picker '{FileName}' failed: {StandardError}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"{nameof(MGXAMLDesigner)} file picker '{FileName}' failed: {ex}");
+            }
+
+            FilePath = null;
+            return false;
+        }
+
+        private static string EnsureTrailingDirectorySeparator(string DirectoryPath)
+        {
+            if (string.IsNullOrEmpty(DirectoryPath))
+            {
+                return DirectoryPath;
+            }
+
+            if (Path.EndsInDirectorySeparator(DirectoryPath))
+            {
+                return DirectoryPath;
+            }
+
+            return DirectoryPath + Path.DirectorySeparatorChar;
+        }
+
         //Taken from: https://stackoverflow.com/a/16722767/11689514
+#if OS_WINDOWS
         private static Task<T> StartSTATask<T>(Func<T> func)
         {
             var tcs = new TaskCompletionSource<T>();
@@ -233,6 +352,7 @@ namespace MGUI.Core.UI
             thread.Start();
             return tcs.Task;
         }
+#endif
 
         private void RefreshParsedContent()
         {
