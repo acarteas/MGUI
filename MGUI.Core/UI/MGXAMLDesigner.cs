@@ -30,6 +30,7 @@ namespace MGUI.Core.UI
         public MGButton RefreshButton { get; }
         public MGContentPresenter MarkupPresenter { get; }
         public MGTabControl TabControlComponent { get; }
+        private MGTabItem FromStringTab { get; }
 
         /// <summary>True if the input xaml is being read from the file at <see cref="FromFilePath"/>.<br/>
         /// False if it's being read from the <see cref="FromStringTextBoxComponent"/>'s Text.</summary>
@@ -97,7 +98,15 @@ namespace MGUI.Core.UI
 #endif
                     }
                     if (TryBrowseFilePath(InitialDirectory, out string SelectedFilePath))
+                    {
                         FromFileTextBoxComponent.SetText(SelectedFilePath);
+                        if (TryLoadMarkupFromFile(SelectedFilePath, out string Markup))
+                        {
+                            FromStringTextBoxComponent.SetText(Markup);
+                            if (!TabControlComponent.TrySelectTab(FromStringTab))
+                                RefreshParsedContent();
+                        }
+                    }
                 });
                 if (FilePathBrowseButton.BackgroundBrush.NormalValue != null && FilePathBrowseButton.BackgroundBrush.NormalValue.TryDarken(0.25f, out IFillBrush Darkened))
                     FilePathBrowseButton.BackgroundBrush.NormalValue = Darkened;
@@ -132,7 +141,7 @@ namespace MGUI.Core.UI
                 TabControlComponent = new(ParentWindow);
                 TabControlComponent.Padding = new(8);
                 TabControlComponent.AddTab("From File", FilePathStackPanel);
-                TabControlComponent.AddTab("From String", MarkupScrollViewer);
+                FromStringTab = TabControlComponent.AddTab("From String", MarkupScrollViewer);
                 TabControlComponent.SelectedTabChanged += (sender, e) => { RefreshParsedContent(); };
 
                 MarkupPresenter = new(ParentWindow);
@@ -336,6 +345,25 @@ POSIX path of selectedFile";
             }
 
             return DirectoryPath + Path.DirectorySeparatorChar;
+        }
+
+        private static bool TryLoadMarkupFromFile(string FilePath, out string Markup)
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(FilePath) && File.Exists(FilePath))
+                {
+                    Markup = File.ReadAllText(FilePath);
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"{nameof(MGXAMLDesigner)} failed to read '{FilePath}': {ex}");
+            }
+
+            Markup = null;
+            return false;
         }
 
         //Taken from: https://stackoverflow.com/a/16722767/11689514
