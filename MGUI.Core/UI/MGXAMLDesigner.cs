@@ -28,6 +28,7 @@ namespace MGUI.Core.UI
     {
         private MGComponent<MGDockPanel> MainContent { get; }
         public MGButton RefreshButton { get; }
+        public MGButton SaveAsButton { get; }
         public MGContentPresenter MarkupPresenter { get; }
         public MGTabControl TabControlComponent { get; }
         private MGTabItem FromStringTab { get; }
@@ -73,31 +74,37 @@ namespace MGUI.Core.UI
                 MarkupScrollViewer.SetContent(FromStringTextBoxComponent);
                 MarkupScrollViewer.CanChangeContent = false;
 
+                SaveAsButton = new(ParentWindow, btn =>
+                {
+                    if (TryBrowseSaveFilePath(GetSuggestedInitialDirectory(), GetSuggestedSaveFileName(), out string SelectedFilePath))
+                    {
+                        SelectedFilePath = EnsureXAMLExtension(SelectedFilePath);
+                        if (TrySaveMarkupToFile(SelectedFilePath, FromStringTextBoxComponent.Text))
+                            FromFileTextBoxComponent.SetText(SelectedFilePath);
+                    }
+                });
+                SaveAsButton.HorizontalAlignment = HorizontalAlignment.Center;
+                SaveAsButton.Padding = new(10, 5);
+                SaveAsButton.SetContent("Save As");
+                SaveAsButton.CanChangeContent = false;
+
                 //  Create the refresh button
                 RefreshButton = new(ParentWindow);
                 RefreshButton.HorizontalAlignment = HorizontalAlignment.Center;
                 RefreshButton.Padding = new(10, 5);
-                RefreshButton.Margin = new(0, 0, 15, 0);
                 RefreshButton.SetContent("[b]Refresh[/b]");
                 RefreshButton.CanChangeContent = false;
                 RefreshButton.AddCommandHandler((btn, e) => { RefreshParsedContent(); });
 
+                MGStackPanel FooterButtons = new(ParentWindow, Orientation.Horizontal) { Spacing = 15, HorizontalAlignment = HorizontalAlignment.Center };
+                FooterButtons.TryAddChild(RefreshButton);
+                FooterButtons.TryAddChild(SaveAsButton);
+                FooterButtons.CanChangeContent = false;
+
                 //  Create the 'From File' browse button and textbox
                 MGButton FilePathBrowseButton = new(ParentWindow, btn =>
                 {
-                    string InitialDirectory;
-                    if (!string.IsNullOrEmpty(FromFilePath))
-                        InitialDirectory = Path.GetDirectoryName(FromFilePath);
-                    else
-                    {
-                        string AssemblyDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-#if DEBUG
-                        InitialDirectory = Path.GetFullPath(Path.Combine(AssemblyDirectory, "..", "..", ".."));
-#else
-                        InitialDirectory = AssemblyDirectory;
-#endif
-                    }
-                    if (TryBrowseFilePath(InitialDirectory, out string SelectedFilePath))
+                    if (TryBrowseFilePath(GetSuggestedInitialDirectory(), out string SelectedFilePath))
                     {
                         FromFileTextBoxComponent.SetText(SelectedFilePath);
                         if (TryLoadMarkupFromFile(SelectedFilePath, out string Markup))
@@ -147,7 +154,7 @@ namespace MGUI.Core.UI
                 MarkupPresenter = new(ParentWindow);
                 MarkupPresenter.BackgroundBrush.NormalValue = new MGBorderedFillBrush(new(2), MGUniformBorderBrush.Black, Color.Black.AsFillBrush() * 0.75f, true);
 
-                MGHeaderedContentPresenter Tmp = new(ParentWindow, RefreshButton, TabControlComponent) { HeaderPosition = Dock.Bottom, Spacing = 2 };
+                MGHeaderedContentPresenter Tmp = new(ParentWindow, FooterButtons, TabControlComponent) { HeaderPosition = Dock.Bottom, Spacing = 2 };
                 Tmp.CanChangeContent = false;
 
                 MGGrid MainGrid = new(ParentWindow);
@@ -182,6 +189,24 @@ namespace MGUI.Core.UI
 
         private FileSystemWatcher FileWatcher { get; }
 
+        private string GetSuggestedInitialDirectory()
+        {
+            if (!string.IsNullOrEmpty(FromFilePath))
+            {
+                string DirectoryPath = Path.GetDirectoryName(FromFilePath);
+                if (!string.IsNullOrEmpty(DirectoryPath))
+                    return DirectoryPath;
+            }
+
+            return GetDefaultInitialDirectory();
+        }
+
+        private string GetSuggestedSaveFileName()
+        {
+            string FileName = string.IsNullOrEmpty(FromFilePath) ? null : Path.GetFileName(FromFilePath);
+            return string.IsNullOrEmpty(FileName) ? "Markup.xaml" : FileName;
+        }
+
         private string _FromFilePath;
         public string FromFilePath
         {
@@ -199,6 +224,16 @@ namespace MGUI.Core.UI
                     NPC(nameof(FromFilePath));
                 }
             }
+        }
+
+        private static string GetDefaultInitialDirectory()
+        {
+            string AssemblyDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+#if DEBUG
+            return Path.GetFullPath(Path.Combine(AssemblyDirectory, "..", "..", ".."));
+#else
+            return AssemblyDirectory;
+#endif
         }
 
         private static bool TryBrowseFilePath(string InitialDirectory, out string FilePath)
@@ -228,6 +263,38 @@ namespace MGUI.Core.UI
 #else
             //TODO: Implement this
             Debug.WriteLine($"This feature is not implemented on non-Windows platforms: {nameof(MGXAMLDesigner)}.{nameof(TryBrowseFilePath)}");
+            FilePath = null;
+            return false;
+#endif
+        }
+
+        private static bool TryBrowseSaveFilePath(string InitialDirectory, string InitialFileName, out string FilePath)
+        {
+#if OS_WINDOWS
+            string Browse()
+            {
+                SaveFileDialog FileBrowser = new();
+                FileBrowser.Filter = "Xaml Files|*.xaml";
+                if (!string.IsNullOrEmpty(InitialDirectory) && Directory.Exists(InitialDirectory))
+                    FileBrowser.InitialDirectory = InitialDirectory;
+                if (!string.IsNullOrEmpty(InitialFileName))
+                    FileBrowser.FileName = InitialFileName;
+
+                if (FileBrowser.ShowDialog() == true)
+                    return FileBrowser.FileName;
+                else
+                    return null;
+            }
+
+            ApartmentState State = Thread.CurrentThread.GetApartmentState();
+            FilePath = State == ApartmentState.STA ? Browse() : StartSTATask(Browse).Result;
+            return !string.IsNullOrEmpty(FilePath);
+#elif OS_LINUX
+            return TryBrowseSaveFilePathLinux(InitialDirectory, InitialFileName, out FilePath);
+#elif OS_MAC
+            return TryBrowseSaveFilePathMacOS(InitialFileName, out FilePath);
+#else
+            Debug.WriteLine($"This feature is not implemented on non-Windows platforms: {nameof(MGXAMLDesigner)}.{nameof(TryBrowseSaveFilePath)}");
             FilePath = null;
             return false;
 #endif
@@ -265,6 +332,40 @@ namespace MGUI.Core.UI
             FilePath = null;
             return false;
         }
+
+        private static bool TryBrowseSaveFilePathLinux(string InitialDirectory, string InitialFileName, out string FilePath)
+        {
+            string InitialPath = GetInitialFilePickerPath(InitialDirectory, InitialFileName);
+
+            if (TryRunFilePickerProcess("zenity", StartInfo =>
+            {
+                StartInfo.ArgumentList.Add("--file-selection");
+                StartInfo.ArgumentList.Add("--save");
+                StartInfo.ArgumentList.Add("--confirm-overwrite");
+                StartInfo.ArgumentList.Add("--title=Save XAML File");
+                StartInfo.ArgumentList.Add("--file-filter=*.xaml");
+
+                if (!string.IsNullOrEmpty(InitialPath))
+                    StartInfo.ArgumentList.Add($"--filename={InitialPath}");
+            }, out FilePath))
+            {
+                return true;
+            }
+
+            if (TryRunFilePickerProcess("kdialog", StartInfo =>
+            {
+                StartInfo.ArgumentList.Add("--getsavefilename");
+                StartInfo.ArgumentList.Add(string.IsNullOrEmpty(InitialPath) ? Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) : InitialPath);
+                StartInfo.ArgumentList.Add("*.xaml|XAML Files");
+            }, out FilePath))
+            {
+                return true;
+            }
+
+            Debug.WriteLine("Unable to open a Linux save file picker for MGXAMLDesigner. Install zenity or kdialog to enable Save As.");
+            FilePath = null;
+            return false;
+        }
 #endif
 
 #if OS_MAC
@@ -282,6 +383,24 @@ POSIX path of selectedFile";
             }
 
             Debug.WriteLine("Unable to open the macOS file picker for MGXAMLDesigner.");
+            FilePath = null;
+            return false;
+        }
+
+        private static bool TryBrowseSaveFilePathMacOS(string InitialFileName, out string FilePath)
+        {
+            string Script = $@"set selectedFile to choose file name with prompt ""Save XAML file"" default name ""{EscapeAppleScriptString(InitialFileName)}""
+POSIX path of selectedFile";
+            if (TryRunFilePickerProcess("/usr/bin/osascript", StartInfo =>
+            {
+                StartInfo.ArgumentList.Add("-e");
+                StartInfo.ArgumentList.Add(Script);
+            }, out FilePath))
+            {
+                return true;
+            }
+
+            Debug.WriteLine("Unable to open the macOS save file picker for MGXAMLDesigner.");
             FilePath = null;
             return false;
         }
@@ -332,6 +451,19 @@ POSIX path of selectedFile";
             return false;
         }
 
+        private static string GetInitialFilePickerPath(string InitialDirectory, string InitialFileName)
+        {
+            if (!string.IsNullOrEmpty(InitialDirectory) && Directory.Exists(InitialDirectory))
+            {
+                if (!string.IsNullOrEmpty(InitialFileName))
+                    return Path.Combine(InitialDirectory, InitialFileName);
+
+                return EnsureTrailingDirectorySeparator(InitialDirectory);
+            }
+
+            return InitialFileName;
+        }
+
         private static string EnsureTrailingDirectorySeparator(string DirectoryPath)
         {
             if (string.IsNullOrEmpty(DirectoryPath))
@@ -346,6 +478,18 @@ POSIX path of selectedFile";
 
             return DirectoryPath + Path.DirectorySeparatorChar;
         }
+
+        private static string EnsureXAMLExtension(string FilePath)
+        {
+            if (string.IsNullOrEmpty(FilePath) || Path.HasExtension(FilePath))
+                return FilePath;
+
+            return FilePath + ".xaml";
+        }
+
+#if OS_MAC
+        private static string EscapeAppleScriptString(string Value) => (Value ?? string.Empty).Replace("\\", "\\\\").Replace("\"", "\\\"");
+#endif
 
         private static bool TryLoadMarkupFromFile(string FilePath, out string Markup)
         {
@@ -363,6 +507,28 @@ POSIX path of selectedFile";
             }
 
             Markup = null;
+            return false;
+        }
+
+        private static bool TrySaveMarkupToFile(string FilePath, string Markup)
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(FilePath))
+                {
+                    string DirectoryPath = Path.GetDirectoryName(FilePath);
+                    if (!string.IsNullOrEmpty(DirectoryPath) && !Directory.Exists(DirectoryPath))
+                        Directory.CreateDirectory(DirectoryPath);
+
+                    File.WriteAllText(FilePath, Markup ?? string.Empty);
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"{nameof(MGXAMLDesigner)} failed to save '{FilePath}': {ex}");
+            }
+
             return false;
         }
 
