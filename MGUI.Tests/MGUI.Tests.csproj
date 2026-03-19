@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.1.303" />
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" />
     <PackageReference Include="FontStashSharp.MonoGame" Version="1.5.4" />
   </ItemGroup>
 
@@ -53,12 +53,8 @@
     </Content>
   </ItemGroup>
 
-  <Target Name="BuildLinuxProjectDependencies"
-          BeforeTargets="ResolveReferences"
-          Condition="'$(IsWindowsOS)'!='true'">
-    <MSBuild Projects="..\MGUI.Core\MGUI.Core.csproj;..\MGUI.FontStashSharp\MGUI.FontStashSharp.csproj"
-             Targets="Build"
-             Properties="Configuration=$(Configuration)" />
+  <Target Name="BuildLinuxProjectDependencies" BeforeTargets="ResolveReferences" Condition="'$(IsWindowsOS)'!='true'">
+    <MSBuild Projects="..\MGUI.Core\MGUI.Core.csproj;..\MGUI.FontStashSharp\MGUI.FontStashSharp.csproj" Targets="Build" Properties="Configuration=$(Configuration)" />
   </Target>
 
 </Project>

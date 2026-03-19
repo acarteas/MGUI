@@ -705,7 +705,7 @@ namespace MGUI.Core.UI
                     if (IsContextMenuOpen && !IsSubmenu && !IsHoveringSubmenu(5) && AutoCloseThreshold.HasValue)
                     {
                         Point LayoutSpacePosition = ConvertCoordinateSpace(CoordinateSpace.Screen, CoordinateSpace.Layout, e.CurrentPosition);
-                        if (((RectangleF)LayoutBounds).SquaredDistanceTo(LayoutSpacePosition) >= AutoCloseThreshold.Value * AutoCloseThreshold.Value)
+                        if (((RectangleF)LayoutBounds).SquaredDistanceTo(LayoutSpacePosition.ToVector2()) >= AutoCloseThreshold.Value * AutoCloseThreshold.Value)
                             TryCloseContextMenu();
                     }
                 };
