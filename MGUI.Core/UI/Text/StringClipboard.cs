@@ -8,7 +8,7 @@ namespace MGUI.Core.UI.Text
 {
     public class StringClipboard
     {
-#if WINDOWS
+#if OS_WINDOWS
         public string Text
         {
             get => System.Windows.Clipboard.GetText(System.Windows.TextDataFormat.Text);

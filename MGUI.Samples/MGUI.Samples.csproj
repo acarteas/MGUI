@@ -1,15 +1,19 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net6.0-windows</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
+    <IsWindowsOS Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true'">true</IsWindowsOS>
     <RollForward>Major</RollForward>
     <PublishReadyToRun>false</PublishReadyToRun>
     <TieredCompilation>false</TieredCompilation>
     <UseWindowsForms>False</UseWindowsForms>
   </PropertyGroup>
-  <PropertyGroup>
+  <PropertyGroup Condition="'$(IsWindowsOS)'=='true'">
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Icon.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(IsWindowsOS)'!='true'">
+    <OutputType>Exe</OutputType>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <NoWarn>1701;1702</NoWarn>
@@ -173,21 +177,56 @@
     <MonoGameContentReference Include="..\MGUI.Shared\Content\MGUI.Shared.Content.mgcb" Link="Content\MGUI.Shared.Content.mgcb" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\MGUI.Core\Content\MGUI.Core.Content.mgcb" Link="Content\MGUI.Core.Content.mgcb" />
+    <MonoGameContentReference Include="..\MGUI.Core\Content\MGUI.Core.Content.mgcb" Link="Content\MGUI.Core.Content.mgcb" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.VisualStudio.VsixColorCompiler" Version="17.0.31709.430" />
     <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.1.303" />
+    <PackageReference Include="MonoGame.Extended" Version="3.8.0" />
     <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.0.1641" />
+    <PackageReference Include="FontStashSharp.MonoGame" Version="1.5.4" />
     <PackageReference Include="SpriteFontPlus" Version="0.9.2" />
   </ItemGroup>
-  <ItemGroup>
+
+  <ItemGroup Condition="'$(IsWindowsOS)'=='true'">
+    <PackageReference Include="Microsoft.VisualStudio.VsixColorCompiler" Version="17.0.31709.430" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(IsWindowsOS)'!='true'">
+    <PackageReference Include="Portable.Xaml" Version="0.26.0" />
+    <PackageReference Include="Prism.Core" Version="8.1.97" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(IsWindowsOS)'=='true'">
     <ProjectReference Include="..\MGUI.Core\MGUI.Core.csproj" />
     <ProjectReference Include="..\MGUI.Shared\MGUI.Shared.csproj" />
     <ProjectReference Include="..\MGUI.FontStashSharp\MGUI.FontStashSharp.csproj" />
   </ItemGroup>
-  <Target Name="RestoreDotnetTools" BeforeTargets="Restore">
+
+  <ItemGroup Condition="'$(IsWindowsOS)'!='true'">
+    <Reference Include="MGUI.Core">
+      <HintPath>..\MGUI.Core\bin\$(Configuration)\net8.0\MGUI.Core.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="MGUI.Shared">
+      <HintPath>..\MGUI.Shared\bin\$(Configuration)\net8.0\MGUI.Shared.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="MGUI.FontStashSharp">
+      <HintPath>..\MGUI.FontStashSharp\bin\$(Configuration)\net8.0\MGUI.FontStashSharp.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+  </ItemGroup>
+
+  <Target Name="RestoreDotnetTools" BeforeTargets="Restore" Condition="'$(IsWindowsOS)'=='true'">
     <Message Text="Restoring dotnet tools" Importance="High" />
     <Exec Command="dotnet tool restore" />
+  </Target>
+
+  <Target Name="BuildLinuxProjectDependencies"
+          BeforeTargets="ResolveReferences"
+          Condition="'$(IsWindowsOS)'!='true'">
+    <MSBuild Projects="..\MGUI.Core\MGUI.Core.csproj;..\MGUI.FontStashSharp\MGUI.FontStashSharp.csproj"
+             Targets="Build"
+             Properties="Configuration=$(Configuration)" />
   </Target>
 </Project>

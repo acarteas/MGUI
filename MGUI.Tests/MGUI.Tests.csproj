@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0-windows</TargetFramework>
-    <UseWPF>True</UseWPF>
+    <TargetFramework>net8.0</TargetFramework>
+    <IsWindowsOS Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true'">true</IsWindowsOS>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
@@ -25,8 +25,26 @@
   <ItemGroup>
     <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.1.303" />
     <PackageReference Include="FontStashSharp.MonoGame" Version="1.5.4" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(IsWindowsOS)'=='true'">
     <ProjectReference Include="..\MGUI.Core\MGUI.Core.csproj" />
     <ProjectReference Include="..\MGUI.FontStashSharp\MGUI.FontStashSharp.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(IsWindowsOS)'!='true'">
+    <Reference Include="MGUI.Core">
+      <HintPath>..\MGUI.Core\bin\$(Configuration)\net8.0\MGUI.Core.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="MGUI.FontStashSharp">
+      <HintPath>..\MGUI.FontStashSharp\bin\$(Configuration)\net8.0\MGUI.FontStashSharp.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="MGUI.Shared">
+      <HintPath>..\MGUI.Shared\bin\$(Configuration)\net8.0\MGUI.Shared.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup>
@@ -34,5 +52,13 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+
+  <Target Name="BuildLinuxProjectDependencies"
+          BeforeTargets="ResolveReferences"
+          Condition="'$(IsWindowsOS)'!='true'">
+    <MSBuild Projects="..\MGUI.Core\MGUI.Core.csproj;..\MGUI.FontStashSharp\MGUI.FontStashSharp.csproj"
+             Targets="Build"
+             Properties="Configuration=$(Configuration)" />
+  </Target>
 
 </Project>

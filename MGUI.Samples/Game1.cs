@@ -74,7 +74,7 @@ namespace MGUI.Samples
             //  Initialize the FontStashSharp text engine
             try
             {
-                string ttfDir = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, @"Content\Fonts\ttf"));
+                string ttfDir = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "Content", "Fonts", "ttf"));
 
                 FontStashSharpEngine = new FontStashSharpTextEngine();
 

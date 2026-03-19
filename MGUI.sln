@@ -16,9 +16,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MGUI.Samples", "MGUI.Sample
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MGUI.Shared", "MGUI.Shared\MGUI.Shared.csproj", "{5575997A-88D3-4EA2-B0A3-7FA6FF455DAA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MGUI.FontStashSharp", "MGUI.FontStashSharp\MGUI.FontStashSharp.csproj", "{FC5DCE9C-37D6-4F2C-9E5C-A55596942D13}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MGUI.FontStashSharp", "MGUI.FontStashSharp\MGUI.FontStashSharp.csproj", "{FC5DCE9C-37D6-4F2C-9E5C-A55596942D13}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MGUI.Tests", "MGUI.Tests\MGUI.Tests.csproj", "{C5605C23-1356-4AFA-A4DB-DFBB34C44990}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MGUI.Tests", "MGUI.Tests\MGUI.Tests.csproj", "{C5605C23-1356-4AFA-A4DB-DFBB34C44990}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

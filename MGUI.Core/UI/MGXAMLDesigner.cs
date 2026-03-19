@@ -17,7 +17,7 @@ using Rectangle = Microsoft.Xna.Framework.Rectangle;
 using System.Diagnostics;
 using System.Threading;
 
-#if WINDOWS
+#if OS_WINDOWS
 using Microsoft.Win32;
 #endif
 
@@ -194,7 +194,7 @@ namespace MGUI.Core.UI
 
         private static bool TryBrowseFilePath(string InitialDirectory, out string FilePath)
         {
-#if WINDOWS
+#if OS_WINDOWS
             string Browse()
             {
                 OpenFileDialog FileBrowser = new();
