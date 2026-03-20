@@ -71,6 +71,8 @@ internal sealed class XamlSchemaGenerator
             )
         );
 
+        schema.Add(GenerateMguiBooleanType());
+
         foreach (Type enumType in GetReferencedEnumTypes())
         {
             schema.Add(GenerateEnumType(enumType));
@@ -93,6 +95,30 @@ internal sealed class XamlSchemaGenerator
         }
 
         return new XDocument(new XDeclaration("1.0", "utf-8", "yes"), schema);
+    }
+
+    private XElement GenerateMguiBooleanType()
+    {
+        XElement simpleType = new(Xs + "simpleType", new XAttribute("name", "MguiBoolean"));
+        XElement restriction = new(Xs + "restriction", new XAttribute("base", "xs:string"));
+
+        foreach (string value in new[]
+        {
+            "true",
+            "false",
+            "True",
+            "False",
+            "TRUE",
+            "FALSE",
+            "1",
+            "0",
+        })
+        {
+            restriction.Add(new XElement(Xs + "enumeration", new XAttribute("value", value)));
+        }
+
+        simpleType.Add(restriction);
+        return simpleType;
     }
 
     private XElement GenerateEnumType(Type enumType)
@@ -120,20 +146,7 @@ internal sealed class XamlSchemaGenerator
             complexType.Add(new XAttribute("mixed", "true"));
         }
 
-        Type? baseType = GetSchemaBaseType(type);
-        if (baseType != null)
-        {
-            XElement extension = new(
-                Xs + "extension",
-                new XAttribute("base", $"mgui:{GetSchemaTypeName(baseType)}")
-            );
-            AddTypeMembers(extension, type);
-            complexType.Add(new XElement(Xs + "complexContent", extension));
-        }
-        else
-        {
-            AddTypeMembers(complexType, type);
-        }
+        AddTypeMembers(complexType, type);
 
         return complexType;
     }
@@ -184,7 +197,7 @@ internal sealed class XamlSchemaGenerator
             parent.Add(choice);
         }
 
-        foreach (PropertyInfo property in GetAttributePropertiesDeclaredOn(type))
+        foreach (PropertyInfo property in GetAttributePropertiesVisibleOn(type))
         {
             parent.Add(
                 new XElement(
@@ -210,6 +223,11 @@ internal sealed class XamlSchemaGenerator
         bool isCollection = collectionItemType != null;
         Type acceptedType = collectionItemType ?? NormalizePropertyType(property.PropertyType);
 
+        if (acceptedType == typeof(object))
+        {
+            return GenerateOpenPropertyElement(ownerType, property, isCollection);
+        }
+
         if (!IsSchemaModelType(acceptedType))
         {
             return null;
@@ -227,6 +245,45 @@ internal sealed class XamlSchemaGenerator
         foreach (string elementName in GetAssignableConcreteElementNames(acceptedType))
         {
             choice.Add(new XElement(Xs + "element", new XAttribute("ref", $"mgui:{elementName}")));
+        }
+
+        choice.Add(
+            new XElement(
+                Xs + "any",
+                new XAttribute("namespace", "##other"),
+                new XAttribute("processContents", "lax"),
+                new XAttribute("minOccurs", "0"),
+                new XAttribute("maxOccurs", isCollection ? "unbounded" : "1")
+            )
+        );
+
+        complexType.Add(choice);
+        complexType.Add(
+            new XElement(
+                Xs + "anyAttribute",
+                new XAttribute("namespace", "##other"),
+                new XAttribute("processContents", "lax")
+            )
+        );
+
+        propertyElement.Add(complexType);
+        return propertyElement;
+    }
+
+    private XElement GenerateOpenPropertyElement(Type ownerType, PropertyInfo property, bool isCollection)
+    {
+        string propertyElementName = $"{ownerType.Name}.{property.Name}";
+        XElement propertyElement = new(Xs + "element", new XAttribute("name", propertyElementName));
+        XElement complexType = new(Xs + "complexType", new XAttribute("mixed", "true"));
+        XElement choice = new(
+            Xs + "choice",
+            new XAttribute("minOccurs", "0"),
+            new XAttribute("maxOccurs", isCollection ? "unbounded" : "1")
+        );
+
+        foreach (Type concreteType in _concreteSchemaTypes)
+        {
+            choice.Add(new XElement(Xs + "element", new XAttribute("ref", $"mgui:{concreteType.Name}")));
         }
 
         choice.Add(
@@ -345,17 +402,17 @@ internal sealed class XamlSchemaGenerator
 
         if (collectionItemType != null)
         {
-            return IsSchemaModelType(collectionItemType);
+            return collectionItemType == typeof(object) || IsSchemaModelType(collectionItemType);
         }
 
-        return IsSchemaModelType(normalizedPropertyType);
+        return normalizedPropertyType == typeof(object) || IsSchemaModelType(normalizedPropertyType);
     }
 
     private static bool IsSimpleAttributeType(Type propertyType)
     {
         Type normalizedPropertyType = NormalizePropertyType(propertyType);
 
-        if (normalizedPropertyType == typeof(string))
+        if (normalizedPropertyType == typeof(string) || normalizedPropertyType == typeof(object))
         {
             return true;
         }
@@ -406,7 +463,8 @@ internal sealed class XamlSchemaGenerator
 
         return normalizedPropertyType switch
         {
-            _ when normalizedPropertyType == typeof(bool) => "xs:boolean",
+            _ when normalizedPropertyType == typeof(bool) => "mgui:MguiBoolean",
+            _ when normalizedPropertyType == typeof(object) => "xs:string",
             _ when normalizedPropertyType == typeof(byte) => "xs:unsignedByte",
             _ when normalizedPropertyType == typeof(sbyte) => "xs:byte",
             _ when normalizedPropertyType == typeof(short) => "xs:short",

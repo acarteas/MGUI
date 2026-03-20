@@ -1,1 +1,11 @@
-{}
+{
+    "files.associations": {
+    "*.xaml": "xml"
+  },
+  "xml.fileAssociations": [
+    {
+      "pattern": "**/Ui/MGUI/**/*.xaml",
+      "systemId": "./schemas/mgui.xsd"
+    }
+  ],
+}

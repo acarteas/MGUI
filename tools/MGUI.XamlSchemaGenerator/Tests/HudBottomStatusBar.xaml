@@ -1,0 +1,207 @@
+<InputConsumer xmlns="clr-namespace:MGUI.Core.UI.XAML;assembly=MGUI.Core"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Converters="clr-namespace:MGUI.Core.UI.Data_Binding.Converters;assembly=MGUI.Core"
+    HorizontalAlignment="Center"
+    VerticalAlignment="Bottom"
+    Width="980"
+    Margin="24">
+    <InputConsumer.Styles>
+        <Style Name="TopHotkeyButtonStyle" TargetType="Button">
+            <Setter Property="MinWidth" Value="44" />
+            <Setter Property="MinHeight" Value="28" />
+            <Setter Property="Padding" Value="8,4" />
+            <Setter Property="Background" Value="rgb(46,41,40)|rgb(30,28,29)" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="TextForeground" Value="rgb(171,151,115)" />
+            <Setter Property="Opacity" Value="0.9" />
+            <Setter Property="BorderBrush">
+                <Setter.Value>
+                    <BandedBorderBrush>
+                        <BorderBand Brush="rgb(96,73,47)" />
+                        <BorderBand Brush="rgb(50,43,35)" />
+                    </BandedBorderBrush>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style Name="TopActionButtonStyle" TargetType="Button">
+            <Setter Property="MinWidth" Value="118" />
+            <Setter Property="MinHeight" Value="38" />
+            <Setter Property="Padding" Value="12,8" />
+            <Setter Property="Background" Value="rgb(64,57,53)|rgb(36,33,33)" />
+            <Setter Property="SelectedBackground" Value="rgb(109,92,64)|rgb(66,58,49)" />
+            <Setter Property="BorderThickness" Value="2" />
+            <Setter Property="TextForeground" Value="rgb(176,160,128)" />
+            <Setter Property="SelectedTextForeground" Value="rgb(226,212,179)" />
+            <Setter Property="BorderBrush">
+                <Setter.Value>
+                    <BandedBorderBrush>
+                        <BorderBand Brush="rgb(111,87,58)" />
+                        <BorderBand Brush="rgb(70,59,44)" />
+                    </BandedBorderBrush>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style Name="BottomTabButtonStyle" TargetType="Button">
+            <Setter Property="MinHeight" Value="30" />
+            <Setter Property="Padding" Value="18,7" />
+            <Setter Property="Background" Value="rgb(47,42,41)|rgb(28,27,29)" />
+            <Setter Property="SelectedBackground" Value="rgb(95,82,60)|rgb(53,49,45)" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="TextForeground" Value="rgb(150,133,104)" />
+            <Setter Property="SelectedTextForeground" Value="rgb(225,209,171)" />
+            <Setter Property="BorderBrush">
+                <Setter.Value>
+                    <BandedBorderBrush>
+                        <BorderBand Brush="rgb(92,73,48)" />
+                        <BorderBand Brush="rgb(43,39,37)" />
+                    </BandedBorderBrush>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </InputConsumer.Styles>
+
+    <Border BorderThickness="4"
+        Padding="10,8,10,0"
+        Background="rgb(39,35,34)|rgb(24,23,24)">
+        <Border.BorderBrush>
+            <BandedBorderBrush>
+                <BorderBand Brush="rgb(106,82,52)" />
+                <BorderBand Brush="rgb(67,57,45)" />
+                <BorderBand Brush="rgb(42,38,37)" />
+                <BorderBand Brush="rgb(79,62,40)" />
+            </BandedBorderBrush>
+        </Border.BorderBrush>
+
+        <Grid RowLengths="40,68,32"
+            ColumnLengths="*">
+            <Grid Row="0"
+                Column="0"
+                ColumnLengths="*,118,118,*,36"
+                ColumnSpacing="4">
+                <Grid Column="0"
+                    ColumnLengths="*,*,*,*,*"
+                    ColumnSpacing="6"
+                    HorizontalAlignment="Right"
+                    Margin="0,0,10,0">
+                    <Button Column="0"
+                        StyleNames="TopHotkeyButtonStyle"
+                        Content="[ ] 1" />
+                    <Button Column="1"
+                        StyleNames="TopHotkeyButtonStyle"
+                        Content="[ ] 2" />
+                    <Button Column="2"
+                        StyleNames="TopHotkeyButtonStyle"
+                        Content="[ ] 3" />
+                    <Button Column="3"
+                        StyleNames="TopHotkeyButtonStyle"
+                        Content="[ ] 4" />
+                    <Button Column="4"
+                        StyleNames="TopHotkeyButtonStyle"
+                        Content="[ ] 5" />
+                </Grid>
+
+                <Button Column="1"
+                    StyleNames="TopActionButtonStyle"
+                    Content="TOOLS" />
+                <Button Column="2"
+                    StyleNames="TopActionButtonStyle"
+                    IsSelected="True"
+                    Content="FLEET" />
+
+                <Grid Column="3"
+                    ColumnLengths="*,*,*,*,*"
+                    ColumnSpacing="6"
+                    HorizontalAlignment="Left"
+                    Margin="10,0,0,0">
+                    <Button Column="0"
+                        StyleNames="TopHotkeyButtonStyle"
+                        Content="[ ] 6" />
+                    <Button Column="1"
+                        StyleNames="TopHotkeyButtonStyle"
+                        Content="[ ] 7" />
+                    <Button Column="2"
+                        StyleNames="TopHotkeyButtonStyle"
+                        Content="[ ] 8" />
+                    <Button Column="3"
+                        StyleNames="TopHotkeyButtonStyle"
+                        Content="[ ] 9" />
+                    <Button Column="4"
+                        StyleNames="TopHotkeyButtonStyle"
+                        Content="[ ] 0" />
+                </Grid>
+
+                <Button Column="4"
+                    StyleNames="TopActionButtonStyle"
+                    MinWidth="36"
+                    Padding="0"
+                    Content="MAP" />
+            </Grid>
+
+            <Border Row="1"
+                Margin="0,0,0,1"
+                BorderThickness="1"
+                Padding="16,10"
+                Background="rgb(45,40,40)|rgb(29,28,29)">
+                <Border.BorderBrush>
+                    <BandedBorderBrush>
+                        <BorderBand Brush="rgb(72,59,44)" />
+                        <BorderBand Brush="rgb(39,36,36)" />
+                    </BandedBorderBrush>
+                </Border.BorderBrush>
+                <TextBlock HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    FontSize="12"
+                    Foreground="rgb(153,136,105)"
+                    Opacity="0.8"
+                    Text="No entries" />
+            </Border>
+
+            <Grid Row="2"
+                ColumnLengths="140,*,*,*,*,*,*,140"
+                ColumnSpacing="2">
+                <Border Column="0"
+                    BorderThickness="1,1,1,0"
+                    Background="rgb(35,33,34)|rgb(23,22,24)">
+                    <Border.BorderBrush>
+                        <BandedBorderBrush>
+                            <BorderBand Brush="rgb(63,52,40)" />
+                            <BorderBand Brush="rgb(34,32,33)" />
+                        </BandedBorderBrush>
+                    </Border.BorderBrush>
+                </Border>
+
+                <Button Column="1"
+                    StyleNames="BottomTabButtonStyle"
+                    IsSelected="True"
+                    Margin="0,-2,0,0"
+                    Content="All Ships" />
+                <Button Column="2"
+                    StyleNames="BottomTabButtonStyle"
+                    Content="Idle Ships" />
+                <Button Column="3"
+                    StyleNames="BottomTabButtonStyle"
+                    Content="On Trade Routes" />
+                <Button Column="4"
+                    StyleNames="BottomTabButtonStyle"
+                    Content="On Patrol" />
+                <Button Column="5"
+                    StyleNames="BottomTabButtonStyle"
+                    Content="Escorting" />
+                <Button Column="6"
+                    StyleNames="BottomTabButtonStyle"
+                    Content="In Transit" />
+
+                <Border Column="7"
+                    BorderThickness="1,1,1,0"
+                    Background="rgb(35,33,34)|rgb(23,22,24)">
+                    <Border.BorderBrush>
+                        <BandedBorderBrush>
+                            <BorderBand Brush="rgb(63,52,40)" />
+                            <BorderBand Brush="rgb(34,32,33)" />
+                        </BandedBorderBrush>
+                    </Border.BorderBrush>
+                </Border>
+            </Grid>
+        </Grid>
+    </Border>
+</InputConsumer>
