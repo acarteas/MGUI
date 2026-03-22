@@ -30,9 +30,9 @@
                 <StackPanel Orientation="Vertical" Spacing="4" Margin="20,0,0,0">
                     <TextBlock>
                         Call [c=Turquoise][i]TextBlock.TrySetFont([c=LightBlue][s=Blue]string[/s][/c] FontFamily, [c=LightBlue][s=Blue]string[/s][/c] FontSize[/s][/c])[/i][/c] 
-                        to change the FontFamily and FontSize. TextBlocks default to [i]Arial[/i] FontFamily. To use a different FontFamily, you must add a FontSet to the FontManager 
+                        to change the FontFamily and FontSize. In this sample, TextBlocks default to [i]NotoSans[/i] because the application registers that FontFamily at startup. To use a different FontFamily, you must add a FontSet to the FontManager 
                         via [c=Turquoise][i]Desktop.FontManager.AddFontSet(...)[/i][/c]. A FontSet represents a collection of SpriteFonts all belonging to the same FontFamily but
-                        with varying sizes and styles (such as Arial 12pt, Arial Bold 12pt, Arial Italic 12pt, Arial 14pt, Arial Bold 14pt etc). To change the default values, you can
+                        with varying sizes and styles (such as NotoSans 12pt, NotoSans Bold 12pt, NotoSans Italic 12pt, NotoSans 14pt, NotoSans Bold 14pt etc). To change the default values, you can
                         modify [c=Turquoise][i]Window.GetTheme().FontSettings[/i][/c].
                     </TextBlock>
                     <Separator/>

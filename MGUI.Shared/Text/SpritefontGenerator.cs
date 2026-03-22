@@ -62,10 +62,10 @@ namespace MGUI.Shared.Text
         /// The files will be named in the following format:<br/>
         /// <code>{FontSize}_{Underscore-Delimited-FontStyles}.xnb</code><para/>
         /// Example format:<br/>
-        /// {ExeFolder}\Content\Fonts\Arial\10_Bold.xnb - Represents a SpriteFont where Size=10pts for the 'Arial Bold' Font Family.<br/>
+        /// {ExeFolder}\Content\Fonts\MyFont\10_Bold.xnb - Represents a SpriteFont where Size=10pts for the 'MyFont Bold' Font Family.<br/>
         /// {ExeFolder}\Content\Fonts\Calibri\12_Bold_Italic.xnb - Represents a SpriteFont where Size=12pts for the 'Calibri Bold Italic' Font Family.<br/>
         /// {ExeFolder}\Content\Fonts\Helvetica\14_Normal.xnb - Represents a SpriteFont where Size=14pts for the 'Helvetica' Font Family.</summary>
-        /// <param name="FontName">The base name of the font, such as 'Arial' or 'Times New Roman'. This value should not include any suffixes related to the font's style (like 'Arial Bold')</param>
+        /// <param name="FontName">The base name of the font, such as 'MyFont' or 'Times New Roman'. This value should not include any suffixes related to the font's style (like 'MyFont Bold')</param>
         /// <param name="FontStyles">The font styles to generate a .spritefont file for.</param>
         /// <param name="FontSizes">The font sizes (in points) to generate a .spritefont file for.</param>
         /// <param name="CharacterRegionStart">The Start Character region to use. Default value: <see cref="DefaultCharacterRegionStart"/></param>

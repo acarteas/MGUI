@@ -75,7 +75,7 @@ namespace MGUI.Core.UI
 
         /// <summary>The name of the font that should be used by default in <see cref="MGTextBlock"/>s when no font family is explicitly specified.<para/>
         /// If null, uses <see cref="FontManager.DefaultFontFamily"/> instead.<para/>
-        /// EX: "Arial". If not null, the <see cref="FontManager"/> must contain a <see cref="FontSet"/> with <see cref="FontSet.Name"/> that matches this value.</summary>
+        /// EX: "MyFont". If not null, the <see cref="FontManager"/> must contain a <see cref="FontSet"/> with <see cref="FontSet.Name"/> that matches this value.</summary>
         public string DefaultFontFamily { get; set; }
 
         /// <summary>The fallback value to use for <see cref="MGTextBlock.ShadowOffset"/> when <see cref="MGTextBlock.ShadowOffset"/> is null.</summary>

@@ -48,7 +48,7 @@ namespace MGUI.Shared.Text
         internal static readonly ReadOnlyCollection<CustomFontStyles> AllStyles = Enum.GetValues(typeof(CustomFontStyles)).Cast<CustomFontStyles>().ToList().AsReadOnly();
         public static readonly string FontsBasePath = "Fonts";
 
-        /// <summary>EX: "Arial". Doesn't include suffixes such as "Arial Bold"</summary>
+        /// <summary>EX: "MyFont". Doesn't include suffixes such as "MyFont Bold"</summary>
         public string Name { get; }
 
         private ReadOnlyCollection<CustomFontStyles> SupportedStyles { get; }
@@ -71,7 +71,7 @@ namespace MGUI.Shared.Text
         /// where the .xnb's filename is in the following format:<br/>
         /// <code>{FontSize}_{Underscore-Delimited-FontStyles}.xnb</code><para/>
         /// Example format:<br/>
-        /// {ExeFolder}\Content\Fonts\Arial\10_Bold.xnb - Represents a SpriteFont where Size=10pts for the 'Arial Bold' Font Family.<br/>
+        /// {ExeFolder}\Content\Fonts\MyFont\10_Bold.xnb - Represents a SpriteFont where Size=10pts for the 'MyFont Bold' Font Family.<br/>
         /// {ExeFolder}\Content\Fonts\Calibri\12_Bold_Italic.xnb - Represents a SpriteFont where Size=12pts for the 'Calibri Bold Italic' Font Family.<br/>
         /// {ExeFolder}\Content\Fonts\Helvetica\14_Normal.xnb - Represents a SpriteFont where Size=14pts for the 'Helvetica' Font Family.<para/>
         /// Supported FontStyles: <see cref="CustomFontStyles.Normal"/>, <see cref="CustomFontStyles.Bold"/>, <see cref="CustomFontStyles.Italic"/><para/>

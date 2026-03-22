@@ -43,18 +43,18 @@ public class FSSMeasureDrawConsistencyTests
 
     private static FontStashSharpTextEngine CreateEngine(out byte[] ttfData)
     {
-        string ttfPath = Path.Combine(AppContext.BaseDirectory, "Fonts", "arial.ttf");
+        string ttfPath = Path.Combine(AppContext.BaseDirectory, "Fonts", "NotoSans-Regular.ttf");
         ttfData = File.ReadAllBytes(ttfPath);
 
         var engine = new FontStashSharpTextEngine();
         var fontSystem = new FontSystem();
         fontSystem.AddFont(ttfData);
-        engine.AddFontSystem("Arial", CustomFontStyles.Normal, fontSystem, ttfData);
+        engine.AddFontSystem("NotoSans", CustomFontStyles.Normal, fontSystem, ttfData);
         return engine;
     }
 
     private static ResolvedFont Resolve(FontStashSharpTextEngine engine, int size = 14)
-        => engine.ResolveFont(new FontSpec("Arial", size, CustomFontStyles.Normal));
+        => engine.ResolveFont(new FontSpec("NotoSans", size, CustomFontStyles.Normal));
 
     // ── Tests ───────────────────────────────────────────────────────────────
 

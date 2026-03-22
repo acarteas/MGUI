@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.1.0" />
+    <PackageReference Include="MonoGame.Extended" Version="5.4.0" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -48,7 +49,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="..\MGUI.Core\Content\Fonts\ttf\arial.ttf" Link="Fonts\arial.ttf">
+    <Content Include="..\MGUI.Samples\Content\Fonts\ttf\NotoSans-Regular.ttf" Link="Fonts\NotoSans-Regular.ttf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

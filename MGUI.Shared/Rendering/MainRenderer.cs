@@ -123,14 +123,16 @@ namespace MGUI.Shared.Rendering
         public Rectangle GetViewport(int Margin) => Host.GetBounds().GetCompressed(Margin);
 
         /// <param name="Host">Consider using an instance of <see cref="GameRenderHost{TObservableGame}"/> to quickly create an implementation of <see cref="IRenderHost"/></param>
-        public MainRenderer(IRenderHost Host)
+        /// <param name="FontManager">Font registry used by the default <see cref="SpriteFontTextEngine"/>. At least one font family must be registered before constructing the renderer.</param>
+        public MainRenderer(IRenderHost Host, FontManager FontManager)
         {
             this.Host = Host;
             SpriteBatch = new(GraphicsDevice);
             PrimitiveBatch = new(GraphicsDevice, 1024);
             Content = new(Host, "Content");
-            FontManager = new(Content, "Arial");
-            TextEngine = new SpriteFontTextEngine(FontManager);
+            this.FontManager = FontManager ?? throw new ArgumentNullException(nameof(FontManager));
+
+            TextEngine = new SpriteFontTextEngine(this.FontManager);
             Input = new();
 
             ScrollMarker = Content.Load<Texture2D>(Path.Combine("Icons", "ScrollMarker"));

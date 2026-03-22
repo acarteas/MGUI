@@ -8,7 +8,8 @@ namespace MGUI.Shared.Text.Engines
     /// <see cref="ITextEngine"/> implementation backed by MonoGame <see cref="SpriteFont"/> via
     /// the existing <see cref="FontManager"/> / <see cref="FontSet"/> infrastructure.
     /// Behaviour is bit-for-bit identical to the original hard-coded path in
-    /// <c>DrawTransaction</c> and <c>MGTextBlock</c>.
+    /// <c>DrawTransaction</c> and <c>MGTextBlock</c>, but fonts must be
+    /// registered explicitly on the supplied <see cref="FontManager"/>.
     /// </summary>
     public sealed class SpriteFontTextEngine : ITextEngine
     {
@@ -62,6 +63,9 @@ namespace MGUI.Shared.Text.Engines
             if (_cache.TryGetValue(spec, out ResolvedFont cached))
                 return cached;
 
+            if (!_fontManager.HasAnyFonts)
+                throw new System.InvalidOperationException("SpriteFontTextEngine cannot resolve fonts because the FontManager is empty. Register at least one FontSet before rendering text.");
+
             bool found = _fontManager.TryGetFont(
                 spec.Family, spec.Style, spec.Size,
                 /*PreferDownsampled*/ true,
@@ -92,12 +96,7 @@ namespace MGUI.Shared.Text.Engines
             }
 
             if (!found || sf == null)
-            {
-                // Last resort: an empty / placeholder ResolvedFont
-                var placeholder = new ResolvedFont(spec, spec.Size, 1f, 1f, spec.Size, 6f, Vector2.Zero, true, null);
-                _cache[spec] = placeholder;
-                return placeholder;
-            }
+                throw new System.InvalidOperationException($"Unable to resolve a SpriteFont for family '{spec.Family}', style '{spec.Style}', and size '{spec.Size}'. Register the requested family or configure a valid default font family.");
 
             var handle = new SpriteFontHandle(sf, suggestedScale, exactScale, actualSize,
                 fs.Heights[actualSize], fs.Origins[actualSize]);

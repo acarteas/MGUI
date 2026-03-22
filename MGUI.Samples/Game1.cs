@@ -47,7 +47,8 @@ namespace MGUI.Samples
 
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            MGUIRenderer = new(new GameRenderHost<Game1>(this));
+            FontManager fontManager = CreateFontManager();
+            MGUIRenderer = new(new GameRenderHost<Game1>(this), fontManager);
             Desktop = new(MGUIRenderer);
 
             InitializeTextEngines();
@@ -57,6 +58,13 @@ namespace MGUI.Samples
             Compendium.Show();
 
             base.Initialize();
+        }
+
+        private FontManager CreateFontManager()
+        {
+            FontManager result = new("NotoSans");
+            result.AddFontSet(new FontSet(Content, "NotoSans"));
+            return result;
         }
 
         /// <summary>Default SpriteFont backend (Press F1 to toggle the active text-rendering engine)</summary>
@@ -83,20 +91,20 @@ namespace MGUI.Samples
                 //  2. Create a FontSystem and add the data to the system
                 //  3. Add the FontSystem to the engine (be sure to use the AddFontSystem method overload that takes in the byte[] data)
 
-                const string FamilyName = "Arial";
+                const string FamilyName = "NotoSans";
 
-                byte[] arialBytes = File.ReadAllBytes(Path.Combine(ttfDir, "arial.ttf"));
-                FontSystem arialNormal = new FontSystem();
-                arialNormal.AddFont(arialBytes);
-                FontStashSharpEngine.AddFontSystem(FamilyName, CustomFontStyles.Normal, arialNormal, arialBytes);
+                byte[] notoSansRegularBytes = File.ReadAllBytes(Path.Combine(ttfDir, "NotoSans-Regular.ttf"));
+                FontSystem notoSansNormal = new FontSystem();
+                notoSansNormal.AddFont(notoSansRegularBytes);
+                FontStashSharpEngine.AddFontSystem(FamilyName, CustomFontStyles.Normal, notoSansNormal, notoSansRegularBytes);
 
-                FontSystem arialBold = new FontSystem();
-                arialBold.AddFont(File.ReadAllBytes(Path.Combine(ttfDir, "arialbd.ttf")));
-                FontStashSharpEngine.AddFontSystem(FamilyName, CustomFontStyles.Bold, arialBold);
+                FontSystem notoSansBold = new FontSystem();
+                notoSansBold.AddFont(File.ReadAllBytes(Path.Combine(ttfDir, "NotoSans-Bold.ttf")));
+                FontStashSharpEngine.AddFontSystem(FamilyName, CustomFontStyles.Bold, notoSansBold);
 
-                FontSystem arialItalic = new FontSystem();
-                arialItalic.AddFont(File.ReadAllBytes(Path.Combine(ttfDir, "ariali.ttf")));
-                FontStashSharpEngine.AddFontSystem(FamilyName, CustomFontStyles.Italic, arialItalic);
+                FontSystem notoSansItalic = new FontSystem();
+                notoSansItalic.AddFont(File.ReadAllBytes(Path.Combine(ttfDir, "NotoSans-Italic.ttf")));
+                FontStashSharpEngine.AddFontSystem(FamilyName, CustomFontStyles.Italic, notoSansItalic);
 
                 // Calibrate per-size advance widths to match SpriteFontTextEngine exactly.
                 // Must be called after FontSizeScale is set (via AddFontSystem overload above).

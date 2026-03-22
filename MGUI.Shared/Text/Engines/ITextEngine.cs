@@ -19,8 +19,9 @@ namespace MGUI.Shared.Text.Engines
 
         /// <summary>
         /// Resolves the best available font for <paramref name="spec"/> and returns an opaque
-        /// handle.  Never throws — returns a fallback font when the requested family is not
-        /// registered (check <see cref="ResolvedFont.IsFallback"/>).
+        /// handle. Implementations may fall back when the requested family is unavailable
+        /// (check <see cref="ResolvedFont.IsFallback"/>), but they may also throw if the
+        /// text backend has not been configured with any fonts.
         /// Results are cached internally; call <see cref="InvalidateCache"/> when fonts change.
         /// </summary>
         ResolvedFont ResolveFont(FontSpec spec);

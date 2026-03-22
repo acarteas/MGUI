@@ -109,3 +109,312 @@
 /processorParam:TextureFormat=Color
 /build:Portraits/Red XIII.png
 
+
+#begin Fonts/NotoSans/10_Bold.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Color
+/build:Fonts/NotoSans/10_Bold.spritefont
+
+#begin Fonts/NotoSans/10_Italic.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Color
+/build:Fonts/NotoSans/10_Italic.spritefont
+
+#begin Fonts/NotoSans/10_Normal.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Color
+/build:Fonts/NotoSans/10_Normal.spritefont
+
+#begin Fonts/NotoSans/11_Bold.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Color
+/build:Fonts/NotoSans/11_Bold.spritefont
+
+#begin Fonts/NotoSans/11_Italic.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Color
+/build:Fonts/NotoSans/11_Italic.spritefont
+
+#begin Fonts/NotoSans/11_Normal.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Color
+/build:Fonts/NotoSans/11_Normal.spritefont
+
+#begin Fonts/NotoSans/12_Bold.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Color
+/build:Fonts/NotoSans/12_Bold.spritefont
+
+#begin Fonts/NotoSans/12_Italic.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Color
+/build:Fonts/NotoSans/12_Italic.spritefont
+
+#begin Fonts/NotoSans/12_Normal.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Color
+/build:Fonts/NotoSans/12_Normal.spritefont
+
+#begin Fonts/NotoSans/13_Bold.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Color
+/build:Fonts/NotoSans/13_Bold.spritefont
+
+#begin Fonts/NotoSans/13_Italic.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Color
+/build:Fonts/NotoSans/13_Italic.spritefont
+
+#begin Fonts/NotoSans/13_Normal.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Color
+/build:Fonts/NotoSans/13_Normal.spritefont
+
+#begin Fonts/NotoSans/14_Bold.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Color
+/build:Fonts/NotoSans/14_Bold.spritefont
+
+#begin Fonts/NotoSans/14_Italic.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Color
+/build:Fonts/NotoSans/14_Italic.spritefont
+
+#begin Fonts/NotoSans/14_Normal.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Color
+/build:Fonts/NotoSans/14_Normal.spritefont
+
+#begin Fonts/NotoSans/16_Bold.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:Fonts/NotoSans/16_Bold.spritefont
+
+#begin Fonts/NotoSans/16_Italic.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:Fonts/NotoSans/16_Italic.spritefont
+
+#begin Fonts/NotoSans/16_Normal.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:Fonts/NotoSans/16_Normal.spritefont
+
+#begin Fonts/NotoSans/18_Bold.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:Fonts/NotoSans/18_Bold.spritefont
+
+#begin Fonts/NotoSans/18_Italic.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:Fonts/NotoSans/18_Italic.spritefont
+
+#begin Fonts/NotoSans/18_Normal.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:Fonts/NotoSans/18_Normal.spritefont
+
+#begin Fonts/NotoSans/20_Bold.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:Fonts/NotoSans/20_Bold.spritefont
+
+#begin Fonts/NotoSans/20_Italic.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:Fonts/NotoSans/20_Italic.spritefont
+
+#begin Fonts/NotoSans/20_Normal.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:Fonts/NotoSans/20_Normal.spritefont
+
+#begin Fonts/NotoSans/24_Bold.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:Fonts/NotoSans/24_Bold.spritefont
+
+#begin Fonts/NotoSans/24_Italic.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:Fonts/NotoSans/24_Italic.spritefont
+
+#begin Fonts/NotoSans/24_Normal.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:Fonts/NotoSans/24_Normal.spritefont
+
+#begin Fonts/NotoSans/36_Bold.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:Fonts/NotoSans/36_Bold.spritefont
+
+#begin Fonts/NotoSans/36_Italic.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:Fonts/NotoSans/36_Italic.spritefont
+
+#begin Fonts/NotoSans/36_Normal.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:Fonts/NotoSans/36_Normal.spritefont
+
+#begin Fonts/NotoSans/48_Bold.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:Fonts/NotoSans/48_Bold.spritefont
+
+#begin Fonts/NotoSans/48_Italic.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:Fonts/NotoSans/48_Italic.spritefont
+
+#begin Fonts/NotoSans/48_Normal.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:Fonts/NotoSans/48_Normal.spritefont
+
+#begin Fonts/NotoSans/72_Bold.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:Fonts/NotoSans/72_Bold.spritefont
+
+#begin Fonts/NotoSans/72_Italic.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:Fonts/NotoSans/72_Italic.spritefont
+
+#begin Fonts/NotoSans/72_Normal.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:Fonts/NotoSans/72_Normal.spritefont
+
+#begin Fonts/NotoSans/8_Bold.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Color
+/build:Fonts/NotoSans/8_Bold.spritefont
+
+#begin Fonts/NotoSans/8_Italic.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Color
+/build:Fonts/NotoSans/8_Italic.spritefont
+
+#begin Fonts/NotoSans/8_Normal.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Color
+/build:Fonts/NotoSans/8_Normal.spritefont
+
+#begin Fonts/NotoSans/9_Bold.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Color
+/build:Fonts/NotoSans/9_Bold.spritefont
+
+#begin Fonts/NotoSans/9_Italic.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Color
+/build:Fonts/NotoSans/9_Italic.spritefont
+
+#begin Fonts/NotoSans/9_Normal.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Color
+/build:Fonts/NotoSans/9_Normal.spritefont
+
+#begin Fonts/ttf/NotoSans-Regular.ttf
+/copy:Fonts/ttf/NotoSans-Regular.ttf
+
+#begin Fonts/ttf/NotoSans-Bold.ttf
+/copy:Fonts/ttf/NotoSans-Bold.ttf
+
+#begin Fonts/ttf/NotoSans-BoldItalic.ttf
+/copy:Fonts/ttf/NotoSans-BoldItalic.ttf
+
+#begin Fonts/ttf/NotoSans-Italic.ttf
+/copy:Fonts/ttf/NotoSans-Italic.ttf
+
+#begin Fonts/NotoSansLicense.txt
+/copy:Fonts/NotoSansLicense.txt

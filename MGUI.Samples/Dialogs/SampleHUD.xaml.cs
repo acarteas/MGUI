@@ -291,7 +291,7 @@ namespace MGUI.Samples.Dialogs
                     //  Draw the quantity in the bottom-right corner
                     if (Slot.Item.Quantity > 1)
                     {
-                        const string FontFamily = "Arial";
+                        const string FontFamily = "NotoSans";
                         const CustomFontStyles FontStyle = CustomFontStyles.Bold;
                         const int FontSize = 11;
 

@@ -558,7 +558,7 @@ MGUI uses its own framework to detect and respond to inputs.
 
 - `InputTracker`
   - The base-class for input-related logic
-  - Uusually only 1 instance per program, automatically created when you create an instance of `MGUI.Shared.Rendering.MainRenderer`
+  - Usually only 1 instance per program, automatically created when you create an instance of `MGUI.Shared.Rendering.MainRenderer`
   - Contains 2 child objects: `MouseTracker` and `KeyboardTracker`
 - `MouseTracker`
   - Detects changes to the `MouseState` and stores information about those changes in `EventArg` objects, most of which have an `IsHandled` property.
@@ -591,7 +591,9 @@ public class Game1 : Game, IObservableUpdate, IMouseHandlerHost
 
     protected override void Initialize()
     {
-        this.MGUIRenderer = new MainRenderer(new GameRenderHost<Game1>(this));
+        FontManager fonts = new FontManager("MyFont");
+        fonts.AddFontSet(new FontSet(Content, "MyFont"));
+        this.MGUIRenderer = new MainRenderer(new GameRenderHost<Game1>(this), fonts);
         this.Desktop = new MGDesktop(MGUIRenderer);
 
         //  Create a MouseHandler

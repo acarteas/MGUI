@@ -1,20 +1,27 @@
-﻿using Microsoft.Xna.Framework.Content;
-using Microsoft.Xna.Framework.Graphics;
+﻿using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MGUI.Shared.Text
 {
+    /// <summary>
+    /// Registry of font families available to MGUI text renderers.
+    /// Applications are responsible for registering one or more <see cref="FontSet"/> instances
+    /// before creating text content or resolving fonts.
+    /// </summary>
     public class FontManager
     {
         private Dictionary<string, FontSet> _FontsByFamily { get; }
         public IReadOnlyDictionary<string, FontSet> FontsByFamily => _FontsByFamily;
 
-        public void AddFontSet(FontSet Set) => _FontsByFamily.Add(Set.Name, Set);
+        public bool HasAnyFonts => _FontsByFamily.Count > 0;
+
+        public void AddFontSet(FontSet Set)
+        {
+            _FontsByFamily.Add(Set.Name, Set);
+            DefaultFontFamily ??= Set.Name;
+        }
 
         /// <summary>The name of the font family that should be used by default when no font has been explicitly specified for text content.</summary>
         public string DefaultFontFamily { get; set; }
@@ -24,15 +31,20 @@ namespace MGUI.Shared.Text
                 return FS;
             else if (DefaultFontFamily != null && _FontsByFamily.TryGetValue(DefaultFontFamily, out FS))
                 return FS;
+            else if (_FontsByFamily.Values.FirstOrDefault() is FontSet FirstRegisteredFontSet)
+                return FirstRegisteredFontSet;
             else
-                return _FontsByFamily.Values.First();
+                throw new InvalidOperationException("No fonts have been registered. Register at least one FontSet before creating text content or resolving fonts.");
         }
 
-        public FontManager(ContentManager Content, string DefaultFontFamily)
+        /// <summary>
+        /// Creates an empty font registry. Register at least one <see cref="FontSet"/> before
+        /// constructing text-driven UI or resolving fonts through a text engine.
+        /// </summary>
+        public FontManager(string DefaultFontFamily = null)
         {
             this.DefaultFontFamily = DefaultFontFamily;
-            List<string> BuiltInFontFamilyNames = new() { "Arial" };
-            _FontsByFamily = BuiltInFontFamilyNames.Select(x => new FontSet(Content, x)).ToDictionary(x => x.Name);
+            _FontsByFamily = new(StringComparer.Ordinal);
         }
 
         /// <param name="DesiredFontSize">The desired height, in points, of the returned <see cref="SpriteFont"/> <paramref name="SF"/></param>

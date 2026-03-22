@@ -14,12 +14,12 @@ namespace MGUI.FontStashSharp
     /// <para/>
     /// Usage:
     /// <code>
-    /// byte[] ttfData = File.ReadAllBytes("Arial.ttf");
+    /// byte[] ttfData = File.ReadAllBytes("MyFont-Regular.ttf");
     /// var fontSystem = new FontSystem();
     /// fontSystem.AddFont(ttfData);
     ///
     /// var engine = new FontStashSharpTextEngine();
-    /// engine.AddFontSystem("Arial", CustomFontStyles.Normal, fontSystem, ttfData);
+    /// engine.AddFontSystem("MyFont", CustomFontStyles.Normal, fontSystem, ttfData);
     ///
     /// desktop.TextEngine = engine;
     /// </code>
@@ -159,7 +159,7 @@ namespace MGUI.FontStashSharp
         ///         <c>.spritefont</c> sizes at 96 DPI → <c>1 pt = 96/72 px</c>.</item>
         ///   <item>The sizing-model gap: the Content Pipeline sizes by <b>em square</b>,
         ///         while FontStashSharp (StbTrueType) sizes by <b>ascender − descender</b>.
-        ///         For fonts where these differ (e.g. Arial: ratio ≈ 1.117) a pure
+        ///         For fonts where these differ (e.g. NotoSans) a pure
         ///         DPI factor (<c>4/3</c>) is not enough.</item>
         /// </list>
         /// Call <see cref="ComputeFontSizeScale(byte[])"/> to obtain the exact value
@@ -201,7 +201,7 @@ namespace MGUI.FontStashSharp
         /// Registers a <see cref="FontSystem"/> for a specific font family and style variant.
         /// The first registered family/style combination is automatically set as the fallback.
         /// </summary>
-        /// <param name="family">Case-sensitive font family name (e.g. "Arial").</param>
+        /// <param name="family">Case-sensitive font family name (e.g. "MyFont").</param>
         /// <param name="style">The style this <see cref="FontSystem"/> provides.</param>
         /// <param name="fontSystem">Pre-configured <see cref="FontSystem"/> with at least one
         /// TTF font added via <see cref="FontSystem.AddFont(byte[])"/>.</param>
@@ -218,7 +218,7 @@ namespace MGUI.FontStashSharp
         /// <see cref="FontSizeScale"/> from the raw TTF data so that FontStashSharp
         /// renders at the same em-square size as MonoGame’s Content Pipeline.
         /// </summary>
-        /// <param name="family">Case-sensitive font family name (e.g. "Arial").</param>
+        /// <param name="family">Case-sensitive font family name (e.g. "MyFont").</param>
         /// <param name="style">The style this <see cref="FontSystem"/> provides.</param>
         /// <param name="fontSystem">Pre-configured <see cref="FontSystem"/>.</param>
         /// <param name="ttfData">Raw TrueType font bytes (the same array passed to

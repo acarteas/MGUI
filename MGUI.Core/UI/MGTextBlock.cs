@@ -62,19 +62,25 @@ namespace MGUI.Core.UI
                 string PreviousFontFamily = FontFamily;
                 int PreviousFontSize = FontSize;
 
-                // Validate that the requested font exists before committing the change
-                if (!GetDesktop().FontManager.TryGetFont(FontFamily, CustomFontStyles.Normal, FontSize, true, out _, out _, out _, out _, out _))
-                    return false;
-
                 _FontFamily = FontFamily;
                 _FontSize = FontSize;
 
-                // Resolve ITextEngine handles for all 4 style variants
-                ITextEngine engine = TextEngine;
-                RF_Regular    = engine.ResolveFont(new FontSpec(_FontFamily, _FontSize, CustomFontStyles.Normal));
-                RF_Bold       = engine.ResolveFont(new FontSpec(_FontFamily, _FontSize, CustomFontStyles.Bold));
-                RF_Italic     = engine.ResolveFont(new FontSpec(_FontFamily, _FontSize, CustomFontStyles.Italic));
-                RF_BoldItalic = engine.ResolveFont(new FontSpec(_FontFamily, _FontSize, CustomFontStyles.Bold | CustomFontStyles.Italic));
+                try
+                {
+                    // Resolve ITextEngine handles for all 4 style variants before committing
+                    // so validation works for both SpriteFont and custom text engines.
+                    ITextEngine engine = TextEngine;
+                    RF_Regular    = engine.ResolveFont(new FontSpec(_FontFamily, _FontSize, CustomFontStyles.Normal));
+                    RF_Bold       = engine.ResolveFont(new FontSpec(_FontFamily, _FontSize, CustomFontStyles.Bold));
+                    RF_Italic     = engine.ResolveFont(new FontSpec(_FontFamily, _FontSize, CustomFontStyles.Italic));
+                    RF_BoldItalic = engine.ResolveFont(new FontSpec(_FontFamily, _FontSize, CustomFontStyles.Bold | CustomFontStyles.Italic));
+                }
+                catch
+                {
+                    _FontFamily = PreviousFontFamily;
+                    _FontSize = PreviousFontSize;
+                    return false;
+                }
 
                 SpaceWidth = RF_Regular.SpaceWidth;
 
