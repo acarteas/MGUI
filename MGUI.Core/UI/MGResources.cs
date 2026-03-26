@@ -110,7 +110,7 @@ namespace MGUI.Core.UI
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private readonly Dictionary<string, Action<MGElement>> _Commands = new();
         /// <summary>This dictionary is commonly used by <see cref="MGButton.CommandName"/> or by <see cref="MGTextBlock"/> to reference delegates by a string key value.<para/>
-        /// See also:<br/><see cref="AddCommand(string, Action{MGElement})"/><br/><see cref="RemoveComand(string)"/><para/>
+        /// See also:<br/><see cref="AddCommand(string, Action{MGElement})"/><br/><see cref="AddOrReplaceCommand(string, Action{MGElement})"/><br/><see cref="RemoveComand(string)"/><para/>
         /// EX: If you create an <see cref="MGTextBlock"/> and set its text to:
         /// <code>[Command=ABC]This text invokes a delegate when clicked[/Command] but this text doesn't</code>
         /// then the <see cref="Action{MGElement}"/> with the name "ABC" will be invoked when clicking the substring "This text invokes a delegate when clicked"</summary>
@@ -122,6 +122,13 @@ namespace MGUI.Core.UI
         {
             _Commands.Add(Name, Command);
             OnCommandAdded?.Invoke(this, (Name, Command));
+        }
+
+        /// <summary>Adds a new command, or replaces the existing command with the same name if one is already registered.</summary>
+        public void AddOrReplaceCommand(string Name, Action<MGElement> Command)
+        {
+            RemoveComand(Name);
+            AddCommand(Name, Command);
         }
 
         public bool RemoveComand(string Name)
@@ -147,10 +154,10 @@ namespace MGUI.Core.UI
             }
         }
 
-        /// <summary>Invoked when a new value is added to <see cref="Commands"/> via <see cref="AddCommand(string, Action{MGElement})"/><para/>
+        /// <summary>Invoked when a new value is added to <see cref="Commands"/> via <see cref="AddCommand(string, Action{MGElement})"/> or <see cref="AddOrReplaceCommand(string, Action{MGElement})"/><para/>
         /// See also: <see cref="OnCommandRemoved"/></summary>
         public event EventHandler<(string Name, Action<MGElement> Command)> OnCommandAdded;
-        /// <summary>Invoked when a value is removed from <see cref="Commands"/> via <see cref="RemoveComand(string)"/><para/>
+        /// <summary>Invoked when a value is removed from <see cref="Commands"/> via <see cref="RemoveComand(string)"/> or <see cref="AddOrReplaceCommand(string, Action{MGElement})"/><para/>
         /// See also: <see cref="OnCommandAdded"/></summary>
         public event EventHandler<(string Name, Action<MGElement> Command)> OnCommandRemoved;
 
