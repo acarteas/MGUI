@@ -71,7 +71,9 @@ internal sealed class XamlSchemaGenerator
             )
         );
 
+        schema.Add(GenerateBindingMarkupExtensionType());
         schema.Add(GenerateMguiBooleanType());
+        schema.Add(GenerateBindableNumericTypes());
 
         foreach (Type enumType in GetReferencedEnumTypes())
         {
@@ -97,9 +99,32 @@ internal sealed class XamlSchemaGenerator
         return new XDocument(new XDeclaration("1.0", "utf-8", "yes"), schema);
     }
 
+    private XElement GenerateBindingMarkupExtensionType()
+    {
+        XElement simpleType = new(
+            Xs + "simpleType",
+            new XAttribute("name", BindingMarkupExtensionSchemaTypeName)
+        );
+        XElement restriction = new(Xs + "restriction", new XAttribute("base", "xs:string"));
+
+        restriction.Add(
+            new XElement(
+                Xs + "pattern",
+                new XAttribute("value", @"\s*\{MGBinding.*\}\s*")
+            )
+        );
+
+        simpleType.Add(restriction);
+        return simpleType;
+    }
+
     private XElement GenerateMguiBooleanType()
     {
         XElement simpleType = new(Xs + "simpleType", new XAttribute("name", "MguiBoolean"));
+        XElement union = new(
+            Xs + "union",
+            new XAttribute("memberTypes", $"mgui:{BindingMarkupExtensionSchemaTypeName}")
+        );
         XElement restriction = new(Xs + "restriction", new XAttribute("base", "xs:string"));
 
         foreach (string value in new[]
@@ -117,8 +142,27 @@ internal sealed class XamlSchemaGenerator
             restriction.Add(new XElement(Xs + "enumeration", new XAttribute("value", value)));
         }
 
-        simpleType.Add(restriction);
+        union.Add(new XElement(Xs + "simpleType", restriction));
+        simpleType.Add(union);
         return simpleType;
+    }
+
+    private IEnumerable<XElement> GenerateBindableNumericTypes()
+    {
+        foreach ((string schemaTypeName, string xmlSchemaTypeName) in BindableNumericTypeMappings)
+        {
+            yield return new XElement(
+                Xs + "simpleType",
+                new XAttribute("name", schemaTypeName),
+                new XElement(
+                    Xs + "union",
+                    new XAttribute(
+                        "memberTypes",
+                        $"xs:{xmlSchemaTypeName} mgui:{BindingMarkupExtensionSchemaTypeName}"
+                    )
+                )
+            );
+        }
     }
 
     private XElement GenerateEnumType(Type enumType)
@@ -128,13 +172,18 @@ internal sealed class XamlSchemaGenerator
             new XAttribute("name", GetEnumSchemaTypeName(enumType))
         );
 
+        XElement union = new(
+            Xs + "union",
+            new XAttribute("memberTypes", $"mgui:{BindingMarkupExtensionSchemaTypeName}")
+        );
         XElement restriction = new(Xs + "restriction", new XAttribute("base", "xs:string"));
         foreach (string enumName in Enum.GetNames(enumType))
         {
             restriction.Add(new XElement(Xs + "enumeration", new XAttribute("value", enumName)));
         }
 
-        simpleType.Add(restriction);
+        union.Add(new XElement(Xs + "simpleType", restriction));
+        simpleType.Add(union);
         return simpleType;
     }
 
@@ -465,17 +514,17 @@ internal sealed class XamlSchemaGenerator
         {
             _ when normalizedPropertyType == typeof(bool) => "mgui:MguiBoolean",
             _ when normalizedPropertyType == typeof(object) => "xs:string",
-            _ when normalizedPropertyType == typeof(byte) => "xs:unsignedByte",
-            _ when normalizedPropertyType == typeof(sbyte) => "xs:byte",
-            _ when normalizedPropertyType == typeof(short) => "xs:short",
-            _ when normalizedPropertyType == typeof(ushort) => "xs:unsignedShort",
-            _ when normalizedPropertyType == typeof(int) => "xs:int",
-            _ when normalizedPropertyType == typeof(uint) => "xs:unsignedInt",
-            _ when normalizedPropertyType == typeof(long) => "xs:long",
-            _ when normalizedPropertyType == typeof(ulong) => "xs:unsignedLong",
-            _ when normalizedPropertyType == typeof(float) => "xs:float",
-            _ when normalizedPropertyType == typeof(double) => "xs:double",
-            _ when normalizedPropertyType == typeof(decimal) => "xs:decimal",
+            _ when normalizedPropertyType == typeof(byte) => "mgui:MguiBindableUnsignedByte",
+            _ when normalizedPropertyType == typeof(sbyte) => "mgui:MguiBindableByte",
+            _ when normalizedPropertyType == typeof(short) => "mgui:MguiBindableShort",
+            _ when normalizedPropertyType == typeof(ushort) => "mgui:MguiBindableUnsignedShort",
+            _ when normalizedPropertyType == typeof(int) => "mgui:MguiBindableInt",
+            _ when normalizedPropertyType == typeof(uint) => "mgui:MguiBindableUnsignedInt",
+            _ when normalizedPropertyType == typeof(long) => "mgui:MguiBindableLong",
+            _ when normalizedPropertyType == typeof(ulong) => "mgui:MguiBindableUnsignedLong",
+            _ when normalizedPropertyType == typeof(float) => "mgui:MguiBindableFloat",
+            _ when normalizedPropertyType == typeof(double) => "mgui:MguiBindableDouble",
+            _ when normalizedPropertyType == typeof(decimal) => "mgui:MguiBindableDecimal",
             _ => "xs:string",
         };
     }
@@ -589,6 +638,22 @@ internal sealed class XamlSchemaGenerator
 
         return depth;
     }
+
+    private const string BindingMarkupExtensionSchemaTypeName = "MguiBindingMarkupExtension";
+    private static readonly IReadOnlyList<(string SchemaTypeName, string XmlSchemaTypeName)> BindableNumericTypeMappings =
+    [
+        ("MguiBindableUnsignedByte", "unsignedByte"),
+        ("MguiBindableByte", "byte"),
+        ("MguiBindableShort", "short"),
+        ("MguiBindableUnsignedShort", "unsignedShort"),
+        ("MguiBindableInt", "int"),
+        ("MguiBindableUnsignedInt", "unsignedInt"),
+        ("MguiBindableLong", "long"),
+        ("MguiBindableUnsignedLong", "unsignedLong"),
+        ("MguiBindableFloat", "float"),
+        ("MguiBindableDouble", "double"),
+        ("MguiBindableDecimal", "decimal"),
+    ];
 
     private static string GetSchemaTypeName(Type type) => type.Name;
 
