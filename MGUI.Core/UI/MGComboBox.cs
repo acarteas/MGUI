@@ -441,10 +441,23 @@ namespace MGUI.Core.UI
 
             int AvailableHeightScreenSpace = GetDesktop().ValidScreenBounds.Bottom - Dropdown.Top;
             int ActualAvailableHeight = (int)(AvailableHeightScreenSpace / Dropdown.Scale);
+            int AvailableWidthScreenSpace = GetDesktop().ValidScreenBounds.Right - Dropdown.Left;
+            int ActualAvailableWidth = (int)(AvailableWidthScreenSpace / Dropdown.Scale);
             int ActualMaxHeight = Math.Clamp(MaxDropdownHeight, 0, ActualAvailableHeight);
             int ActualMinHeight = Math.Clamp(MinDropdownHeight, 0, ActualMaxHeight);
-            int ActualMinWidth = Math.Clamp(Math.Max(ActualWidth, MinDropdownWidth), 0, MaxDropdownWidth);
-            Dropdown.ApplySizeToContent(SizeToContent.WidthAndHeight, ActualMinWidth, ActualMinHeight, MaxDropdownWidth, ActualMaxHeight);
+            int ActualMaxWidth = Math.Clamp(MaxDropdownWidth, 0, ActualAvailableWidth);
+            int ActualMinWidth = Math.Clamp(
+                Math.Max(ActualWidth, MinDropdownWidth),
+                0,
+                ActualMaxWidth
+            );
+            Dropdown.ApplySizeToContent(
+                SizeToContent.WidthAndHeight,
+                ActualMinWidth,
+                ActualMinHeight,
+                ActualMaxWidth,
+                ActualMaxHeight
+            );
         }
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
