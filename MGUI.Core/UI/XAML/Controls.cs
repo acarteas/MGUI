@@ -414,6 +414,17 @@ namespace MGUI.Core.UI.XAML
             yield return Border;
             yield return DropdownArrow;
 
+            if (Dropdown != null)
+                yield return Dropdown;
+            if (DropdownScrollViewer != null)
+                yield return DropdownScrollViewer;
+            if (DropdownStackPanel != null)
+                yield return DropdownStackPanel;
+            if (DropdownHeader != null)
+                yield return DropdownHeader;
+            if (DropdownFooter != null)
+                yield return DropdownFooter;
+
             if (DropdownItemTemplate?.Content != null)
                 yield return DropdownItemTemplate.Content;
             if (SelectedItemTemplate?.Content != null)
@@ -1926,6 +1937,10 @@ namespace MGUI.Core.UI.XAML
         {
             yield return Border;
             yield return HeadersPanel;
+            if (SelectedTabHeaderTemplate != null)
+                yield return SelectedTabHeaderTemplate;
+            if (UnselectedTabHeaderTemplate != null)
+                yield return UnselectedTabHeaderTemplate;
 
             foreach (TabItem Tab in Tabs)
                 yield return Tab;
