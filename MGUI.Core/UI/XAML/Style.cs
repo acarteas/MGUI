@@ -23,6 +23,9 @@ namespace MGUI.Core.UI.XAML
         /// Otherwise, this style will only affect elements of the <see cref="TargetType"/> that also have this name in their <see cref="Element.StyleNames"/><para/>
         /// This value should never contain commas, because commas are used to delimit multiple style names in <see cref="Element.StyleNames"/></summary>
         public string Name { get; set; }
+        /// <summary>If specified, this style inherits the setters of the named base style before applying its own setters.<para/>
+        /// The base style must have the exact same <see cref="TargetType"/>.</summary>
+        public string BasedOn { get; set; }
 
         //TODO maybe a bool, 'AffectsComponents'? Default=true. If true, the style affects components of elements, such as MGUI.Core/UI/XAML/CheckBox.Button
         //      If false, the style only affects elements that are explicitly defined in the visual tree, such as the Content of a SingleContentHost

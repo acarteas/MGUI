@@ -731,6 +731,22 @@
     <xs:attribute name="WidthWeight" type="mgui:MguiBindableDouble" />
     <xs:anyAttribute namespace="##other" processContents="lax" />
   </xs:complexType>
+  <xs:complexType name="ResourceDictionary">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element ref="mgui:Style" />
+      <xs:element name="ResourceDictionary.Styles">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="unbounded">
+            <xs:element ref="mgui:Style" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
+    </xs:choice>
+    <xs:anyAttribute namespace="##other" processContents="lax" />
+  </xs:complexType>
   <xs:complexType name="Setter">
     <xs:choice minOccurs="0" maxOccurs="unbounded">
       <xs:element name="Setter.Value">
@@ -788,6 +804,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -845,6 +862,7 @@
     </xs:choice>
     <xs:attribute name="TargetType" type="mgui:MGElementTypeEnum" />
     <xs:attribute name="Name" type="xs:string" />
+    <xs:attribute name="BasedOn" type="xs:string" />
     <xs:anyAttribute namespace="##other" processContents="lax" />
   </xs:complexType>
   <xs:complexType name="ColumnDefinition">
@@ -910,6 +928,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -1000,6 +1019,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -1137,6 +1157,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -1278,6 +1299,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -1473,6 +1495,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -1631,6 +1654,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -1738,6 +1762,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -1867,6 +1892,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -2061,6 +2087,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -2293,6 +2320,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -2481,6 +2509,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -2604,6 +2633,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -2745,6 +2775,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -3002,6 +3033,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -3243,6 +3275,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -3360,6 +3393,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -3530,6 +3564,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -3734,6 +3769,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -4022,6 +4058,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -4268,6 +4305,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -4480,6 +4518,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -4656,6 +4695,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -4794,6 +4834,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -4959,6 +5000,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -5154,6 +5196,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -5484,6 +5527,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -5679,6 +5723,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -5837,6 +5882,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -5981,6 +6027,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -6189,6 +6236,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -6401,6 +6449,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -6627,6 +6676,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -6858,6 +6908,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -7096,6 +7147,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -7317,6 +7369,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -7522,6 +7575,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -7726,6 +7780,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -7931,6 +7986,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -8126,6 +8182,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -8446,6 +8503,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -8641,6 +8699,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -8844,6 +8903,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -9096,6 +9156,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -9367,6 +9428,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -9509,6 +9571,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -9704,6 +9767,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -9938,6 +10002,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -10133,6 +10198,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -10385,6 +10451,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -10624,6 +10691,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -10843,6 +10911,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -11065,6 +11134,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -11326,6 +11396,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -11557,6 +11628,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -11782,6 +11854,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -11891,6 +11964,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -12080,6 +12154,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -12275,6 +12350,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -12478,6 +12554,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -12620,6 +12697,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -12815,6 +12893,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -13156,6 +13235,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -13351,6 +13431,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -13704,6 +13785,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -13899,6 +13981,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -14261,6 +14344,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -14456,6 +14540,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -14701,6 +14786,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -14997,6 +15083,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -15175,6 +15262,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -15508,6 +15596,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -15703,6 +15792,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -16022,6 +16112,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -16217,6 +16308,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -16536,6 +16628,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -16731,6 +16824,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -17050,6 +17144,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -17391,6 +17486,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -17734,6 +17830,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -17989,6 +18086,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -18355,6 +18453,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -18639,6 +18738,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -18967,6 +19067,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -19224,6 +19325,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -19546,6 +19648,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -19741,6 +19844,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -19965,6 +20069,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -20193,6 +20298,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -20426,6 +20532,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -20525,6 +20632,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -20798,6 +20906,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -21020,6 +21129,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -21299,6 +21409,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -21512,6 +21623,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -21783,6 +21895,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -21999,6 +22112,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -22361,6 +22475,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -22556,6 +22671,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -22881,6 +22997,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -23102,6 +23219,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -23423,6 +23541,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -23618,6 +23737,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -23861,6 +23981,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -24092,6 +24213,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -24501,6 +24623,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -24762,6 +24885,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -25139,6 +25263,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -25343,6 +25468,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -25673,6 +25799,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -25936,6 +26063,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -26272,6 +26400,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -26467,6 +26596,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -26865,6 +26995,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -27060,6 +27191,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -27383,6 +27515,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -27640,6 +27773,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -28019,6 +28153,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -28214,6 +28349,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -28562,6 +28698,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -28783,6 +28920,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -29106,6 +29244,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -29301,6 +29440,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -29647,6 +29787,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -29893,6 +30034,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -30288,6 +30430,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -30514,6 +30657,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -30873,6 +31017,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -31129,6 +31274,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -31497,6 +31643,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -31701,6 +31848,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -32062,6 +32210,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -32297,6 +32446,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -32659,6 +32809,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -32863,6 +33014,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -33183,6 +33335,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -33396,6 +33549,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -33719,6 +33873,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -33923,6 +34078,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -34247,6 +34403,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -34451,6 +34608,7 @@
             <xs:element ref="mgui:RatingControl" />
             <xs:element ref="mgui:Rectangle" />
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:element ref="mgui:RowDefinition" />
             <xs:element ref="mgui:ScrollViewer" />
             <xs:element ref="mgui:Separator" />
@@ -34609,6 +34767,7 @@
   <xs:element name="RatingControl" type="mgui:RatingControl" />
   <xs:element name="Rectangle" type="mgui:Rectangle" />
   <xs:element name="ResizeGrip" type="mgui:ResizeGrip" />
+  <xs:element name="ResourceDictionary" type="mgui:ResourceDictionary" />
   <xs:element name="RowDefinition" type="mgui:RowDefinition" />
   <xs:element name="ScrollViewer" type="mgui:ScrollViewer" />
   <xs:element name="Separator" type="mgui:Separator" />

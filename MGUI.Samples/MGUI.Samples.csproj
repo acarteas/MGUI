@@ -62,6 +62,7 @@
     <None Remove="Features\DataBindings.xaml" />
     <None Remove="Features\IBorderBrush.xaml" />
     <None Remove="Features\IFillBrush.xaml" />
+    <None Remove="Features\SharedStyles.xaml" />
     <None Remove="Features\Styles.xaml" />
   </ItemGroup>
   <ItemGroup>
@@ -169,6 +170,7 @@
     <EmbeddedResource Include="Features\IFillBrush.xaml">
       <Generator>MSBuild:Compile</Generator>
     </EmbeddedResource>
+    <EmbeddedResource Include="Features\SharedStyles.xaml" />
     <EmbeddedResource Include="Features\Styles.xaml">
       <Generator>MSBuild:Compile</Generator>
     </EmbeddedResource>

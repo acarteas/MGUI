@@ -1,6 +1,7 @@
 ﻿using FontStashSharp;
 using MGUI.Core.UI;
 using MGUI.Core.UI.Brushes.Fill_Brushes;
+using MGUI.Core.UI.XAML;
 using MGUI.FontStashSharp;
 using MGUI.Shared.Helpers;
 using MGUI.Shared.Input.Keyboard;
@@ -14,6 +15,7 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 
 namespace MGUI.Samples
 {
@@ -52,6 +54,7 @@ namespace MGUI.Samples
             Desktop = new(MGUIRenderer);
 
             InitializeTextEngines();
+            RegisterSharedStyles();
 
             //  This is a dialog with toggle buttons to launch other dialogs
             Compendium Compendium = new(Content, Desktop);
@@ -117,6 +120,14 @@ namespace MGUI.Samples
             }
 
             Desktop.TextEngine = SpriteFontEngine;
+        }
+
+        private void RegisterSharedStyles()
+        {
+            string resourceName = $"{nameof(MGUI)}.{nameof(Samples)}.{nameof(Features)}.SharedStyles.xaml";
+            string xaml = GeneralUtils.ReadEmbeddedResourceAsString(Assembly.GetExecutingAssembly(), resourceName);
+            ResourceDictionary dictionary = XAMLParser.LoadStyleDictionary(xaml);
+            Desktop.Resources.AddStyles(dictionary);
         }
 
         /// <summary>Toggles the active text rendering engine between <see cref="SpriteFontTextEngine"/> and <see cref="FontStashSharpTextEngine"/></summary>

@@ -1,0 +1,13 @@
+﻿<ResourceDictionary xmlns="clr-namespace:MGUI.Core.UI.XAML;assembly=MGUI.Core">
+    <Style Name="SharedHeader" TargetType="TextBlock">
+        <Setter Property="IsBold" Value="True" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="Foreground" Value="#f2d6a2" />
+    </Style>
+    <Style Name="SharedActionButton" TargetType="Button">
+        <Setter Property="MinWidth" Value="120" />
+        <Setter Property="Padding" Value="8,4" />
+        <Setter Property="HorizontalAlignment" Value="Left" />
+        <Setter Property="Background" Value="rgb(36,48,84)" />
+    </Style>
+</ResourceDictionary>

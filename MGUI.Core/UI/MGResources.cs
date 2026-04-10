@@ -248,8 +248,76 @@ namespace MGUI.Core.UI
 
         public void AddStyle(string Name, Style Style)
         {
-            _Styles.Add(Name, Style);
-            OnStyleAdded?.Invoke(this, (Name, Style));
+            if (Style == null)
+            {
+                throw new ArgumentNullException(nameof(Style));
+            }
+
+            if (string.IsNullOrWhiteSpace(Name))
+            {
+                throw new ArgumentException("Style names cannot be null or whitespace.", nameof(Name));
+            }
+
+            if (string.IsNullOrWhiteSpace(Style.Name))
+            {
+                Style.Name = Name;
+            }
+            else if (!string.Equals(Style.Name, Name, StringComparison.Ordinal))
+            {
+                throw new ArgumentException($"The style name '{Style.Name}' does not match the registration name '{Name}'.", nameof(Name));
+            }
+
+            AddStyles(new ResourceDictionary() { Styles = new() { Style } });
+        }
+
+        public void AddStyle(Style Style)
+        {
+            if (Style == null)
+            {
+                throw new ArgumentNullException(nameof(Style));
+            }
+
+            if (string.IsNullOrWhiteSpace(Style.Name))
+            {
+                throw new InvalidOperationException("Styles added to MGResources must define a non-empty Name.");
+            }
+
+            AddStyles(new ResourceDictionary() { Styles = new() { Style } });
+        }
+
+        public void AddStyles(ResourceDictionary dictionary)
+        {
+            if (dictionary == null)
+            {
+                throw new ArgumentNullException(nameof(dictionary));
+            }
+
+            Dictionary<string, Style> incomingStyles = new();
+            foreach (Style Style in dictionary.Styles)
+            {
+                if (Style == null)
+                {
+                    throw new InvalidOperationException("ResourceDictionary cannot contain null styles.");
+                }
+
+                if (string.IsNullOrWhiteSpace(Style.Name))
+                {
+                    throw new InvalidOperationException($"Styles in a {nameof(ResourceDictionary)} must define a non-empty {nameof(Style.Name)}.");
+                }
+
+                if (!incomingStyles.TryAdd(Style.Name, Style))
+                {
+                    throw new InvalidOperationException($"A style named '{Style.Name}' appears more than once in the same {nameof(ResourceDictionary)}.");
+                }
+            }
+
+            StyleResolver.ValidateNamedStyles(_Styles, incomingStyles);
+
+            foreach (KeyValuePair<string, Style> kvp in incomingStyles)
+            {
+                _Styles.Add(kvp.Key, kvp.Value);
+                OnStyleAdded?.Invoke(this, (kvp.Key, kvp.Value));
+            }
         }
 
         public bool RemoveStyle(string Name)

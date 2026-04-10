@@ -22,11 +22,19 @@ namespace MGUI.Samples.Features
             });
 
             string XAML = @"<StackPanel Orientation=""Vertical"" Spacing=""5"">
+    <!-- Shared styles can now live in a top-level ResourceDictionary loaded once at startup -->
+    <!-- Example app startup:
+    var shared = XAMLParser.LoadStyleDictionary(File.ReadAllText(""Features/SharedStyles.xaml""));
+    desktop.Resources.AddStyles(shared); -->
+
     <StackPanel.Styles>
         <!-- This is an implicit style. Since it doesn't have a Name, it will affect ALL child TextBlocks 
         (unless the TextBlock explicitly opts out of styling by setting IsStyleable=""false"") -->
         <Style TargetType=""TextBlock"">
             <Setter Property=""HorizontalAlignment"" Value=""Right"" />
+        </Style>
+        <Style TargetType=""Button"" Name=""DemoButton"" BasedOn=""SharedActionButton"">
+            <Setter Property=""TextForeground"" Value=""#fff2cc"" />
         </Style>
     </StackPanel.Styles>
 
@@ -36,13 +44,13 @@ namespace MGUI.Samples.Features
 
     <!-- This textblock inherits HorizontalAlignment=""Right"" from the implicit style defined above -->
     <TextBlock Background=""RGB(40,40,40)"" Text=""Two"" />
+    <Button StyleNames=""DemoButton"" Content=""Shared + BasedOn button"" />
 
     <StackPanel Orientation=""Vertical"">
         <!-- These styles have an explicit name. They will only affect TextBlocks where StyleNames contains the name -->
         <StackPanel.Styles>
-            <Style TargetType=""TextBlock"" Name=""Explicit1"">
+            <Style TargetType=""TextBlock"" Name=""Explicit1"" BasedOn=""SharedHeader"">
                 <Setter Property=""HorizontalAlignment"" Value=""Center"" />
-                <Setter Property=""Foreground"" Value=""Red"" />
             </Style>
             <Style TargetType=""TextBlock"" Name=""Explicit2"">
                 <Setter Property=""HorizontalAlignment"" Value=""Left"" />

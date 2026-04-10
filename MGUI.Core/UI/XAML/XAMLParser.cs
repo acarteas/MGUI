@@ -99,6 +99,7 @@ namespace MGUI.Core.UI.XAML
 
             { "Style", nameof(Style) },
             { "Setter", nameof(Setter) },
+            { "ResourceDictionary", nameof(ResourceDictionary) },
 
             //  Abbreviated names
             { "CP", nameof(ContentPresenter) },
@@ -145,11 +146,13 @@ namespace MGUI.Core.UI.XAML
             {
                 //  Insert the required xml namespaces into the XAML string
                 int SpaceIndex = XAMLString.IndexOf(' ');
-                if (SpaceIndex >= 0)
+                int InsertionIndex = XAMLString.IndexOf('>');
+                if (SpaceIndex >= 0 && (InsertionIndex < 0 || SpaceIndex < InsertionIndex))
+                {
                     XAMLString = $"{XAMLString.Substring(0, SpaceIndex)} {XMLNameSpaces} {XAMLString.Substring(SpaceIndex + 1)}";
+                }
                 else
                 {
-                    int InsertionIndex = XAMLString.IndexOf('>');
                     XAMLString = $"{XAMLString.Substring(0, InsertionIndex)} {XMLNameSpaces} {XAMLString.Substring(InsertionIndex)}";
                 }
             }
@@ -186,6 +189,35 @@ namespace MGUI.Core.UI.XAML
             }
         }
 
+        private static string PrepareXAMLString(string XAMLString, bool SanitizeXAMLString, bool ReplaceLinebreakLiterals)
+        {
+            if (SanitizeXAMLString)
+            {
+                XAMLString = ValidateXAMLString(XAMLString);
+            }
+
+            if (ReplaceLinebreakLiterals)
+            {
+                XAMLString = XAMLString.Replace(@"\n", "&#x0a;");
+            }
+
+            return XAMLString;
+        }
+
+        private static string RemoveDefaultPresentationNamespace(string xamlString)
+        {
+            XDocument document = XDocument.Parse(xamlString);
+            XAttribute defaultNamespace = document.Root?.Attributes()
+                .FirstOrDefault(x => x.IsNamespaceDeclaration && x.Name.Namespace == XNamespace.None && x.Name.LocalName == "xmlns" && x.Value == XMLNameSpaceBaseUri);
+            defaultNamespace?.Remove();
+
+            using StringWriter sw = new();
+            using XmlWriter xw = XmlWriter.Create(sw, new XmlWriterSettings() { OmitXmlDeclaration = true, Indent = true });
+            document.WriteTo(xw);
+            xw.Flush();
+            return sw.ToString();
+        }
+
         /// <param name="SanitizeXAMLString">If true, the given <paramref name="XAMLString"/> will be pre-processed via the following logic:<para/>
         /// 1. Trim leading and trailing whitespace<br/>
         /// 2. Insert required XML namespaces (such as "xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation")<br/>
@@ -197,10 +229,7 @@ namespace MGUI.Core.UI.XAML
         public static T Load<T>(MGWindow Window, string XAMLString, bool SanitizeXAMLString = false, bool ReplaceLinebreakLiterals = true)
             where T : MGElement
         {
-            if (SanitizeXAMLString)
-                XAMLString = ValidateXAMLString(XAMLString);
-            if (ReplaceLinebreakLiterals)
-                XAMLString = XAMLString.Replace(@"\n", "&#x0a;");
+            XAMLString = PrepareXAMLString(XAMLString, SanitizeXAMLString, ReplaceLinebreakLiterals);
             Element Parsed = (Element)XamlServices.Parse(XAMLString);
             Parsed.ProcessStyles(Window.GetResources());
             return Parsed.ToElement<T>(Window, null);
@@ -216,13 +245,28 @@ namespace MGUI.Core.UI.XAML
         /// See also: <see href="https://stackoverflow.com/a/183435/11689514"/></param>
         public static MGWindow LoadRootWindow(MGDesktop Desktop, string XAMLString, bool SanitizeXAMLString = false, bool ReplaceLinebreakLiterals = true)
         {
-            if (SanitizeXAMLString)
-                XAMLString = ValidateXAMLString(XAMLString);
-            if (ReplaceLinebreakLiterals)
-                XAMLString = XAMLString.Replace(@"\n", "&#x0a;");
+            XAMLString = PrepareXAMLString(XAMLString, SanitizeXAMLString, ReplaceLinebreakLiterals);
             Window Parsed = (Window)XamlServices.Parse(XAMLString);
             Parsed.ProcessStyles(Desktop.Resources);
             return Parsed.ToElement(Desktop);
+        }
+
+        /// <summary>Parses a top-level <see cref="ResourceDictionary"/> XAML payload containing shared named styles.</summary>
+        public static ResourceDictionary LoadStyleDictionary(string xaml, bool sanitizeXamlString = false, bool replaceLinebreakLiterals = true)
+        {
+            xaml = PrepareXAMLString(xaml, sanitizeXamlString, replaceLinebreakLiterals);
+            if (sanitizeXamlString)
+            {
+                xaml = RemoveDefaultPresentationNamespace(xaml);
+            }
+
+            ResourceDictionary parsed = (ResourceDictionary)XamlServices.Parse(xaml);
+            if (parsed.Styles.Any(x => x == null || string.IsNullOrWhiteSpace(x.Name)))
+            {
+                throw new InvalidOperationException($"{nameof(ResourceDictionary)} only supports named styles in this version.");
+            }
+
+            return parsed;
         }
     }
 }

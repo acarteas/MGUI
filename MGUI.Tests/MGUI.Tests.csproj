@@ -34,6 +34,7 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(IsWindowsOS)'!='true'">
+    <PackageReference Include="Portable.Xaml" Version="0.26.0" />
     <Reference Include="MGUI.Core">
       <HintPath>..\MGUI.Core\bin\$(Configuration)\net8.0\MGUI.Core.dll</HintPath>
       <Private>true</Private>

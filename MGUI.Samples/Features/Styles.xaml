@@ -1,9 +1,12 @@
 ﻿<Window xmlns="clr-namespace:MGUI.Core.UI.XAML;assembly=MGUI.Core"
         Left="440" Top="20" MinHeight="0" Width="780" Height="720" TitleText="TextBlock" Padding="10">
     <Window.Styles>
-        <Style Name="Header1" TargetType="TextBlock">
-            <Setter Property="IsBold" Value="True" />
-            <Setter Property="FontSize" Value="14" />
+        <Style Name="Header1" TargetType="TextBlock" BasedOn="SharedHeader">
+            <Setter Property="Foreground" Value="#fff2cc" />
+        </Style>
+        <Style Name="DemoButton" TargetType="Button" BasedOn="SharedActionButton">
+            <Setter Property="TextForeground" Value="#fff2cc" />
+            <Setter Property="Background" Value="rgb(56,76,124)" />
         </Style>
         <Style TargetType="Separator">
             <Setter Property="Margin" Value="0" />
@@ -34,6 +37,10 @@
                 If you give your Style a Name, then the Style will only be applied to child elements that opt-in to it via [c=Turquoise][i]Element.StyleNames[/i][/c].
                 You may opt-in to multiple styles by delimiting the names with a comma.
             </TextBlock>
+            <TextBlock FontSize="10">
+                This sample also loads a shared [c=Turquoise][i]ResourceDictionary[/i][/c] once at app startup, registers it into [c=Turquoise][i]Desktop.Resources.Styles[/i][/c],
+                and then derives local styles from those shared names via [c=Turquoise][i]BasedOn[/i][/c].
+            </TextBlock>
 
             <Expander IsExpanded="True">
                 <Expander.Header>
@@ -50,6 +57,7 @@
                 </Expander.Header>
                 <StackPanel Orientation="Vertical" Spacing="4" Margin="20,0,0,0" Padding="6" Background="rgb(16,16,64)" MaxWidth="280" HorizontalAlignment="Left">
                     <TextBlock FontSize="10" Text="Pay close attention to the Foreground colors and HorizontalAlignments of the TextBlocks:" />
+                    <Button StyleNames="DemoButton" Content="Shared + BasedOn button" />
                     <StackPanel Orientation="Vertical" Spacing="5">
                         <StackPanel.Styles>
                             <Style TargetType="TextBlock">

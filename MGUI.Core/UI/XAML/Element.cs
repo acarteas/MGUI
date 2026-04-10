@@ -487,37 +487,40 @@ namespace MGUI.Core.UI.XAML
             Dictionary<string, Style> StylesByName = Resources.Styles.ToDictionary(x => x.Key, x => x.Value);
             ProcessStyles(StylesByName, new Dictionary<MGElementType, Dictionary<string, List<object>>>());
         }
+
         private void ProcessStyles(Dictionary<string, Style> StylesByName, Dictionary<MGElementType, Dictionary<string, List<object>>> StylesByType)
         {
             Dictionary<string, List<object>> ValuesByProperty;
+            List<string> AddedNamedStyles = new();
+            List<(MGElementType Type, string Property, object Value)> AddedImplicitSetters = new();
 
             //  Append current style setters to indexed data
-            foreach (Style Style in Styles.Where(x => x.Setters.Any()))
+            foreach (Style Style in Styles.Where(x => x.Name != null))
             {
-                if (Style.Name != null)
+                StylesByName.Add(Style.Name, Style);
+                AddedNamedStyles.Add(Style.Name);
+            }
+
+            foreach (Style Style in Styles.Where(x => x.Name == null && (x.Setters.Any() || !string.IsNullOrWhiteSpace(x.BasedOn))))
+            {
+                MGElementType Type = Style.TargetType;
+                if (!StylesByType.TryGetValue(Type, out ValuesByProperty))
                 {
-                    StylesByName.Add(Style.Name, Style);
+                    ValuesByProperty = new();
+                    StylesByType.Add(Type, ValuesByProperty);
                 }
-                else
+
+                foreach (Setter Setter in StyleResolver.ResolveSetters(Style, StylesByName))
                 {
-                    MGElementType Type = Style.TargetType;
-                    if (!StylesByType.TryGetValue(Type, out ValuesByProperty))
+                    string Property = Setter.Property;
+                    if (!ValuesByProperty.TryGetValue(Property, out List<object> Values))
                     {
-                        ValuesByProperty = new();
-                        StylesByType.Add(Type, ValuesByProperty);
+                        Values = new();
+                        ValuesByProperty.Add(Property, Values);
                     }
 
-                    foreach (Setter Setter in Style.Setters)
-                    {
-                        string Property = Setter.Property;
-                        if (!ValuesByProperty.TryGetValue(Property, out List<object> Values))
-                        {
-                            Values = new();
-                            ValuesByProperty.Add(Property, Values);
-                        }
-
-                        Values.Add(Setter.Value);
-                    }
+                    Values.Add(Setter.Value);
+                    AddedImplicitSetters.Add((Type, Property, Setter.Value));
                 }
             }
 
@@ -564,8 +567,7 @@ namespace MGUI.Core.UI.XAML
                 //  Apply explicit styles (styles that were explicitly referenced by their Name)
                 if (StyleNames != null)
                 {
-                    string[] Names = StyleNames.Split(',');
-                    List<Style> ExplicitStyles = Names.Select(x => StylesByName[x]).Where(x => x.TargetType == ElementType).ToList();
+                    IReadOnlyList<ResolvedStyle> ExplicitStyles = StyleResolver.ResolveExplicitStyles(StyleNames, ElementType, StylesByName);
 
                     //  Get all the properties that the explicit styles will modify
                     HashSet<string> PropertyNames = ExplicitStyles.SelectMany(x => x.Setters).Select(x => x.Property).ToHashSet();
@@ -584,7 +586,7 @@ namespace MGUI.Core.UI.XAML
                     }
 
                     //  Apply the values of each setter
-                    foreach (Style Style in ExplicitStyles)
+                    foreach (var Style in ExplicitStyles)
                     {
                         foreach (Setter Setter in Style.Setters)
                         {
@@ -611,28 +613,23 @@ namespace MGUI.Core.UI.XAML
             }
 
             //  Remove current style setters from indexed data
-            foreach (Style Style in Styles.Where(x => x.Setters.Any()))
+            foreach (string StyleName in AddedNamedStyles)
             {
-                if (Style.Name != null)
+                StylesByName.Remove(StyleName);
+            }
+
+            foreach (var Item in AddedImplicitSetters)
+            {
+                if (StylesByType.TryGetValue(Item.Type, out ValuesByProperty))
                 {
-                    StylesByName.Remove(Style.Name);
-                }
-                else
-                {
-                    MGElementType Type = Style.TargetType;
-                    if (StylesByType.TryGetValue(Type, out ValuesByProperty))
+                    if (ValuesByProperty.TryGetValue(Item.Property, out List<object> Values))
                     {
-                        foreach (Setter Setter in Style.Setters)
+                        if (Values.Remove(Item.Value) && Values.Count == 0)
                         {
-                            string Property = Setter.Property;
-                            if (ValuesByProperty.TryGetValue(Property, out List<object> Values))
+                            ValuesByProperty.Remove(Item.Property);
+                            if (ValuesByProperty.Count == 0)
                             {
-                                if (Values.Remove(Setter.Value) && Values.Count == 0)
-                                {
-                                    ValuesByProperty.Remove(Property);
-                                    if (ValuesByProperty.Count == 0)
-                                        StylesByType.Remove(Type);
-                                }
+                                StylesByType.Remove(Item.Type);
                             }
                         }
                     }
