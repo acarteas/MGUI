@@ -1,13 +1,23 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using System.Runtime.ExceptionServices;
 using MGUI.Core.UI;
 using MGUI.Core.UI.XAML;
+#if UseWPF
+using System.Xaml;
+#else
+using Portable.Xaml;
+#endif
 
 namespace MGUI.Tests.XAML;
 
 public class StyleDictionaryTests
 {
+    private static readonly MethodInfo ProcessStylesMethod = typeof(Element)
+        .GetMethod("ProcessStyles", BindingFlags.Instance | BindingFlags.NonPublic, null, new[] { typeof(MGResources) }, null)!;
+
     [Fact]
     public void XAMLParser_LoadStyleDictionary_ParsesNamedStylesAndPreservesBasedOn()
     {
@@ -142,7 +152,7 @@ public class StyleDictionaryTests
     [Fact]
     public void StyleResolver_ResolveSetters_AppliesBaseSettersBeforeDerivedSetters()
     {
-        Dictionary<string, Style> stylesByName = new()
+        Dictionary<string, Style> sourceStyles = new()
         {
             ["BaseButton"] = new Style()
             {
@@ -165,8 +175,9 @@ public class StyleDictionaryTests
                 }
             }
         };
+        NamedStyleScopeCollection stylesByName = CreateStyleScopes(sourceStyles);
 
-        IReadOnlyList<Setter> setters = StyleResolver.ResolveSetters("HotkeyButton", stylesByName["HotkeyButton"], stylesByName);
+        IReadOnlyList<Setter> setters = StyleResolver.ResolveSetters("HotkeyButton", sourceStyles["HotkeyButton"], stylesByName);
 
         Assert.Equal(new[] { "Opacity", "HorizontalAlignment", "HorizontalAlignment" }, setters.Select(x => x.Property).ToArray());
         Assert.Equal("0.5", setters[0].Value);
@@ -177,13 +188,14 @@ public class StyleDictionaryTests
     [Fact]
     public void StyleResolver_ResolveSetters_ThrowsOnTargetTypeMismatch()
     {
-        Dictionary<string, Style> stylesByName = new()
+        Dictionary<string, Style> sourceStyles = new()
         {
             ["BaseButton"] = new Style() { Name = "BaseButton", TargetType = MGElementType.Button },
             ["ButtonText"] = new Style() { Name = "ButtonText", TargetType = MGElementType.TextBlock, BasedOn = "BaseButton" }
         };
+        NamedStyleScopeCollection stylesByName = CreateStyleScopes(sourceStyles);
 
-        InvalidOperationException ex = Assert.Throws<InvalidOperationException>(() => StyleResolver.ResolveSetters("ButtonText", stylesByName["ButtonText"], stylesByName));
+        InvalidOperationException ex = Assert.Throws<InvalidOperationException>(() => StyleResolver.ResolveSetters("ButtonText", sourceStyles["ButtonText"], stylesByName));
 
         Assert.Contains("targets", ex.Message);
     }
@@ -191,7 +203,7 @@ public class StyleDictionaryTests
     [Fact]
     public void StyleResolver_ResolveSetters_AllowsLocalNamedStylesToDeriveFromGlobalNamedStyles()
     {
-        Dictionary<string, Style> stylesByName = new()
+        Dictionary<string, Style> sourceStyles = new()
         {
             ["ActionButton"] = new Style()
             {
@@ -213,8 +225,9 @@ public class StyleDictionaryTests
                 }
             }
         };
+        NamedStyleScopeCollection stylesByName = CreateStyleScopes(sourceStyles);
 
-        IReadOnlyList<Setter> setters = StyleResolver.ResolveSetters("HotkeyButton", stylesByName["HotkeyButton"], stylesByName);
+        IReadOnlyList<Setter> setters = StyleResolver.ResolveSetters("HotkeyButton", sourceStyles["HotkeyButton"], stylesByName);
 
         Assert.Equal(2, setters.Count);
         Assert.Equal("Opacity", setters[0].Property);
@@ -224,16 +237,216 @@ public class StyleDictionaryTests
     [Fact]
     public void StyleResolver_ResolveExplicitStyles_PreservesStyleNamesOrdering()
     {
-        Dictionary<string, Style> stylesByName = new()
+        NamedStyleScopeCollection stylesByName = CreateStyleScopes(new Dictionary<string, Style>
         {
             ["First"] = new Style() { Name = "First", TargetType = MGElementType.Button, Setters = { new Setter() { Property = "Opacity", Value = "0.25" } } },
             ["Second"] = new Style() { Name = "Second", TargetType = MGElementType.Button, Setters = { new Setter() { Property = "HorizontalAlignment", Value = "Center" } } }
-        };
+        });
 
         IReadOnlyList<ResolvedStyle> styles = StyleResolver.ResolveExplicitStyles("Second,First", MGElementType.Button, stylesByName);
 
         Assert.Equal(new[] { "Second", "First" }, styles.Select(x => x.Name).ToArray());
     }
 
+    [Fact]
+    public void WindowResources_ParsesNamedAndImplicitStyles()
+    {
+        string xaml = """
+            <Window xmlns="clr-namespace:MGUI.Core.UI.XAML;assembly=MGUI.Core">
+                <Window.Resources>
+                    <ResourceDictionary>
+                        <Style Name="HeaderText" TargetType="TextBlock">
+                            <Setter Property="MinWidth" Value="40" />
+                        </Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="MaxWidth" Value="80" />
+                        </Style>
+                    </ResourceDictionary>
+                </Window.Resources>
+            </Window>
+            """;
+
+        Window parsed = (Window)XamlServices.Parse(xaml);
+
+        Assert.Equal(2, parsed.Resources.Styles.Count);
+        Assert.Equal("HeaderText", parsed.Resources.Styles[0].Name);
+        Assert.Null(parsed.Resources.Styles[1].Name);
+    }
+
+    [Fact]
+    public void ProcessStyles_WindowResources_ImplicitStyleAppliesToDescendants()
+    {
+        StackPanel root = new()
+        {
+            Resources = new()
+            {
+                Styles =
+                {
+                    new Style()
+                    {
+                        TargetType = MGElementType.TextBlock,
+                        Setters = { new Setter() { Property = nameof(Element.MinWidth), Value = "20" } }
+                    }
+                }
+            },
+            Children = { new TextBlock() }
+        };
+
+        ProcessStyles(root);
+
+        Assert.Equal(20, ((TextBlock)root.Children[0]).MinWidth);
+    }
+
+    [Fact]
+    public void ProcessStyles_NestedResources_ImplicitStylesOverrideOuterScope()
+    {
+        StackPanel childPanel = new()
+        {
+            Resources = new()
+            {
+                Styles =
+                {
+                    new Style()
+                    {
+                        TargetType = MGElementType.TextBlock,
+                        Setters = { new Setter() { Property = nameof(Element.MinWidth), Value = "30" } }
+                    }
+                }
+            },
+            Children = { new TextBlock() }
+        };
+        StackPanel root = new()
+        {
+            Resources = new()
+            {
+                Styles =
+                {
+                    new Style()
+                    {
+                        TargetType = MGElementType.TextBlock,
+                        Setters = { new Setter() { Property = nameof(Element.MinWidth), Value = "10" } }
+                    }
+                }
+            },
+            Children = { childPanel }
+        };
+
+        ProcessStyles(root);
+
+        Assert.Equal(30, ((TextBlock)childPanel.Children[0]).MinWidth);
+    }
+
+    [Fact]
+    public void ProcessStyles_NestedResources_NamedStylesShadowOuterScope()
+    {
+        TextBlock target = new() { StyleNames = "Header" };
+        StackPanel childPanel = new()
+        {
+            Resources = new()
+            {
+                Styles =
+                {
+                    new Style()
+                    {
+                        Name = "Header",
+                        TargetType = MGElementType.TextBlock,
+                        Setters = { new Setter() { Property = nameof(Element.MinWidth), Value = "30" } }
+                    }
+                }
+            },
+            Children = { target }
+        };
+        StackPanel root = new()
+        {
+            Resources = new()
+            {
+                Styles =
+                {
+                    new Style()
+                    {
+                        Name = "Header",
+                        TargetType = MGElementType.TextBlock,
+                        Setters = { new Setter() { Property = nameof(Element.MinWidth), Value = "10" } }
+                    }
+                }
+            },
+            Children = { childPanel }
+        };
+
+        ProcessStyles(root);
+
+        Assert.Equal(30, target.MinWidth);
+    }
+
+    [Fact]
+    public void ProcessStyles_LegacyStyles_ShadowSameNodeResources()
+    {
+        TextBlock target = new() { StyleNames = "Header" };
+        StackPanel root = new()
+        {
+            Resources = new()
+            {
+                Styles =
+                {
+                    new Style()
+                    {
+                        Name = "Header",
+                        TargetType = MGElementType.TextBlock,
+                        Setters = { new Setter() { Property = nameof(Element.MinWidth), Value = "10" } }
+                    }
+                }
+            },
+            Styles =
+            {
+                new Style()
+                {
+                    Name = "Header",
+                    TargetType = MGElementType.TextBlock,
+                    Setters = { new Setter() { Property = nameof(Element.MinWidth), Value = "30" } }
+                }
+            },
+            Children = { target }
+        };
+
+        ProcessStyles(root);
+
+        Assert.Equal(30, target.MinWidth);
+    }
+
+    [Fact]
+    public void ProcessStyles_ThrowsOnDuplicateNamedStylesWithinSingleResourceDictionary()
+    {
+        StackPanel root = new()
+        {
+            Resources = new()
+            {
+                Styles =
+                {
+                    new Style() { Name = "Header", TargetType = MGElementType.TextBlock },
+                    new Style() { Name = "Header", TargetType = MGElementType.TextBlock }
+                }
+            }
+        };
+
+        InvalidOperationException ex = Assert.Throws<InvalidOperationException>(() => ProcessStyles(root));
+
+        Assert.Contains("Header", ex.Message);
+    }
+
     private static MGResources CreateResources() => new(new MGTheme("TestFont"));
+
+    private static NamedStyleScopeCollection CreateStyleScopes(IReadOnlyDictionary<string, Style> styles)
+        => new(styles);
+
+    private static void ProcessStyles(Element element)
+    {
+        try
+        {
+            ProcessStylesMethod.Invoke(element, new object[] { CreateResources() });
+        }
+        catch (TargetInvocationException ex) when (ex.InnerException != null)
+        {
+            ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
+        }
+    }
 }

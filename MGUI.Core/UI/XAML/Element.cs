@@ -158,6 +158,8 @@ namespace MGUI.Core.UI.XAML
         [Category("Appearance")]
         public bool IsStyleable { get; set; } = true;
         [Category("Appearance")]
+        public ResourceDictionary Resources { get; set; } = new();
+        [Category("Appearance")]
         public List<Style> Styles { get; set; } = new();
         /// <summary>The names of the named <see cref="Style"/>s that should be applied to this <see cref="Element"/>.<br/>
         /// Use a comma to delimit multiple names, such as: "Style1,Style2<br/>
@@ -484,45 +486,20 @@ namespace MGUI.Core.UI.XAML
 
         protected internal void ProcessStyles(MGResources Resources)
         {
-            Dictionary<string, Style> StylesByName = Resources.Styles.ToDictionary(x => x.Key, x => x.Value);
+            NamedStyleScopeCollection StylesByName = new(Resources.Styles);
             ProcessStyles(StylesByName, new Dictionary<MGElementType, Dictionary<string, List<object>>>());
         }
 
-        private void ProcessStyles(Dictionary<string, Style> StylesByName, Dictionary<MGElementType, Dictionary<string, List<object>>> StylesByType)
+        private void ProcessStyles(NamedStyleScopeCollection StylesByName, Dictionary<MGElementType, Dictionary<string, List<object>>> StylesByType)
         {
             Dictionary<string, List<object>> ValuesByProperty;
-            List<string> AddedNamedStyles = new();
-            List<(MGElementType Type, string Property, object Value)> AddedImplicitSetters = new();
+            List<Style> AddedResourceNamedStyles = new();
+            List<(MGElementType Type, string Property, object Value)> AddedResourceImplicitSetters = new();
+            List<Style> AddedLegacyNamedStyles = new();
+            List<(MGElementType Type, string Property, object Value)> AddedLegacyImplicitSetters = new();
 
-            //  Append current style setters to indexed data
-            foreach (Style Style in Styles.Where(x => x.Name != null))
-            {
-                StylesByName.Add(Style.Name, Style);
-                AddedNamedStyles.Add(Style.Name);
-            }
-
-            foreach (Style Style in Styles.Where(x => x.Name == null && (x.Setters.Any() || !string.IsNullOrWhiteSpace(x.BasedOn))))
-            {
-                MGElementType Type = Style.TargetType;
-                if (!StylesByType.TryGetValue(Type, out ValuesByProperty))
-                {
-                    ValuesByProperty = new();
-                    StylesByType.Add(Type, ValuesByProperty);
-                }
-
-                foreach (Setter Setter in StyleResolver.ResolveSetters(Style, StylesByName))
-                {
-                    string Property = Setter.Property;
-                    if (!ValuesByProperty.TryGetValue(Property, out List<object> Values))
-                    {
-                        Values = new();
-                        ValuesByProperty.Add(Property, Values);
-                    }
-
-                    Values.Add(Setter.Value);
-                    AddedImplicitSetters.Add((Type, Property, Setter.Value));
-                }
-            }
+            AppendStyleScope(this.Resources?.Styles, $"{GetType().Name}.{nameof(Resources)}", StylesByName, StylesByType, AddedResourceNamedStyles, AddedResourceImplicitSetters);
+            AppendStyleScope(Styles, $"{GetType().Name}.{nameof(Styles)}", StylesByName, StylesByType, AddedLegacyNamedStyles, AddedLegacyImplicitSetters);
 
             //  Apply the appropriate style setters to this instance
             if (IsStyleable)
@@ -613,25 +590,65 @@ namespace MGUI.Core.UI.XAML
             }
 
             //  Remove current style setters from indexed data
-            foreach (string StyleName in AddedNamedStyles)
+            RemoveImplicitStyleSetters(AddedLegacyImplicitSetters, StylesByType);
+            StylesByName.PopScope(AddedLegacyNamedStyles);
+
+            RemoveImplicitStyleSetters(AddedResourceImplicitSetters, StylesByType);
+            StylesByName.PopScope(AddedResourceNamedStyles);
+        }
+
+        private static void AppendStyleScope(IEnumerable<Style> Styles, string ScopeName, NamedStyleScopeCollection StylesByName,
+            Dictionary<MGElementType, Dictionary<string, List<object>>> StylesByType, List<Style> AddedNamedStyles,
+            List<(MGElementType Type, string Property, object Value)> AddedImplicitSetters)
+        {
+            if (Styles == null)
             {
-                StylesByName.Remove(StyleName);
+                return;
             }
 
+            List<Style> LocalStyles = Styles.Where(x => x != null).ToList();
+            List<Style> NamedStyles = LocalStyles.Where(x => !string.IsNullOrWhiteSpace(x.Name)).ToList();
+            StylesByName.PushScope(NamedStyles, ScopeName);
+            AddedNamedStyles.AddRange(NamedStyles);
+
+            foreach (Style Style in LocalStyles.Where(x => string.IsNullOrWhiteSpace(x.Name) && (x.Setters.Any() || !string.IsNullOrWhiteSpace(x.BasedOn))))
+            {
+                MGElementType Type = Style.TargetType;
+                if (!StylesByType.TryGetValue(Type, out Dictionary<string, List<object>> ValuesByProperty))
+                {
+                    ValuesByProperty = new();
+                    StylesByType.Add(Type, ValuesByProperty);
+                }
+
+                foreach (Setter Setter in StyleResolver.ResolveSetters(Style, StylesByName))
+                {
+                    string Property = Setter.Property;
+                    if (!ValuesByProperty.TryGetValue(Property, out List<object> Values))
+                    {
+                        Values = new();
+                        ValuesByProperty.Add(Property, Values);
+                    }
+
+                    Values.Add(Setter.Value);
+                    AddedImplicitSetters.Add((Type, Property, Setter.Value));
+                }
+            }
+        }
+
+        private static void RemoveImplicitStyleSetters(List<(MGElementType Type, string Property, object Value)> AddedImplicitSetters,
+            Dictionary<MGElementType, Dictionary<string, List<object>>> StylesByType)
+        {
             foreach (var Item in AddedImplicitSetters)
             {
-                if (StylesByType.TryGetValue(Item.Type, out ValuesByProperty))
+                if (StylesByType.TryGetValue(Item.Type, out Dictionary<string, List<object>> ValuesByProperty)
+                    && ValuesByProperty.TryGetValue(Item.Property, out List<object> Values)
+                    && Values.Remove(Item.Value)
+                    && Values.Count == 0)
                 {
-                    if (ValuesByProperty.TryGetValue(Item.Property, out List<object> Values))
+                    ValuesByProperty.Remove(Item.Property);
+                    if (ValuesByProperty.Count == 0)
                     {
-                        if (Values.Remove(Item.Value) && Values.Count == 0)
-                        {
-                            ValuesByProperty.Remove(Item.Property);
-                            if (ValuesByProperty.Count == 0)
-                            {
-                                StylesByType.Remove(Item.Type);
-                            }
-                        }
+                        StylesByType.Remove(Item.Type);
                     }
                 }
             }

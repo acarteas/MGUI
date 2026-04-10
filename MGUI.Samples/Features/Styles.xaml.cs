@@ -27,6 +27,17 @@ namespace MGUI.Samples.Features
     var shared = XAMLParser.LoadStyleDictionary(File.ReadAllText(""Features/SharedStyles.xaml""));
     desktop.Resources.AddStyles(shared); -->
 
+    <StackPanel.Resources>
+        <ResourceDictionary>
+            <Style Name=""ResourceHeader"" TargetType=""TextBlock"" BasedOn=""SharedHeader"">
+                <Setter Property=""Foreground"" Value=""#b7d4ff"" />
+            </Style>
+            <Style TargetType=""TextBlock"">
+                <Setter Property=""MaxWidth"" Value=""280"" />
+            </Style>
+        </ResourceDictionary>
+    </StackPanel.Resources>
+
     <StackPanel.Styles>
         <!-- This is an implicit style. Since it doesn't have a Name, it will affect ALL child TextBlocks 
         (unless the TextBlock explicitly opts out of styling by setting IsStyleable=""false"") -->
@@ -38,6 +49,8 @@ namespace MGUI.Samples.Features
         </Style>
     </StackPanel.Styles>
 
+    <TextBlock StyleNames=""ResourceHeader"" Text=""This header comes from StackPanel.Resources"" />
+
     <!-- This textblock ignores all styles because IsStyleable=""false"" -->
     <!-- Its HorizontalAlignment remains at the default value of ""Stretch"" -->
     <TextBlock Background=""RGB(40,40,40)"" Text=""One"" IsStyleable=""False"" />
@@ -47,6 +60,17 @@ namespace MGUI.Samples.Features
     <Button StyleNames=""DemoButton"" Content=""Shared + BasedOn button"" />
 
     <StackPanel Orientation=""Vertical"">
+        <StackPanel.Resources>
+            <ResourceDictionary>
+                <Style Name=""ResourceHeader"" TargetType=""TextBlock"" BasedOn=""SharedHeader"">
+                    <Setter Property=""Foreground"" Value=""#ffb0b0"" />
+                </Style>
+                <Style TargetType=""TextBlock"">
+                    <Setter Property=""HorizontalAlignment"" Value=""Left"" />
+                </Style>
+            </ResourceDictionary>
+        </StackPanel.Resources>
+
         <!-- These styles have an explicit name. They will only affect TextBlocks where StyleNames contains the name -->
         <StackPanel.Styles>
             <Style TargetType=""TextBlock"" Name=""Explicit1"" BasedOn=""SharedHeader"">
@@ -59,6 +83,7 @@ namespace MGUI.Samples.Features
 
         <!-- This TextBlock is affected by the implicit style and the ""Explicit1"" style, in that order. -->
         <!-- So HorizontalAlignment=""Right"" is applied first, then HorizontalAlignment=""Center"" and Foreground=""Red"" are applied -->
+        <TextBlock Background=""RGB(40,40,40)"" Text=""Resource scoped header"" StyleNames=""ResourceHeader"" />
         <TextBlock Background=""RGB(40,40,40)"" Text=""Three"" StyleNames=""Explicit1"" />
 
         <!-- This TextBlock uses a comma delimiter to specify multiple explicit style names that are applied to it. -->

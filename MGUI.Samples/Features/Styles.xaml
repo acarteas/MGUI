@@ -19,10 +19,20 @@
             <Setter Property="Background" Value="White * 0.1" />
         </Style>
     </Window.Styles>
+    <Window.Resources>
+        <ResourceDictionary>
+            <Style Name="ResourceHeader" TargetType="TextBlock" BasedOn="Header1">
+                <Setter Property="Foreground" Value="#b7d4ff" />
+            </Style>
+            <Style TargetType="TextBlock">
+                <Setter Property="MaxWidth" Value="280" />
+            </Style>
+        </ResourceDictionary>
+    </Window.Resources>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" Background="rgb(64,64,64)" Padding="6,3">
         <StackPanel Orientation="Vertical" Spacing="10">
-            <TextBlock StyleNames="Header1" Text="Styles:" HorizontalAlignment="Center" />
+            <TextBlock StyleNames="ResourceHeader" Text="Styles:" HorizontalAlignment="Center" />
             <Separator/>
             <TextBlock FontSize="10">
                 [b]Styles[/b] are a XAML feature that allows you to manage property values of several controls simultaneously. 
@@ -41,6 +51,10 @@
                 This sample also loads a shared [c=Turquoise][i]ResourceDictionary[/i][/c] once at app startup, registers it into [c=Turquoise][i]Desktop.Resources.Styles[/i][/c],
                 and then derives local styles from those shared names via [c=Turquoise][i]BasedOn[/i][/c].
             </TextBlock>
+            <TextBlock FontSize="10">
+                You can now also use [c=Turquoise][i]Window.Resources[/i][/c] and [c=Turquoise][i]Element.Resources[/i][/c] to define styles for an entire subtree,
+                including implicit type styles and named styles that shadow outer scopes.
+            </TextBlock>
 
             <Expander IsExpanded="True">
                 <Expander.Header>
@@ -56,8 +70,19 @@
                     <TextBlock StyleNames="Header1" Text="Result" />
                 </Expander.Header>
                 <StackPanel Orientation="Vertical" Spacing="4" Margin="20,0,0,0" Padding="6" Background="rgb(16,16,64)" MaxWidth="280" HorizontalAlignment="Left">
+                    <StackPanel.Resources>
+                        <ResourceDictionary>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="HorizontalAlignment" Value="Left" />
+                            </Style>
+                            <Style Name="ResourceHeader" TargetType="TextBlock" BasedOn="Header1">
+                                <Setter Property="Foreground" Value="#ffb0b0" />
+                            </Style>
+                        </ResourceDictionary>
+                    </StackPanel.Resources>
                     <TextBlock FontSize="10" Text="Pay close attention to the Foreground colors and HorizontalAlignments of the TextBlocks:" />
                     <Button StyleNames="DemoButton" Content="Shared + BasedOn button" />
+                    <TextBlock StyleNames="ResourceHeader" Text="This header comes from nested StackPanel.Resources" />
                     <StackPanel Orientation="Vertical" Spacing="5">
                         <StackPanel.Styles>
                             <Style TargetType="TextBlock">

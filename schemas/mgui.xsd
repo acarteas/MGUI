@@ -1405,6 +1405,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="Element.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="Element.SelectedBackground">
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
@@ -2212,6 +2221,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="ChatBox.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="ChatBox.SelectedBackground">
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
@@ -2938,6 +2956,15 @@
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
             <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="ContextualContentPresenter.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
           </xs:choice>
           <xs:anyAttribute namespace="##other" processContents="lax" />
@@ -3892,6 +3919,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="GridColorPicker.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="GridColorPicker.SelectedBackground">
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
@@ -4423,6 +4459,15 @@
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
             <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="GridSplitter.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
           </xs:choice>
           <xs:anyAttribute namespace="##other" processContents="lax" />
@@ -5106,6 +5151,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="Image.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="Image.SelectedBackground">
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
@@ -5628,6 +5682,15 @@
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
             <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="MultiContentHost.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
           </xs:choice>
           <xs:anyAttribute namespace="##other" processContents="lax" />
@@ -6359,6 +6422,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="ProgressBar.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="ProgressBar.SelectedBackground">
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
@@ -6818,6 +6890,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="RatingControl.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="RatingControl.SelectedBackground">
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
@@ -7270,6 +7351,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="Rectangle.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="Rectangle.SelectedBackground">
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
@@ -7690,6 +7780,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="ResizeGrip.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="ResizeGrip.SelectedBackground">
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
@@ -8087,6 +8186,15 @@
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
             <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="Separator.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
           </xs:choice>
           <xs:anyAttribute namespace="##other" processContents="lax" />
@@ -8609,6 +8717,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="SingleContentHost.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="SingleContentHost.SelectedBackground">
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
@@ -9061,6 +9178,15 @@
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
             <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="Slider.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
           </xs:choice>
           <xs:anyAttribute namespace="##other" processContents="lax" />
@@ -9677,6 +9803,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="Spacer.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="Spacer.SelectedBackground">
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
@@ -10103,6 +10238,15 @@
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
             <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="Stopwatch.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
           </xs:choice>
           <xs:anyAttribute namespace="##other" processContents="lax" />
@@ -10583,6 +10727,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="TabControl.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="TabControl.SelectedBackground">
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
@@ -11021,6 +11174,15 @@
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
             <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="TextBlock.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
           </xs:choice>
           <xs:anyAttribute namespace="##other" processContents="lax" />
@@ -11533,6 +11695,15 @@
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="TextBox.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
           </xs:choice>
           <xs:anyAttribute namespace="##other" processContents="lax" />
@@ -12260,6 +12431,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="Timer.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="Timer.SelectedBackground">
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
@@ -12803,6 +12983,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="XAMLDesigner.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="XAMLDesigner.SelectedBackground">
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
@@ -13336,6 +13525,15 @@
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
             <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="Border.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
           </xs:choice>
           <xs:anyAttribute namespace="##other" processContents="lax" />
@@ -13886,6 +14084,15 @@
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
             <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="Button.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
           </xs:choice>
           <xs:anyAttribute namespace="##other" processContents="lax" />
@@ -14445,6 +14652,15 @@
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
             <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="CheckBox.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
           </xs:choice>
           <xs:anyAttribute namespace="##other" processContents="lax" />
@@ -15163,6 +15379,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="ComboBox.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="ComboBox.SelectedBackground">
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
@@ -15702,6 +15927,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="ContentPresenter.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="ContentPresenter.SelectedBackground">
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
@@ -16218,6 +16452,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="ContextMenuItem.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="ContextMenuItem.SelectedBackground">
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
@@ -16729,6 +16972,15 @@
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
             <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="DockPanel.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
           </xs:choice>
           <xs:anyAttribute namespace="##other" processContents="lax" />
@@ -17396,6 +17648,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="Expander.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="Expander.SelectedBackground">
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
@@ -17948,6 +18209,15 @@
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
             <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="Grid.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
           </xs:choice>
           <xs:anyAttribute namespace="##other" processContents="lax" />
@@ -18648,6 +18918,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="GroupBox.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="GroupBox.SelectedBackground">
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
@@ -19235,6 +19514,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="HeaderedContentPresenter.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="HeaderedContentPresenter.SelectedBackground">
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
@@ -19749,6 +20037,15 @@
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
             <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="InputConsumer.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
           </xs:choice>
           <xs:anyAttribute namespace="##other" processContents="lax" />
@@ -20442,6 +20739,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="ListBox.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="ListBox.ScrollViewer">
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
@@ -21030,6 +21336,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="ListView.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="ListView.ScrollViewer">
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
@@ -21533,6 +21848,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="MenuBar.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="MenuBar.SelectedBackground">
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
@@ -22008,6 +22332,15 @@
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
             <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="MenuBarItem.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
           </xs:choice>
           <xs:anyAttribute namespace="##other" processContents="lax" />
@@ -22581,6 +22914,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="Overlay.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="Overlay.SelectedBackground">
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
@@ -23129,6 +23471,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="OverlayHost.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="OverlayHost.SelectedBackground">
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
@@ -23647,6 +23998,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="OverlayPanel.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="OverlayPanel.SelectedBackground">
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
@@ -24118,6 +24478,15 @@
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
             <xs:element ref="mgui:ResizeGrip" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="PasswordBox.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
           </xs:choice>
           <xs:anyAttribute namespace="##other" processContents="lax" />
@@ -24795,6 +25164,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="ProgressButton.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="ProgressButton.SelectedBackground">
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
@@ -25378,6 +25756,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="RadioButton.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="RadioButton.SelectedBackground">
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
@@ -25900,6 +26287,15 @@
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
             <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="ScrollViewer.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
           </xs:choice>
           <xs:anyAttribute namespace="##other" processContents="lax" />
@@ -26506,6 +26902,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="Spoiler.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="Spoiler.SelectedBackground">
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
@@ -27101,6 +27506,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="StackPanel.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="StackPanel.SelectedBackground">
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
@@ -27683,6 +28097,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="TabItem.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="TabItem.SelectedBackground">
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
@@ -28259,6 +28682,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="ToggleButton.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="ToggleButton.SelectedBackground">
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
@@ -28799,6 +29231,15 @@
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
             <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="TreeView.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
           </xs:choice>
           <xs:anyAttribute namespace="##other" processContents="lax" />
@@ -29345,6 +29786,15 @@
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
             <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="TreeViewItem.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
           </xs:choice>
           <xs:anyAttribute namespace="##other" processContents="lax" />
@@ -29905,6 +30355,15 @@
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
             <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="UniformGrid.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
           </xs:choice>
           <xs:anyAttribute namespace="##other" processContents="lax" />
@@ -30567,6 +31026,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="Window.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="Window.SelectedBackground">
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
@@ -31175,6 +31643,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="ContextMenu.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="ContextMenu.ScrollViewer">
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
@@ -31744,6 +32221,15 @@
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
             <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="ContextMenuSeparator.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
           </xs:choice>
           <xs:anyAttribute namespace="##other" processContents="lax" />
@@ -32356,6 +32842,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="ToolTip.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="ToolTip.SelectedBackground">
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
@@ -32915,6 +33410,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="WrappedContextMenuItem.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="WrappedContextMenuItem.SelectedBackground">
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
@@ -33450,6 +33954,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="ContextMenuButton.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="ContextMenuButton.SelectedBackground">
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
@@ -33974,6 +34487,15 @@
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
             <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="ContextMenuRadioButton.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
           </xs:choice>
           <xs:anyAttribute namespace="##other" processContents="lax" />
@@ -34504,6 +35026,15 @@
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
             <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="ContextMenuToggle.Resources">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:ResourceDictionary" />
             <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
           </xs:choice>
           <xs:anyAttribute namespace="##other" processContents="lax" />
