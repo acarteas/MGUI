@@ -1226,7 +1226,8 @@ namespace MGUI.Core.UI.Containers.Grids
 
             //  Account for content alignment
             int ConsumedWidth = HorizontalContentAlignment == HorizontalAlignment.Stretch ? AvailableSize.Width : Math.Min(AvailableSize.Width, TotalContentSize.Width);
-            Size ConsumedContentSize = new(ConsumedWidth, TotalContentSize.Height);
+            int ConsumedHeight = VerticalContentAlignment == VerticalAlignment.Stretch ? AvailableSize.Height : Math.Min(AvailableSize.Height, TotalContentSize.Height);
+            Size ConsumedContentSize = new(ConsumedWidth, ConsumedHeight);
             Rectangle AlignedBounds = ApplyAlignment(Bounds, HorizontalContentAlignment, VerticalContentAlignment, ConsumedContentSize);
 
             int CurrentX = AlignedBounds.Left;

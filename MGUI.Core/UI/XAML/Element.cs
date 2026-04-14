@@ -20,6 +20,8 @@ namespace MGUI.Core.UI.XAML
         public abstract MGElementType ElementType { get; }
 
         public string Name { get; set; }
+        public NameScopeMode NameScopeMode { get; set; } = NameScopeMode.Inherit;
+        public string NameScopeLabel { get; set; }
 
         [Category("Layout")]
         public Thickness? Margin { get; set; }
@@ -202,6 +204,8 @@ namespace MGUI.Core.UI.XAML
 
                 if (Name != null)
                     Element.Name = Name;
+                Element.NameScopeMode = NameScopeMode;
+                Element.NameScopeLabel = NameScopeLabel;
 
                 if (Margin.HasValue)
                     Element.Margin = Margin.Value.ToThickness();

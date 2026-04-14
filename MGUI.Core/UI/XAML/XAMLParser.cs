@@ -24,6 +24,12 @@ using Portable.Xaml.Markup;
 
 namespace MGUI.Core.UI.XAML
 {
+    public sealed class XAMLLoadOptions
+    {
+        public NameScopeMode RootNameScopeMode { get; init; } = NameScopeMode.Inherit;
+        public string RootNameScopeLabel { get; init; }
+    }
+
     public class XAMLParser
     {
         private const string XMLNameSpaceBaseUri = @"http://schemas.microsoft.com/winfx/2006/xaml/presentation";
@@ -228,11 +234,31 @@ namespace MGUI.Core.UI.XAML
         /// See also: <see href="https://stackoverflow.com/a/183435/11689514"/></param>
         public static T Load<T>(MGWindow Window, string XAMLString, bool SanitizeXAMLString = false, bool ReplaceLinebreakLiterals = true)
             where T : MGElement
+            => Load<T>(Window, XAMLString, null, SanitizeXAMLString, ReplaceLinebreakLiterals);
+
+        /// <param name="LoadOptions">Optional configuration applied to the loaded subtree root before child content and bindings are processed.</param>
+        /// <param name="SanitizeXAMLString">If true, the given <paramref name="XAMLString"/> will be pre-processed via the following logic:<para/>
+        /// 1. Trim leading and trailing whitespace<br/>
+        /// 2. Insert required XML namespaces (such as "xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation")<br/>
+        /// 3. Replace type names with their fully-qualified names, such as "Button" -> "MGUI:Button" where the "MGUI" namespace prefix points to the URI defined by <see cref="XMLLocalNameSpaceUri"/><para/>
+        /// If your XAML already contains fully-qualified types, you probably should set this to false.</param>
+        /// <param name="ReplaceLinebreakLiterals">If true, the literal string @"\n" will be replaced with "&#38;#x0a;", which is the XAML encoding of the linebreak character '\n'.<br/>
+        /// If false, setting the text of an <see cref="MGTextBlock"/> requires encoding the '\n' character as "&#38;#x0a;"<para/>
+        /// See also: <see href="https://stackoverflow.com/a/183435/11689514"/></param>
+        public static T Load<T>(MGWindow Window, string XAMLString, XAMLLoadOptions LoadOptions, bool SanitizeXAMLString = false, bool ReplaceLinebreakLiterals = true)
+            where T : MGElement
         {
             XAMLString = PrepareXAMLString(XAMLString, SanitizeXAMLString, ReplaceLinebreakLiterals);
             Element Parsed = (Element)XamlServices.Parse(XAMLString);
             Parsed.ProcessStyles(Window.GetResources());
-            return Parsed.ToElement<T>(Window, null);
+            return Parsed.ToElement<T>(Window, null, Element =>
+            {
+                if (LoadOptions != null)
+                {
+                    Element.NameScopeMode = LoadOptions.RootNameScopeMode;
+                    Element.NameScopeLabel = LoadOptions.RootNameScopeLabel;
+                }
+            });
         }
 
         /// <param name="SanitizeXAMLString">If true, the given <paramref name="XAMLString"/> will be pre-processed via the following logic:<para/>

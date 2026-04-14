@@ -187,7 +187,8 @@ namespace MGUI.Core.UI
         /// <summary>Prioritizes <see cref="MGWindow.Theme"/>. If null, falls back to <see cref="MGDesktop.Theme"/></summary>
         public MGTheme GetTheme() => SelfOrParentWindow.Theme ?? GetDesktop().Theme;
         public MGResources GetResources() => GetDesktop().Resources;
-        public bool TryGetElementByName(string Name, out MGElement NamedElement) => SelfOrParentWindow.TryGetElementByName(Name, out NamedElement);
+        public bool TryGetElementByName(string Name, out MGElement NamedElement)
+            => SelfOrParentWindow.TryResolveElementByName(this, Name, out NamedElement);
 
         /// <summary>
         /// Optional per-element <see cref="ITextEngine"/> override.
@@ -315,9 +316,42 @@ namespace MGUI.Core.UI
 			Components.Add(Component);
 		}
 
+        internal MGNameScope ActiveNameScope { get; set; }
+        internal MGNameScope OwnedNameScope { get; set; }
+
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private NameScopeMode _NameScopeMode;
+        public NameScopeMode NameScopeMode
+        {
+            get => _NameScopeMode;
+            set
+            {
+                if (_NameScopeMode != value)
+                {
+                    _NameScopeMode = value;
+                    NPC(nameof(NameScopeMode));
+                }
+            }
+        }
+
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private string _NameScopeLabel;
+        public string NameScopeLabel
+        {
+            get => _NameScopeLabel;
+            set
+            {
+                if (_NameScopeLabel != value)
+                {
+                    _NameScopeLabel = value;
+                    NPC(nameof(NameScopeLabel));
+                }
+            }
+        }
+
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private string _Name;
-		/// <summary>Optional - can be null. If not null, the <see cref="SelfOrParentWindow"/> will index all child elements by their <see cref="Name"/>, so <see cref="Name"/>s must be unique.</summary>
+		/// <summary>Optional - can be null. If not null, the active name scope indexes this element by <see cref="Name"/>, so names must be unique within that scope.</summary>
 		public string Name
 		{
 			get => _Name;
@@ -1187,6 +1221,8 @@ namespace MGUI.Core.UI
 				UniqueId = Guid.NewGuid().ToString();
                 this.ParentWindow = ParentWindow;
                 this.ElementType = ElementType;
+                NameScopeMode = NameScopeMode.Inherit;
+                NameScopeLabel = null;
 
                 SelfOrParentWindow.WindowDataContextChanged += (sender, e) =>
                 {

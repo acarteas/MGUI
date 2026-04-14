@@ -934,7 +934,10 @@ namespace MGUI.Core.UI
                     }
                 };
 
-                ElementsByName = new();
+                ElementsByName = new(StringComparer.Ordinal);
+                RootNameScope = new(this, null, this, $"{GetType().Name}.Root");
+                ActiveNameScope = RootNameScope;
+                OwnedNameScope = RootNameScope;
                 OnDirectOrNestedContentAdded += Element_Added;
                 OnDirectOrNestedContentRemoved += Element_Removed;
 
@@ -1172,12 +1175,38 @@ namespace MGUI.Core.UI
 #endregion Drag Window Position
 
 #region Indexed Elements
-        private Dictionary<string, MGElement> ElementsByName { get; }
+        private Dictionary<string, List<MGElement>> ElementsByName { get; }
+        private MGNameScope RootNameScope { get; }
 
-        public MGElement GetElementByName(string Name) => ElementsByName[Name];
-        public T GetElementByName<T>(string Name) where T : MGElement => ElementsByName[Name] as T;
+        public MGElement GetElementByName(string Name)
+        {
+            if (TryGetElementByName(Name, out MGElement Element))
+            {
+                return Element;
+            }
 
-        public new bool TryGetElementByName(string Name, out MGElement Element) => ElementsByName.TryGetValue(Name, out Element);
+            throw new KeyNotFoundException($"No unambiguous element named '{Name}' exists in this window.");
+        }
+
+        public T GetElementByName<T>(string Name) where T : MGElement => GetElementByName(Name) as T;
+
+        public new bool TryGetElementByName(string Name, out MGElement Element)
+        {
+            if (ElementsByName.TryGetValue(Name, out List<MGElement> Matches))
+            {
+                if (Matches.Count == 1)
+                {
+                    Element = Matches[0];
+                    return true;
+                }
+
+                throw CreateAmbiguousGlobalNameException(Name, Matches);
+            }
+
+            Element = default;
+            return false;
+        }
+
         public bool TryGetElementByName<T>(string Name, out T Element) where T : MGElement
         {
             if (TryGetElementByName(Name, out MGElement Result))
@@ -1192,27 +1221,65 @@ namespace MGUI.Core.UI
             }
         }
 
+        internal bool TryResolveElementByName(MGElement Requester, string Name, out MGElement Element)
+        {
+            if (Requester?.ActiveNameScope != null)
+            {
+                MGNameScope CurrentScope = Requester.ActiveNameScope;
+                while (CurrentScope != null)
+                {
+                    if (CurrentScope.TryGetElement(Name, out Element))
+                    {
+                        return true;
+                    }
+
+                    CurrentScope = CurrentScope.ParentScope;
+                }
+            }
+
+            bool FoundLegacyElement = TryGetUnambiguousLegacyElementByName(Name, out Element);
+
+#if DEBUG
+            if (FoundLegacyElement && Requester?.ActiveNameScope != null)
+            {
+                Debug.WriteLine(
+                    $"{nameof(MGWindow)} legacy ElementName fallback used for '{Name}' from {DescribeElement(Requester)} in window '{GetType().Name}'."
+                );
+            }
+#endif
+
+            return FoundLegacyElement;
+        }
+
+        private bool TryGetUnambiguousLegacyElementByName(string Name, out MGElement Element)
+        {
+            if (ElementsByName.TryGetValue(Name, out List<MGElement> Matches) && Matches.Count == 1)
+            {
+                Element = Matches[0];
+                return true;
+            }
+
+            Element = default;
+            return false;
+        }
+
         private void Element_Added(object sender, MGElement e)
         {
-            if (e.Name != null)
-                ElementsByName.Add(e.Name, e);
+            MGNameScope InheritedScope = ResolveInheritedNameScope(sender, e);
+            AssignNameScope(e, InheritedScope);
+            RegisterLegacyName(e);
+            RegisterScopedName(e);
 
             if (e.ToolTip != null)
             {
                 MGToolTip TT = e.ToolTip;
-                foreach (MGElement Element in TT.TraverseVisualTree(true, false, false, false, TreeTraversalMode.Preorder))
-                {
-                    Element_Added(TT, Element);
-                }
+                AttachNestedElement(e, TT);
             }
 
             if (e.ContextMenu != null)
             {
                 MGContextMenu CM = e.ContextMenu;
-                foreach (MGElement Element in CM.TraverseVisualTree(true, false, false, false, TreeTraversalMode.Preorder))
-                {
-                    Element_Added(CM, Element);
-                }
+                AttachNestedElement(e, CM);
             }
 
             e.ToolTipChanged += Element_ToolTipChanged;
@@ -1222,66 +1289,269 @@ namespace MGUI.Core.UI
 
         private void Element_Removed(object sender, MGElement e)
         {
-            if (e.Name != null)
-                ElementsByName.Remove(e.Name);
+            UnregisterLegacyName(e);
+            UnregisterScopedName(e);
 
             if (e.ToolTip != null)
             {
                 MGToolTip TT = e.ToolTip;
-                foreach (MGElement Element in TT.TraverseVisualTree(true, false, false, false, TreeTraversalMode.Preorder))
-                {
-                    Element_Removed(TT, Element);
-                }
+                DetachNestedElement(TT);
             }
 
             if (e.ContextMenu != null)
             {
                 MGContextMenu CM = e.ContextMenu;
-                foreach (MGElement Element in CM.TraverseVisualTree(true, false, false, false, TreeTraversalMode.Preorder))
-                {
-                    Element_Removed(CM, Element);
-                }
+                DetachNestedElement(CM);
             }
 
             e.ToolTipChanged -= Element_ToolTipChanged;
             e.ContextMenuChanged -= Element_ContextMenuChanged;
             e.OnNameChanged -= Element_NameChanged;
+
+            e.OwnedNameScope = null;
+            e.ActiveNameScope = null;
         }
 
         private void Element_NameChanged(object sender, EventArgs<string> e)
         {
+            if (sender is not MGElement Element)
+            {
+                return;
+            }
+
+            if (e.NewValue != null && Element.ActiveNameScope != null
+                && Element.ActiveNameScope.TryGetElement(e.NewValue, out MGElement ExistingScopedElement)
+                && !ReferenceEquals(ExistingScopedElement, Element))
+            {
+                throw CreateDuplicateNameException(e.NewValue, Element.ActiveNameScope, ExistingScopedElement, Element);
+            }
+
             if (e.PreviousValue != null)
-                ElementsByName.Remove(e.PreviousValue);
+            {
+                UnregisterLegacyName(Element, e.PreviousValue);
+                UnregisterScopedName(Element, e.PreviousValue);
+            }
+
             if (e.NewValue != null)
-                ElementsByName.Add(e.NewValue, sender as MGElement);
+            {
+                RegisterLegacyName(Element, e.NewValue);
+                RegisterScopedName(Element, e.NewValue);
+            }
         }
 
-        private void Element_ToolTipChanged(object sender, EventArgs<MGToolTip> e) => Element_NestedElementChanged(e.PreviousValue, e.NewValue);
-        private void Element_ContextMenuChanged(object sender, EventArgs<MGContextMenu> e) => Element_NestedElementChanged(e.PreviousValue, e.NewValue);
+        private void Element_ToolTipChanged(object sender, EventArgs<MGToolTip> e)
+            => Element_NestedElementChanged(sender as MGElement, e.PreviousValue, e.NewValue);
 
-        private void Element_NestedElementChanged(MGSingleContentHost Previous, MGSingleContentHost New)
+        private void Element_ContextMenuChanged(object sender, EventArgs<MGContextMenu> e)
+            => Element_NestedElementChanged(sender as MGElement, e.PreviousValue, e.NewValue);
+
+        private void Element_NestedElementChanged(MGElement Owner, MGSingleContentHost Previous, MGSingleContentHost New)
         {
             if (Previous != null)
             {
-                Previous.OnDirectOrNestedContentAdded -= Element_Added;
-                Previous.OnDirectOrNestedContentRemoved -= Element_Removed;
-
-                foreach (MGElement Element in Previous.TraverseVisualTree(true, false, false, false, TreeTraversalMode.Preorder))
-                {
-                    Element_Removed(Previous, Element);
-                }
+                DetachNestedElement(Previous);
             }
 
             if (New != null)
             {
-                New.OnDirectOrNestedContentAdded += Element_Added;
-                New.OnDirectOrNestedContentRemoved += Element_Removed;
+                AttachNestedElement(Owner, New);
+            }
+        }
 
-                foreach (MGElement Element in New.TraverseVisualTree(true, false, false, false, TreeTraversalMode.Preorder))
+        private void AttachNestedElement(MGElement Owner, MGSingleContentHost NestedRoot)
+        {
+            if (NestedRoot == null)
+            {
+                return;
+            }
+
+            NestedRoot.Metadata["InheritedNameScopeOwner"] = Owner;
+            NestedRoot.OnDirectOrNestedContentAdded += Element_Added;
+            NestedRoot.OnDirectOrNestedContentRemoved += Element_Removed;
+
+            foreach (MGElement Element in NestedRoot.TraverseVisualTree(true, false, false, false, TreeTraversalMode.Preorder))
+            {
+                Element_Added(NestedRoot, Element);
+            }
+        }
+
+        private void DetachNestedElement(MGSingleContentHost NestedRoot)
+        {
+            if (NestedRoot == null)
+            {
+                return;
+            }
+
+            NestedRoot.OnDirectOrNestedContentAdded -= Element_Added;
+            NestedRoot.OnDirectOrNestedContentRemoved -= Element_Removed;
+
+            foreach (MGElement Element in NestedRoot.TraverseVisualTree(true, false, false, false, TreeTraversalMode.Preorder))
+            {
+                Element_Removed(NestedRoot, Element);
+            }
+
+            NestedRoot.Metadata.Remove("InheritedNameScopeOwner");
+        }
+
+        private MGNameScope ResolveInheritedNameScope(object sender, MGElement Element)
+        {
+            if (Element == null)
+            {
+                return RootNameScope;
+            }
+
+            if (Element.Parent != null)
+            {
+                return Element.Parent.OwnedNameScope ?? Element.Parent.ActiveNameScope ?? RootNameScope;
+            }
+
+            if (sender is MGElement SenderElement)
+            {
+                if (SenderElement.Metadata.TryGetValue("InheritedNameScopeOwner", out object OwnerValue)
+                    && OwnerValue is MGElement OwnerElement)
                 {
-                    Element_Added(New, Element);
+                    return OwnerElement.OwnedNameScope ?? OwnerElement.ActiveNameScope ?? RootNameScope;
+                }
+
+                return SenderElement.OwnedNameScope ?? SenderElement.ActiveNameScope ?? RootNameScope;
+            }
+
+            return RootNameScope;
+        }
+
+        private void AssignNameScope(MGElement Element, MGNameScope InheritedScope)
+        {
+            MGNameScope ParentScope = InheritedScope ?? RootNameScope;
+            MGNameScope ActiveScope = ParentScope;
+            MGNameScope OwnedScope = null;
+
+            if (Element.NameScopeMode == NameScopeMode.Create)
+            {
+                OwnedScope = new(
+                    this,
+                    ParentScope,
+                    Element,
+                    Element.NameScopeLabel
+                );
+                ActiveScope = OwnedScope;
+            }
+
+            Element.ActiveNameScope = ActiveScope;
+            Element.OwnedNameScope = OwnedScope;
+        }
+
+        private void RegisterLegacyName(MGElement Element, string Name = null)
+        {
+            string ActualName = Name ?? Element?.Name;
+            if (Element == null || ActualName == null)
+            {
+                return;
+            }
+
+            if (!ElementsByName.TryGetValue(ActualName, out List<MGElement> Matches))
+            {
+                Matches = new();
+                ElementsByName.Add(ActualName, Matches);
+            }
+
+            if (!Matches.Contains(Element))
+            {
+                Matches.Add(Element);
+            }
+        }
+
+        private void UnregisterLegacyName(MGElement Element, string Name = null)
+        {
+            string ActualName = Name ?? Element?.Name;
+            if (ActualName != null && ElementsByName.TryGetValue(ActualName, out List<MGElement> Matches))
+            {
+                Matches.Remove(Element);
+                if (!Matches.Any())
+                {
+                    ElementsByName.Remove(ActualName);
                 }
             }
+        }
+
+        private void RegisterScopedName(MGElement Element, string Name = null)
+        {
+            string ActualName = Name ?? Element?.Name;
+            if (Element?.ActiveNameScope == null || ActualName == null)
+            {
+                return;
+            }
+
+            if (Element.ActiveNameScope.TryGetElement(ActualName, out MGElement ExistingElement))
+            {
+                throw CreateDuplicateNameException(ActualName, Element.ActiveNameScope, ExistingElement, Element);
+            }
+
+            Element.ActiveNameScope.Add(ActualName, Element);
+        }
+
+        private void UnregisterScopedName(MGElement Element, string Name = null)
+        {
+            string ActualName = Name ?? Element?.Name;
+            if (Element?.ActiveNameScope != null && ActualName != null)
+            {
+                Element.ActiveNameScope.Remove(ActualName);
+            }
+        }
+
+        private InvalidOperationException CreateDuplicateNameException(
+            string Name,
+            MGNameScope Scope,
+            MGElement ExistingElement,
+            MGElement IncomingElement
+        )
+        {
+            string Message =
+                $"Duplicate element name '{Name}' in name scope '{Scope?.Label ?? "<unknown>"}'. "
+                + $"Existing: {DescribeElement(ExistingElement)}. "
+                + $"Incoming: {DescribeElement(IncomingElement)}. "
+                + $"Scope owner chain: {DescribeScopeChain(Scope)}.";
+
+            return new InvalidOperationException(Message);
+        }
+
+        private static string DescribeScopeChain(MGNameScope Scope)
+        {
+            List<string> Segments = new();
+            MGNameScope Current = Scope;
+            while (Current != null)
+            {
+                Segments.Add(Current.Label);
+                Current = Current.ParentScope;
+            }
+
+            return string.Join(" <= ", Segments);
+        }
+
+        private static string DescribeElement(MGElement Element)
+        {
+            if (Element == null)
+            {
+                return "<null>";
+            }
+
+            List<string> Parents = new();
+            MGElement Current = Element;
+            while (Current != null)
+            {
+                Parents.Add(Current.Name ?? Current.ElementType.ToString());
+                Current = Current.Parent;
+            }
+
+            return $"{Element.GetType().Name}(Name={Element.Name ?? "<null>"}, ElementType={Element.ElementType}, Id={Element.UniqueId}, ParentChain={string.Join(" <- ", Parents)})";
+        }
+
+        private InvalidOperationException CreateAmbiguousGlobalNameException(string Name, IReadOnlyList<MGElement> Matches)
+        {
+            string Message =
+                $"Window-global lookup for '{Name}' is ambiguous because {Matches.Count} elements share that name across different scopes: "
+                + $"{string.Join("; ", Matches.Select(DescribeElement))}.";
+
+            return new InvalidOperationException(Message);
         }
 #endregion Indexed Elements
 

@@ -94,6 +94,12 @@ namespace MGUI.Core.UI
         UserControl,
     }
 
+    public enum NameScopeMode
+    {
+        Inherit = 0,
+        Create = 1
+    }
+
     /// <summary>Describes how a child element is vertically positioned or stretched within a parent's layout slot</summary>
     public enum VerticalAlignment
     {
