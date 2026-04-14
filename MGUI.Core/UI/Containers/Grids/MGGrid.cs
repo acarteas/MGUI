@@ -975,6 +975,8 @@ namespace MGUI.Core.UI.Containers.Grids
             bool IsPseudoInfiniteWidth = AvailableSize.Width >= 1000000;
             bool IsPseduoInfiniteHeight = AvailableSize.Height >= 1000000;
 
+            const double WeightComparisonTolerance = 0.000001;
+
             double TotalColumnWeight = Columns.Select(x => x.Length).Where(x => x.IsWeightedLength).Sum(x => x.Weight);
             double RemainingColumnWeight = TotalColumnWeight;
             double TotalRowWeight = Rows.Select(x => x.Length).Where(x => x.IsWeightedLength).Sum(x => x.Weight);
@@ -1051,11 +1053,19 @@ namespace MGUI.Core.UI.Containers.Grids
                     if (IsWeightedWidth && !IsMeasuring)
                     {
                         double ColumnWeight = Column.Length.Weight;
+                        double EffectiveRemainingColumnWeight = RemainingColumnWeight;
 #if DEBUG
-                        if (ColumnWeight > RemainingColumnWeight)
+                        if (ColumnWeight - RemainingColumnWeight > WeightComparisonTolerance)
+                        {
                             throw new InvalidOperationException("Column weight should not exceed remaining weight");
+                        }
 #endif
-                        ColumnWidth = Math.Clamp((int)Math.Round(RemainingColumnWidth * (ColumnWeight / RemainingColumnWeight), MidpointRounding.ToEven), Column.MinWidth ?? 0, Column.MaxWidth ?? int.MaxValue);
+                        if (ColumnWeight > EffectiveRemainingColumnWeight)
+                        {
+                            EffectiveRemainingColumnWeight = ColumnWeight;
+                        }
+
+                        ColumnWidth = Math.Clamp((int)Math.Round(RemainingColumnWidth * (ColumnWeight / EffectiveRemainingColumnWeight), MidpointRounding.ToEven), Column.MinWidth ?? 0, Column.MaxWidth ?? int.MaxValue);
                         RemainingColumnWeight -= ColumnWeight;
                     }
                     else
@@ -1066,7 +1076,13 @@ namespace MGUI.Core.UI.Containers.Grids
                         if (IsWeightedWidth)
                         {
                             double ColumnWeight = Column.Length.Weight;
-                            WeightedWidth = Math.Clamp((int)Math.Round(RemainingColumnWidth * (ColumnWeight / RemainingColumnWeight), MidpointRounding.ToEven), Column.MinWidth ?? 0, Column.MaxWidth ?? int.MaxValue);
+                            double EffectiveRemainingColumnWeight = RemainingColumnWeight;
+                            if (ColumnWeight > EffectiveRemainingColumnWeight)
+                            {
+                                EffectiveRemainingColumnWeight = ColumnWeight;
+                            }
+
+                            WeightedWidth = Math.Clamp((int)Math.Round(RemainingColumnWidth * (ColumnWeight / EffectiveRemainingColumnWeight), MidpointRounding.ToEven), Column.MinWidth ?? 0, Column.MaxWidth ?? int.MaxValue);
                             RemainingColumnWeight -= ColumnWeight;
                         }
 
@@ -1117,11 +1133,19 @@ namespace MGUI.Core.UI.Containers.Grids
                     if (IsWeightedHeight && !IsMeasuring)
                     {
                         double RowWeight = Row.Length.Weight;
+                        double EffectiveRemainingRowWeight = RemainingRowWeight;
 #if DEBUG
-                        if (RowWeight > RemainingRowWeight)
+                        if (RowWeight - RemainingRowWeight > WeightComparisonTolerance)
+                        {
                             throw new InvalidOperationException("Row weight should not exceed remaining weight");
+                        }
 #endif
-                        RowHeight = Math.Clamp((int)Math.Round(RemainingRowHeight * (RowWeight / RemainingRowWeight), MidpointRounding.ToEven), Row.MinHeight ?? 0, Row.MaxHeight ?? int.MaxValue);
+                        if (RowWeight > EffectiveRemainingRowWeight)
+                        {
+                            EffectiveRemainingRowWeight = RowWeight;
+                        }
+
+                        RowHeight = Math.Clamp((int)Math.Round(RemainingRowHeight * (RowWeight / EffectiveRemainingRowWeight), MidpointRounding.ToEven), Row.MinHeight ?? 0, Row.MaxHeight ?? int.MaxValue);
                         RemainingRowWeight -= RowWeight;
                     }
                     else
@@ -1132,7 +1156,13 @@ namespace MGUI.Core.UI.Containers.Grids
                         if (IsWeightedHeight)
                         {
                             double RowWeight = Row.Length.Weight;
-                            WeightedHeight = Math.Clamp((int)Math.Round(RemainingRowHeight * (RowWeight / RemainingRowWeight), MidpointRounding.ToEven), Row.MinHeight ?? 0, Row.MaxHeight ?? int.MaxValue);
+                            double EffectiveRemainingRowWeight = RemainingRowWeight;
+                            if (RowWeight > EffectiveRemainingRowWeight)
+                            {
+                                EffectiveRemainingRowWeight = RowWeight;
+                            }
+
+                            WeightedHeight = Math.Clamp((int)Math.Round(RemainingRowHeight * (RowWeight / EffectiveRemainingRowWeight), MidpointRounding.ToEven), Row.MinHeight ?? 0, Row.MaxHeight ?? int.MaxValue);
                             RemainingRowWeight -= RowWeight;
                         }
 
