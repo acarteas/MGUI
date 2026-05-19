@@ -1848,7 +1848,7 @@ namespace MGUI.Core.UI
 
         private Rectangle GetBackgroundBounds(Rectangle LayoutBounds)
         {
-            Rectangle BorderlessBounds = !HasBorder ? LayoutBounds : LayoutBounds.GetCompressed(GetBorder().BorderThickness);
+            Rectangle BorderlessBounds = !HasBorder ? LayoutBounds : LayoutBounds.GetCompressed(GetBorder().EffectiveBorderThickness);
             Rectangle BackgroundBounds = BorderlessBounds.GetCompressed(EffectiveBackgroundRenderPadding);
             return BackgroundBounds;
         }
@@ -1867,7 +1867,7 @@ namespace MGUI.Core.UI
         protected void DrawSelfBaseImplementation(ElementDrawArgs DA, Rectangle LayoutBounds)
         {
             if (HasBorder)
-                BackgroundBrush.GetBorderOverlay(DA.VisualState.Secondary)?.Draw(DA, this, LayoutBounds, GetBorder().BorderThickness);
+                BackgroundBrush.GetBorderOverlay(DA.VisualState.Secondary)?.Draw(DA, this, LayoutBounds, GetBorder().EffectiveBorderThickness);
         }
         #endregion Draw
 

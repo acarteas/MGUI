@@ -2,6 +2,8 @@ using System;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using MGUI.Core.UI;
+using MGUI.Core.UI.Containers;
+using MGUI.Core.UI.Containers.Grids;
 using Microsoft.Xna.Framework;
 using MonoGame.Extended;
 using Xunit;
@@ -64,6 +66,136 @@ namespace MGUI.Tests.UI
             SetField(textBlock, "_FontSize", 1);
 
             Assert.Equal(1, textBlock.EffectiveFontSize);
+        }
+
+        [Fact]
+        public void EffectiveBorderThickness_ScalesByBorderAndPreservesPositiveMinimum()
+        {
+            MGBorder border = CreateElement<MGBorder>(scale => scale.BorderScale = 0.25f);
+            SetField(border, "_BorderThickness", new Thickness(1, 2, 0, -1));
+
+            Assert.Equal(new Thickness(1, 2, 0, -1), border.BorderThickness);
+            Assert.Equal(new Thickness(1, 1, 0, -1), border.EffectiveBorderThickness);
+
+            Thickness measured = border.MeasureSelfOverride(new Size(100, 100), out Thickness sharedSize);
+            Assert.Equal(new Thickness(0), sharedSize);
+            Assert.Equal(border.EffectiveBorderThickness, measured);
+        }
+
+        [Fact]
+        public void EffectiveStackPanelSpacing_ScalesWithoutChangingAuthoredValue()
+        {
+            MGStackPanel stackPanel = CreateElement<MGStackPanel>(scale => scale.SpacingScale = 1.5f);
+            SetField(stackPanel, "_Spacing", 3);
+
+            Assert.Equal(3, stackPanel.Spacing);
+            Assert.Equal(5, stackPanel.EffectiveSpacing);
+        }
+
+        [Fact]
+        public void EffectiveGridHelpers_ScaleContainerDistancesAndOnlyPixelLengths()
+        {
+            MGGrid grid = CreateElement<MGGrid>(scale =>
+            {
+                scale.SpacingScale = 1.5f;
+                scale.SizeScale = 2.0f;
+            });
+            SetField(grid, "_RowSpacing", 3);
+            SetField(grid, "_ColumnSpacing", 4);
+            SetField(grid, "_GridLineMargin", 1);
+
+            ColumnDefinition pixelColumn = new(grid, GridLength.CreatePixelLength(10), 5, 40);
+            RowDefinition weightedRow = new(grid, GridLength.CreateWeightedLength(2.0), 6, 30);
+
+            Assert.Equal(5, grid.EffectiveRowSpacing);
+            Assert.Equal(6, grid.EffectiveColumnSpacing);
+            Assert.Equal(2, grid.EffectiveGridLineMargin);
+            Assert.Equal(GridLength.CreatePixelLength(20), grid.EffectiveGridLength(pixelColumn.Length));
+            Assert.Equal(weightedRow.Length, grid.EffectiveGridLength(weightedRow.Length));
+            Assert.Equal(GridLength.Auto, grid.EffectiveGridLength(GridLength.Auto));
+            Assert.Equal(10, grid.EffectiveColumnMinWidth(pixelColumn));
+            Assert.Equal(80, grid.EffectiveColumnMaxWidth(pixelColumn));
+            Assert.Equal(12, grid.EffectiveRowMinHeight(weightedRow));
+            Assert.Equal(60, grid.EffectiveRowMaxHeight(weightedRow));
+        }
+
+        [Fact]
+        public void EffectiveUniformGridHelpers_ScaleSizesAndSpacingWithoutChangingAuthoredValues()
+        {
+            MGUniformGrid uniformGrid = CreateElement<MGUniformGrid>(scale =>
+            {
+                scale.SpacingScale = 1.5f;
+                scale.SizeScale = 2.0f;
+            });
+            SetField(uniformGrid, "_CellSize", new Size(10, 12));
+            SetField(uniformGrid, "_HeaderRowHeight", 8);
+            SetField(uniformGrid, "_HeaderColumnWidth", 9);
+            SetField(uniformGrid, "_RowSpacing", 3);
+            SetField(uniformGrid, "_ColumnSpacing", 4);
+            SetField(uniformGrid, "_GridLineMargin", 1);
+
+            Assert.Equal(new Size(10, 12), uniformGrid.CellSize);
+            Assert.Equal(8, uniformGrid.HeaderRowHeight);
+            Assert.Equal(9, uniformGrid.HeaderColumnWidth);
+
+            Assert.Equal(new Size(20, 24), uniformGrid.EffectiveCellSize);
+            Assert.Equal(16, uniformGrid.EffectiveHeaderRowHeight);
+            Assert.Equal(18, uniformGrid.EffectiveHeaderColumnWidth);
+            Assert.Equal(5, uniformGrid.EffectiveRowSpacing);
+            Assert.Equal(6, uniformGrid.EffectiveColumnSpacing);
+            Assert.Equal(2, uniformGrid.EffectiveGridLineMargin);
+        }
+
+        [Fact]
+        public void EffectiveOverlayOffset_ScalesBySpacing()
+        {
+            MGOverlayPanel overlayPanel = CreateElement<MGOverlayPanel>(scale => scale.SpacingScale = 1.5f);
+
+            Thickness authoredOffset = new(1, 2, 3, 4);
+
+            Assert.Equal(new Thickness(2, 3, 5, 6), overlayPanel.EffectiveChildOffset(authoredOffset));
+            Assert.Equal(new Thickness(1, 2, 3, 4), authoredOffset);
+        }
+
+        [Fact]
+        public void EffectiveProgressButtonBorderThickness_ScalesByBorder()
+        {
+            MGProgressButton progressButton = CreateElement<MGProgressButton>(scale => scale.BorderScale = 0.25f);
+            SetField(progressButton, "_ProgressBarBorderThickness", new Thickness(1, 2, 0, -1));
+
+            Assert.Equal(new Thickness(1, 2, 0, -1), progressButton.ProgressBarBorderThickness);
+            Assert.Equal(new Thickness(1, 1, 0, -1), progressButton.EffectiveProgressBarBorderThickness);
+        }
+
+        [Fact]
+        public void EffectiveContainerHelpers_PreserveValuesAtScaleOne()
+        {
+            MGGrid grid = CreateElement<MGGrid>(_ => { });
+            SetField(grid, "_RowSpacing", 3);
+            SetField(grid, "_ColumnSpacing", 4);
+            SetField(grid, "_GridLineMargin", 1);
+
+            MGUniformGrid uniformGrid = CreateElement<MGUniformGrid>(_ => { });
+            SetField(uniformGrid, "_CellSize", new Size(10, 12));
+            SetField(uniformGrid, "_HeaderRowHeight", 8);
+            SetField(uniformGrid, "_HeaderColumnWidth", 9);
+            SetField(uniformGrid, "_RowSpacing", 3);
+            SetField(uniformGrid, "_ColumnSpacing", 4);
+            SetField(uniformGrid, "_GridLineMargin", 1);
+
+            MGBorder border = CreateElement<MGBorder>(_ => { });
+            SetField(border, "_BorderThickness", new Thickness(1, 2, 3, 4));
+
+            Assert.Equal(3, grid.EffectiveRowSpacing);
+            Assert.Equal(4, grid.EffectiveColumnSpacing);
+            Assert.Equal(1, grid.EffectiveGridLineMargin);
+            Assert.Equal(new Size(10, 12), uniformGrid.EffectiveCellSize);
+            Assert.Equal(8, uniformGrid.EffectiveHeaderRowHeight);
+            Assert.Equal(9, uniformGrid.EffectiveHeaderColumnWidth);
+            Assert.Equal(3, uniformGrid.EffectiveRowSpacing);
+            Assert.Equal(4, uniformGrid.EffectiveColumnSpacing);
+            Assert.Equal(1, uniformGrid.EffectiveGridLineMargin);
+            Assert.Equal(new Thickness(1, 2, 3, 4), border.EffectiveBorderThickness);
         }
 
         private static T CreateElement<T>(Action<MGScaleSettings> configureScale)

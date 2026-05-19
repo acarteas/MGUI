@@ -54,6 +54,8 @@ namespace MGUI.Core.UI
 
         public event EventHandler<EventArgs<Thickness>> OnBorderThicknessChanged;
 
+        protected internal Thickness EffectiveBorderThickness => EffectiveScaleSettings.ScaleThickness(BorderThickness, MGScaleCategory.Border);
+
         public MGBorder(MGWindow Window)
             : this(Window, new(1), MGUniformBorderBrush.Black) { }
 
@@ -73,7 +75,7 @@ namespace MGUI.Core.UI
         public override Thickness MeasureSelfOverride(Size AvailableSize, out Thickness SharedSize)
         {
             SharedSize = new(0);
-            return BorderThickness;
+            return EffectiveBorderThickness;
         }
 
         public override MGBorder GetBorder() => this;
@@ -82,7 +84,7 @@ namespace MGUI.Core.UI
 
         public override void DrawSelf(ElementDrawArgs DA, Rectangle LayoutBounds)
         {
-            BorderBrush?.Draw(DA, this, LayoutBounds, BorderThickness);
+            BorderBrush?.Draw(DA, this, LayoutBounds, EffectiveBorderThickness);
             DrawSelfBaseImplementation(DA, LayoutBounds);
         }
     }

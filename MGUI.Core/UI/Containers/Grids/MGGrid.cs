@@ -170,7 +170,7 @@ namespace MGUI.Core.UI.Containers.Grids
                 {
                     if (Column.Length.IsWeightedLength)
                     {
-                        int NormalizedWeight = Math.Clamp(Column.Width, Column.MinWidth ?? 0, Column.MaxWidth ?? int.MaxValue);
+                        int NormalizedWeight = Math.Clamp(Column.Width, EffectiveColumnMinWidth(Column) ?? 0, EffectiveColumnMaxWidth(Column) ?? int.MaxValue);
                         Column.Length = GridLength.CreateWeightedLength(NormalizedWeight);
                     }
                 }
@@ -179,7 +179,7 @@ namespace MGUI.Core.UI.Containers.Grids
                 {
                     if (Row.Length.IsWeightedLength)
                     {
-                        int NormalizedWeight = Math.Clamp(Row.Height, Row.MinHeight ?? 0, Row.MaxHeight ?? int.MaxValue);
+                        int NormalizedWeight = Math.Clamp(Row.Height, EffectiveRowMinHeight(Row) ?? 0, EffectiveRowMaxHeight(Row) ?? int.MaxValue);
                         Row.Length = GridLength.CreateWeightedLength(NormalizedWeight);
                     }
                 }
@@ -275,6 +275,16 @@ namespace MGUI.Core.UI.Containers.Grids
         /// See also: <see cref="MGElement.ConvertCoordinateSpace(CoordinateSpace, CoordinateSpace, Point)"/></summary>
         public IReadOnlyDictionary<GridCell, Rectangle> CellBounds => _CellBounds;
 
+        protected internal int EffectiveRowSpacing => EffectiveScaleSettings.ScaleInt(RowSpacing, MGScaleCategory.Spacing);
+        protected internal int EffectiveColumnSpacing => EffectiveScaleSettings.ScaleInt(ColumnSpacing, MGScaleCategory.Spacing);
+        protected internal int EffectiveGridLineMargin => EffectiveScaleSettings.ScaleInt(GridLineMargin, MGScaleCategory.Spacing);
+        protected internal GridLength EffectiveGridLength(GridLength Length)
+            => Length.IsPixelLength ? GridLength.CreatePixelLength(EffectiveScaleSettings.ScaleInt(Length.Pixels, MGScaleCategory.Size)) : Length;
+        protected internal int? EffectiveColumnMinWidth(ColumnDefinition Column) => EffectiveScaleSettings.ScaleNullableInt(Column.MinWidth, MGScaleCategory.Size);
+        protected internal int? EffectiveColumnMaxWidth(ColumnDefinition Column) => EffectiveScaleSettings.ScaleNullableInt(Column.MaxWidth, MGScaleCategory.Size);
+        protected internal int? EffectiveRowMinHeight(RowDefinition Row) => EffectiveScaleSettings.ScaleNullableInt(Row.MinHeight, MGScaleCategory.Size);
+        protected internal int? EffectiveRowMaxHeight(RowDefinition Row) => EffectiveScaleSettings.ScaleNullableInt(Row.MaxHeight, MGScaleCategory.Size);
+
         private Dictionary<GridCell, Rectangle> GetCellBounds(bool IncludeGridLineMargin)
         {
             Dictionary<GridCell, Rectangle> CellBounds = new();
@@ -285,7 +295,7 @@ namespace MGUI.Core.UI.Containers.Grids
                 {
                     GridCell Cell = new(Row, Column);
                     Rectangle PaddedBounds = new(Column.Left, Row.Top, Column.Width, Row.Height);
-                    Rectangle ActualBounds = IncludeGridLineMargin ? PaddedBounds : PaddedBounds.GetExpanded(Math.Max(0, GridLineMargin));
+                    Rectangle ActualBounds = IncludeGridLineMargin ? PaddedBounds : PaddedBounds.GetExpanded(Math.Max(0, EffectiveGridLineMargin));
                     CellBounds.Add(Cell, ActualBounds);
                 }
             }
@@ -790,6 +800,10 @@ namespace MGUI.Core.UI.Containers.Grids
 
         private void CheckIfOuterPaddingChanged()
         {
+            int RowSpacing = EffectiveRowSpacing;
+            int ColumnSpacing = EffectiveColumnSpacing;
+            int GridLineMargin = EffectiveGridLineMargin;
+
             if (RowSpacing > 0 && GridLineMargin < RowSpacing &&
                 (GridLinesVisibility.HasFlag(GridLinesVisibility.TopEdge) || GridLinesVisibility.HasFlag(GridLinesVisibility.BottomEdge)))
             {
@@ -977,9 +991,13 @@ namespace MGUI.Core.UI.Containers.Grids
 
             const double WeightComparisonTolerance = 0.000001;
 
-            double TotalColumnWeight = Columns.Select(x => x.Length).Where(x => x.IsWeightedLength).Sum(x => x.Weight);
+            int RowSpacing = EffectiveRowSpacing;
+            int ColumnSpacing = EffectiveColumnSpacing;
+            int GridLineMargin = EffectiveGridLineMargin;
+
+            double TotalColumnWeight = Columns.Select(x => EffectiveGridLength(x.Length)).Where(x => x.IsWeightedLength).Sum(x => x.Weight);
             double RemainingColumnWeight = TotalColumnWeight;
-            double TotalRowWeight = Rows.Select(x => x.Length).Where(x => x.IsWeightedLength).Sum(x => x.Weight);
+            double TotalRowWeight = Rows.Select(x => EffectiveGridLength(x.Length)).Where(x => x.IsWeightedLength).Sum(x => x.Weight);
             double RemainingRowWeight = TotalRowWeight;
 
             int TotalColumnSpacingWidth = (Columns.Count - 1) * ColumnSpacing;
@@ -999,15 +1017,18 @@ namespace MGUI.Core.UI.Containers.Grids
             int RemainingColumnWidth = Math.Max(0, AvailableSize.Width - TotalColumnSpacingWidth);
             foreach (ColumnDefinition Column in Columns)
             {
+                GridLength Length = EffectiveGridLength(Column.Length);
+                int? MinWidth = EffectiveColumnMinWidth(Column);
+                int? MaxWidth = EffectiveColumnMaxWidth(Column);
                 int? ColumnWidth = null;
-                if (Column.Length.IsPixelLength)
-                    ColumnWidth = Column.Length.Pixels;
-                else if (Column.MinWidth.HasValue && Column.MaxWidth.HasValue && Column.MinWidth == Column.MaxWidth)
-                    ColumnWidth = Column.MinWidth.Value;
+                if (Length.IsPixelLength)
+                    ColumnWidth = Length.Pixels;
+                else if (MinWidth.HasValue && MaxWidth.HasValue && MinWidth == MaxWidth)
+                    ColumnWidth = MinWidth.Value;
 
                 if (ColumnWidth.HasValue)
                 {
-                    int Width = GeneralUtils.Min(RemainingColumnWidth, ColumnWidth.Value, Column.MaxWidth ?? int.MaxValue);
+                    int Width = GeneralUtils.Min(RemainingColumnWidth, ColumnWidth.Value, MaxWidth ?? int.MaxValue);
                     ColumnWidths.Add(Column, Width);
                     TotalWidth += Width;
                     RemainingColumnWidth -= Width;
@@ -1019,15 +1040,18 @@ namespace MGUI.Core.UI.Containers.Grids
             int RemainingRowHeight = Math.Max(0, AvailableSize.Height - TotalRowSpacingHeight);
             foreach (RowDefinition Row in Rows)
             {
+                GridLength Length = EffectiveGridLength(Row.Length);
+                int? MinHeight = EffectiveRowMinHeight(Row);
+                int? MaxHeight = EffectiveRowMaxHeight(Row);
                 int? RowHeight = null;
-                if (Row.Length.IsPixelLength)
-                    RowHeight = Row.Length.Pixels;
-                else if (Row.MinHeight.HasValue && Row.MaxHeight.HasValue && Row.MinHeight == Row.MaxHeight)
-                    RowHeight = Row.MinHeight.Value;
+                if (Length.IsPixelLength)
+                    RowHeight = Length.Pixels;
+                else if (MinHeight.HasValue && MaxHeight.HasValue && MinHeight == MaxHeight)
+                    RowHeight = MinHeight.Value;
 
                 if (RowHeight.HasValue)
                 {
-                    int Height = GeneralUtils.Min(RemainingRowHeight, RowHeight.Value, Row.MaxHeight ?? int.MaxValue);
+                    int Height = GeneralUtils.Min(RemainingRowHeight, RowHeight.Value, MaxHeight ?? int.MaxValue);
                     RowHeights.Add(Row, Height);
                     TotalHeight += Height;
                     RemainingRowHeight -= Height;
@@ -1037,22 +1061,25 @@ namespace MGUI.Core.UI.Containers.Grids
             //  Measure every remaining column, starting with Auto-length columns
             IEnumerable<ColumnDefinition> RemainingColumns = Columns
                 .Where(x => !ColumnWidths.ContainsKey(x))
-                .OrderBy(x => x.Length.IsAutoLength || IsPseudoInfiniteWidth ? 0 : 1)
-                .ThenBy(x => x.MaxWidth ?? int.MaxValue) // Try to handle columns with a MaxWidth first because if the column's width gets truncated, it might free up more width for the next weighted column to use
-                .ThenByDescending(x => x.MinWidth.HasValue); // Try to handle columns with a MinWidth first because if the column's width gets increased upwards to the MinWidth, it consumes more space than usual, leaving less space for the next weighted column to use
+                .OrderBy(x => EffectiveGridLength(x.Length).IsAutoLength || IsPseudoInfiniteWidth ? 0 : 1)
+                .ThenBy(x => EffectiveColumnMaxWidth(x) ?? int.MaxValue) // Try to handle columns with a MaxWidth first because if the column's width gets truncated, it might free up more width for the next weighted column to use
+                .ThenByDescending(x => EffectiveColumnMinWidth(x).HasValue); // Try to handle columns with a MinWidth first because if the column's width gets increased upwards to the MinWidth, it consumes more space than usual, leaving less space for the next weighted column to use
             foreach (ColumnDefinition Column in RemainingColumns)
             {
+                GridLength Length = EffectiveGridLength(Column.Length);
+                int? MinWidth = EffectiveColumnMinWidth(Column);
+                int? MaxWidth = EffectiveColumnMaxWidth(Column);
                 int ColumnWidth;
                 if (RemainingColumnWidth <= 0)
                     ColumnWidth = 0;
-                else if (Column.MinWidth.HasValue && RemainingColumnWidth <= Column.MinWidth.Value)
-                    ColumnWidth = Column.MinWidth.Value;
+                else if (MinWidth.HasValue && RemainingColumnWidth <= MinWidth.Value)
+                    ColumnWidth = MinWidth.Value;
                 else
                 {
-                    bool IsWeightedWidth = Column.Length.IsWeightedLength && !IsPseudoInfiniteWidth; // If measured inside a scrollviewer, * lengths are treated as Auto
+                    bool IsWeightedWidth = Length.IsWeightedLength && !IsPseudoInfiniteWidth; // If measured inside a scrollviewer, * lengths are treated as Auto
                     if (IsWeightedWidth && !IsMeasuring)
                     {
-                        double ColumnWeight = Column.Length.Weight;
+                        double ColumnWeight = Length.Weight;
                         double EffectiveRemainingColumnWeight = RemainingColumnWeight;
 #if DEBUG
                         if (ColumnWeight - RemainingColumnWeight > WeightComparisonTolerance)
@@ -1065,7 +1092,7 @@ namespace MGUI.Core.UI.Containers.Grids
                             EffectiveRemainingColumnWeight = ColumnWeight;
                         }
 
-                        ColumnWidth = Math.Clamp((int)Math.Round(RemainingColumnWidth * (ColumnWeight / EffectiveRemainingColumnWeight), MidpointRounding.ToEven), Column.MinWidth ?? 0, Column.MaxWidth ?? int.MaxValue);
+                        ColumnWidth = Math.Clamp((int)Math.Round(RemainingColumnWidth * (ColumnWeight / EffectiveRemainingColumnWeight), MidpointRounding.ToEven), MinWidth ?? 0, MaxWidth ?? int.MaxValue);
                         RemainingColumnWeight -= ColumnWeight;
                     }
                     else
@@ -1075,20 +1102,20 @@ namespace MGUI.Core.UI.Containers.Grids
                         int WeightedWidth = int.MaxValue;
                         if (IsWeightedWidth)
                         {
-                            double ColumnWeight = Column.Length.Weight;
+                            double ColumnWeight = Length.Weight;
                             double EffectiveRemainingColumnWeight = RemainingColumnWeight;
                             if (ColumnWeight > EffectiveRemainingColumnWeight)
                             {
                                 EffectiveRemainingColumnWeight = ColumnWeight;
                             }
 
-                            WeightedWidth = Math.Clamp((int)Math.Round(RemainingColumnWidth * (ColumnWeight / EffectiveRemainingColumnWeight), MidpointRounding.ToEven), Column.MinWidth ?? 0, Column.MaxWidth ?? int.MaxValue);
+                            WeightedWidth = Math.Clamp((int)Math.Round(RemainingColumnWidth * (ColumnWeight / EffectiveRemainingColumnWeight), MidpointRounding.ToEven), MinWidth ?? 0, MaxWidth ?? int.MaxValue);
                             RemainingColumnWeight -= ColumnWeight;
                         }
 
                         //  Measure every element in this column
                         List<int> ColumnChildWidths = new();
-                        int CellAvailableWidth = GeneralUtils.Min(RemainingColumnWidth, WeightedWidth, Column.MaxWidth ?? int.MaxValue);
+                        int CellAvailableWidth = GeneralUtils.Min(RemainingColumnWidth, WeightedWidth, MaxWidth ?? int.MaxValue);
                         foreach (RowDefinition Row in Rows)
                         {
                             GridCell Cell = new(Row, Column);
@@ -1104,11 +1131,11 @@ namespace MGUI.Core.UI.Containers.Grids
                         }
 
                         //  Take the maximum width of the row items in this column
-                        ColumnWidth = Math.Max(Column.MinWidth ?? 0, ColumnChildWidths.DefaultIfEmpty(0).Max());
+                        ColumnWidth = Math.Max(MinWidth ?? 0, ColumnChildWidths.DefaultIfEmpty(0).Max());
                     }
                 }
 
-                ColumnWidth = GeneralUtils.Min(RemainingColumnWidth, ColumnWidth, Column.MaxWidth ?? int.MaxValue);
+                ColumnWidth = GeneralUtils.Min(RemainingColumnWidth, ColumnWidth, MaxWidth ?? int.MaxValue);
                 ColumnWidths.Add(Column, ColumnWidth);
                 TotalWidth += ColumnWidth;
                 RemainingColumnWidth -= ColumnWidth;
@@ -1117,22 +1144,25 @@ namespace MGUI.Core.UI.Containers.Grids
             //  Measure every remaining row, starting with Auto-length rows
             IEnumerable<RowDefinition> RemainingRows = Rows
                 .Where(x => !RowHeights.ContainsKey(x))
-                .OrderBy(x => x.Length.IsAutoLength || IsPseduoInfiniteHeight ? 0 : 1)
-                .ThenBy(x => x.MaxHeight ?? int.MaxValue) // Try to handle rows with a MaxHeight first because if the row's height gets truncated, it might free up more height for the next weighted row to use
-                .ThenByDescending(x => x.MinHeight.HasValue); // Try to handle rows with a MinHeight first because if the row's height gets increased upwards to the MinHeight, it consumes more space than usual, leaving less space for the next weighted row to use
+                .OrderBy(x => EffectiveGridLength(x.Length).IsAutoLength || IsPseduoInfiniteHeight ? 0 : 1)
+                .ThenBy(x => EffectiveRowMaxHeight(x) ?? int.MaxValue) // Try to handle rows with a MaxHeight first because if the row's height gets truncated, it might free up more height for the next weighted row to use
+                .ThenByDescending(x => EffectiveRowMinHeight(x).HasValue); // Try to handle rows with a MinHeight first because if the row's height gets increased upwards to the MinHeight, it consumes more space than usual, leaving less space for the next weighted row to use
             foreach (RowDefinition Row in RemainingRows)
             {
+                GridLength Length = EffectiveGridLength(Row.Length);
+                int? MinHeight = EffectiveRowMinHeight(Row);
+                int? MaxHeight = EffectiveRowMaxHeight(Row);
                 int RowHeight;
                 if (RemainingRowHeight <= 0)
                     RowHeight = 0;
-                else if (Row.MinHeight.HasValue && RemainingRowHeight <= Row.MinHeight.Value)
-                    RowHeight = Row.MinHeight.Value;
+                else if (MinHeight.HasValue && RemainingRowHeight <= MinHeight.Value)
+                    RowHeight = MinHeight.Value;
                 else
                 {
-                    bool IsWeightedHeight = Row.Length.IsWeightedLength && !IsPseduoInfiniteHeight; // If measured inside a scrollviewer, * lengths are treated as Auto
+                    bool IsWeightedHeight = Length.IsWeightedLength && !IsPseduoInfiniteHeight; // If measured inside a scrollviewer, * lengths are treated as Auto
                     if (IsWeightedHeight && !IsMeasuring)
                     {
-                        double RowWeight = Row.Length.Weight;
+                        double RowWeight = Length.Weight;
                         double EffectiveRemainingRowWeight = RemainingRowWeight;
 #if DEBUG
                         if (RowWeight - RemainingRowWeight > WeightComparisonTolerance)
@@ -1145,7 +1175,7 @@ namespace MGUI.Core.UI.Containers.Grids
                             EffectiveRemainingRowWeight = RowWeight;
                         }
 
-                        RowHeight = Math.Clamp((int)Math.Round(RemainingRowHeight * (RowWeight / EffectiveRemainingRowWeight), MidpointRounding.ToEven), Row.MinHeight ?? 0, Row.MaxHeight ?? int.MaxValue);
+                        RowHeight = Math.Clamp((int)Math.Round(RemainingRowHeight * (RowWeight / EffectiveRemainingRowWeight), MidpointRounding.ToEven), MinHeight ?? 0, MaxHeight ?? int.MaxValue);
                         RemainingRowWeight -= RowWeight;
                     }
                     else
@@ -1155,20 +1185,20 @@ namespace MGUI.Core.UI.Containers.Grids
                         int WeightedHeight = int.MaxValue;
                         if (IsWeightedHeight)
                         {
-                            double RowWeight = Row.Length.Weight;
+                            double RowWeight = Length.Weight;
                             double EffectiveRemainingRowWeight = RemainingRowWeight;
                             if (RowWeight > EffectiveRemainingRowWeight)
                             {
                                 EffectiveRemainingRowWeight = RowWeight;
                             }
 
-                            WeightedHeight = Math.Clamp((int)Math.Round(RemainingRowHeight * (RowWeight / EffectiveRemainingRowWeight), MidpointRounding.ToEven), Row.MinHeight ?? 0, Row.MaxHeight ?? int.MaxValue);
+                            WeightedHeight = Math.Clamp((int)Math.Round(RemainingRowHeight * (RowWeight / EffectiveRemainingRowWeight), MidpointRounding.ToEven), MinHeight ?? 0, MaxHeight ?? int.MaxValue);
                             RemainingRowWeight -= RowWeight;
                         }
 
                         //  Measure every element in this row
                         List<int> RowChildHeights = new();
-                        int CellAvailableHeight = GeneralUtils.Min(RemainingRowHeight, WeightedHeight, Row.MaxHeight ?? int.MaxValue);
+                        int CellAvailableHeight = GeneralUtils.Min(RemainingRowHeight, WeightedHeight, MaxHeight ?? int.MaxValue);
                         for (int ColumnIndex = 0; ColumnIndex < _Columns.Count; ColumnIndex++)
                         {
                             ColumnDefinition Column = _Columns[ColumnIndex];
@@ -1193,11 +1223,11 @@ namespace MGUI.Core.UI.Containers.Grids
                         }
 
                         //  Take the maximum height of the items in this row
-                        RowHeight = Math.Max(Row.MinHeight ?? 0, RowChildHeights.DefaultIfEmpty(0).Max());
+                        RowHeight = Math.Max(MinHeight ?? 0, RowChildHeights.DefaultIfEmpty(0).Max());
                     }
                 }
 
-                RowHeight = GeneralUtils.Min(RemainingRowHeight, RowHeight, Row.MaxHeight ?? int.MaxValue);
+                RowHeight = GeneralUtils.Min(RemainingRowHeight, RowHeight, MaxHeight ?? int.MaxValue);
                 RowHeights.Add(Row, RowHeight);
                 TotalHeight += RowHeight;
                 RemainingRowHeight -= RowHeight;
@@ -1223,6 +1253,9 @@ namespace MGUI.Core.UI.Containers.Grids
             Dictionary<ColumnDefinition, int> ColumnWidths = Dimensions.ColumnWidths;
             Dictionary<RowDefinition, int> RowHeights = Dimensions.RowHeights;
             Size TotalContentSize = new(Dimensions.TotalWidth, Dimensions.TotalHeight);
+            int RowSpacing = EffectiveRowSpacing;
+            int ColumnSpacing = EffectiveColumnSpacing;
+            int GridLineMargin = EffectiveGridLineMargin;
 
             //  Account for content alignment
             int ConsumedWidth = HorizontalContentAlignment == HorizontalAlignment.Stretch ? AvailableSize.Width : Math.Min(AvailableSize.Width, TotalContentSize.Width);
@@ -1368,6 +1401,9 @@ namespace MGUI.Core.UI.Containers.Grids
 
             _CellBounds.TryGetValue(new GridCell(_Rows[0], _Columns[0]), out Rectangle TopLeftCellBounds);
             _CellBounds.TryGetValue(GetLastCellWithKnownBounds(), out Rectangle BottomRightCellBounds);
+            int RowSpacing = EffectiveRowSpacing;
+            int ColumnSpacing = EffectiveColumnSpacing;
+            int GridLineMargin = EffectiveGridLineMargin;
 
             int Left = TopLeftCellBounds.Left - Math.Max(0, ColumnSpacing - GridLineMargin);
             int Right = BottomRightCellBounds.Right + Math.Max(0, ColumnSpacing - GridLineMargin);
@@ -1410,6 +1446,9 @@ namespace MGUI.Core.UI.Containers.Grids
 
             _CellBounds.TryGetValue(new GridCell(_Rows[0], _Columns[0]), out Rectangle TopLeftCellBounds);
             _CellBounds.TryGetValue(GetLastCellWithKnownBounds(), out Rectangle BottomRightCellBounds);
+            int RowSpacing = EffectiveRowSpacing;
+            int ColumnSpacing = EffectiveColumnSpacing;
+            int GridLineMargin = EffectiveGridLineMargin;
 
             int Left = TopLeftCellBounds.Left - Math.Max(0, ColumnSpacing - GridLineMargin);
             int Right = BottomRightCellBounds.Right + Math.Max(0, ColumnSpacing - GridLineMargin);

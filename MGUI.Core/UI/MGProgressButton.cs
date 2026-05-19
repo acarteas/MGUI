@@ -70,6 +70,8 @@ namespace MGUI.Core.UI
             set => BorderElement.BorderThickness = value;
         }
 
+        protected internal Thickness EffectiveBorderThickness => BorderElement.EffectiveBorderThickness;
+
         protected override IEnumerable<IBorderBrush> GetBorderBrushes()
         {
             foreach (IBorderBrush Brush in base.GetBorderBrushes())
@@ -458,6 +460,7 @@ namespace MGUI.Core.UI
         private Rectangle GetProgressBarBounds(Rectangle ElementBounds, bool IncludeProgressBarBorder)
         {
             Rectangle PaddedBounds = ElementBounds.GetCompressed(ProgressBarMargin);
+            Thickness ProgressBarBorderThickness = EffectiveProgressBarBorderThickness;
             if (!IncludeProgressBarBorder && ProgressBarBorderBrush != null)
                 PaddedBounds = PaddedBounds.GetCompressed(ProgressBarBorderThickness);
 
@@ -518,6 +521,8 @@ namespace MGUI.Core.UI
                 }
             }
         }
+
+        protected internal Thickness EffectiveProgressBarBorderThickness => EffectiveScaleSettings.ScaleThickness(ProgressBarBorderThickness, MGScaleCategory.Border);
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private IBorderBrush _ProgressBarBorderBrush;
@@ -669,9 +674,10 @@ namespace MGUI.Core.UI
         {
             if (IsProgressBarVisible)
             {
-                Rectangle BorderlessBounds = LayoutBounds.GetCompressed(BorderThickness);
+                Rectangle BorderlessBounds = LayoutBounds.GetCompressed(EffectiveBorderThickness);
                 Rectangle ProgressBarBorderedBounds = GetProgressBarBounds(BorderlessBounds, true);
                 Rectangle ProgressBarBorderlessBounds = GetProgressBarBounds(BorderlessBounds, false);
+                Thickness ProgressBarBorderThickness = EffectiveProgressBarBorderThickness;
 
                 float CompletedScalar = ValuePercent / 100.0f;
                 Rectangle CompletedBounds;

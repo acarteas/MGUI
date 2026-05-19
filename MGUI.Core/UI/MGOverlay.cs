@@ -248,8 +248,8 @@ namespace MGUI.Core.UI
                     //  Draw the OverlayBackground overtop of the content, but underneath the active overlay
                     if (ActiveOverlay != null && OverlayBackground != null)
                     {
-                        Rectangle BorderlessBounds = !HasBorder ? LayoutBounds : LayoutBounds.GetCompressed(GetBorder().BorderThickness);
-                        Rectangle BackgroundBounds = BorderlessBounds.GetCompressed(BackgroundRenderPadding);
+                        Rectangle BorderlessBounds = !HasBorder ? LayoutBounds : LayoutBounds.GetCompressed(GetBorder().EffectiveBorderThickness);
+                        Rectangle BackgroundBounds = BorderlessBounds.GetCompressed(EffectiveBackgroundRenderPadding);
                         OverlayBackground.Draw(e.DA, this, BackgroundBounds);
                     }
                 }
@@ -285,8 +285,8 @@ namespace MGUI.Core.UI
             //  (Usually the OverlayBackground is rendered after Content.OnEndDraw, but Content could be null which means it wouldn't have been handled in SetContentVirtual)
             if (Content == null && ActiveOverlay != null && OverlayBackground != null)
             {
-                Rectangle BorderlessBounds = !HasBorder ? LayoutBounds : LayoutBounds.GetCompressed(GetBorder().BorderThickness);
-                Rectangle BackgroundBounds = BorderlessBounds.GetCompressed(BackgroundRenderPadding);
+                Rectangle BorderlessBounds = !HasBorder ? LayoutBounds : LayoutBounds.GetCompressed(GetBorder().EffectiveBorderThickness);
+                Rectangle BackgroundBounds = BorderlessBounds.GetCompressed(EffectiveBackgroundRenderPadding);
                 OverlayBackground.Draw(DA, this, BackgroundBounds);
             }
         }

@@ -164,11 +164,24 @@ namespace MGUI.Core.UI.Containers.Grids
         /// See also: <see cref="MGElement.ConvertCoordinateSpace(CoordinateSpace, CoordinateSpace, Point)"/></summary>
         public IReadOnlyDictionary<GridCellIndex, Rectangle> CellBounds => _CellBounds;
 
+        protected internal Size EffectiveCellSize => EffectiveScaleSettings.ScaleSize(CellSize, MGScaleCategory.Size);
+        protected internal int? EffectiveHeaderRowHeight => EffectiveScaleSettings.ScaleNullableInt(HeaderRowHeight, MGScaleCategory.Size);
+        protected internal int? EffectiveHeaderColumnWidth => EffectiveScaleSettings.ScaleNullableInt(HeaderColumnWidth, MGScaleCategory.Size);
+        protected internal int EffectiveRowSpacing => EffectiveScaleSettings.ScaleInt(RowSpacing, MGScaleCategory.Spacing);
+        protected internal int EffectiveColumnSpacing => EffectiveScaleSettings.ScaleInt(ColumnSpacing, MGScaleCategory.Spacing);
+        protected internal int EffectiveGridLineMargin => EffectiveScaleSettings.ScaleInt(GridLineMargin, MGScaleCategory.Spacing);
+
         private Dictionary<GridCellIndex, Rectangle> GetCellBounds(Rectangle LayoutBounds, bool IncludeGridLineMargin)
         {
             Dictionary<GridCellIndex, Rectangle> CellBounds = new();
+            Size CellSize = EffectiveCellSize;
+            int? HeaderRowHeight = EffectiveHeaderRowHeight;
+            int? HeaderColumnWidth = EffectiveHeaderColumnWidth;
+            int RowSpacing = EffectiveRowSpacing;
+            int ColumnSpacing = EffectiveColumnSpacing;
+            int GridLineMargin = EffectiveGridLineMargin;
 
-            int CurrentX = LayoutBounds.Left + Padding.Left;
+            int CurrentX = LayoutBounds.Left + EffectivePadding.Left;
             if (GridLinesVisibility.HasFlag(GridLinesVisibility.LeftEdge))
                 CurrentX += Math.Max(0, ColumnSpacing - GridLineMargin);
 
@@ -176,7 +189,7 @@ namespace MGUI.Core.UI.Containers.Grids
             {
                 int ColumnWidth = ColumnIndex == 0 && HeaderColumnWidth.HasValue ? HeaderColumnWidth.Value : CellSize.Width;
 
-                int CurrentY = LayoutBounds.Top + Padding.Top;
+                int CurrentY = LayoutBounds.Top + EffectivePadding.Top;
                 if (GridLinesVisibility.HasFlag(GridLinesVisibility.TopEdge))
                     CurrentY += Math.Max(0, RowSpacing - GridLineMargin);
 
@@ -578,6 +591,10 @@ namespace MGUI.Core.UI.Containers.Grids
 
         private void CheckIfOuterPaddingChanged()
         {
+            int RowSpacing = EffectiveRowSpacing;
+            int ColumnSpacing = EffectiveColumnSpacing;
+            int GridLineMargin = EffectiveGridLineMargin;
+
             if (RowSpacing > 0 && GridLineMargin < RowSpacing &&
                 (GridLinesVisibility.HasFlag(GridLinesVisibility.TopEdge) || GridLinesVisibility.HasFlag(GridLinesVisibility.BottomEdge)))
             {
@@ -761,6 +778,13 @@ namespace MGUI.Core.UI.Containers.Grids
             if (Rows <= 0 || Columns <= 0)
                 return new(0);
 
+            Size CellSize = EffectiveCellSize;
+            int? HeaderRowHeight = EffectiveHeaderRowHeight;
+            int? HeaderColumnWidth = EffectiveHeaderColumnWidth;
+            int RowSpacing = EffectiveRowSpacing;
+            int ColumnSpacing = EffectiveColumnSpacing;
+            int GridLineMargin = EffectiveGridLineMargin;
+
             int TotalColumnSpacingWidth = (Columns - 1) * ColumnSpacing;
             if (GridLinesVisibility.HasFlag(GridLinesVisibility.LeftEdge))
                 TotalColumnSpacingWidth += Math.Max(0, ColumnSpacing - GridLineMargin);
@@ -867,6 +891,10 @@ namespace MGUI.Core.UI.Containers.Grids
             if (DA.Opacity <= 0 || DA.Opacity.IsAlmostZero() || HorizontalGridLineBrush == null || Rows == 0 || Columns == 0)
                 return;
 
+            int RowSpacing = EffectiveRowSpacing;
+            int ColumnSpacing = EffectiveColumnSpacing;
+            int GridLineMargin = EffectiveGridLineMargin;
+
             int Left = _CellBounds[new(0, 0)].Left - Math.Max(0, ColumnSpacing - GridLineMargin);
             int Right = _CellBounds[new(0, Columns - 1)].Right + Math.Max(0, ColumnSpacing - GridLineMargin);
             int Top = _CellBounds[new(0, 0)].Top - Math.Max(0, RowSpacing - GridLineMargin);
@@ -906,6 +934,10 @@ namespace MGUI.Core.UI.Containers.Grids
         {
             if (DA.Opacity <= 0 || DA.Opacity.IsAlmostZero() || VerticalGridLineBrush == null || Rows == 0 || Columns == 0)
                 return;
+
+            int RowSpacing = EffectiveRowSpacing;
+            int ColumnSpacing = EffectiveColumnSpacing;
+            int GridLineMargin = EffectiveGridLineMargin;
 
             int Left = _CellBounds[new(0, 0)].Left - Math.Max(0, ColumnSpacing - GridLineMargin);
             int Right = _CellBounds[new(0, Columns - 1)].Right + Math.Max(0, ColumnSpacing - GridLineMargin);

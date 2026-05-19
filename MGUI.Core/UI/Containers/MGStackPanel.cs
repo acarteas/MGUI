@@ -83,6 +83,8 @@ namespace MGUI.Core.UI.Containers
             }
         }
 
+        protected internal int EffectiveSpacing => EffectiveScaleSettings.ScaleInt(Spacing, MGScaleCategory.Spacing);
+
         /// <returns>True if the given <paramref name="Item"/> was successfully added.<br/>
         /// False otherwise, such as if <see cref="MGContentHost.CanChangeContent"/> is false.</returns>
         public bool TryAddChild(MGElement Item)
@@ -171,6 +173,7 @@ namespace MGUI.Core.UI.Containers
             Size RemainingSize = AvailableSize;
 
             int NonCollapsedChildrenCount = Children.Count(x => !x.IsVisibilityCollapsed);
+            int Spacing = EffectiveSpacing;
 
             if (Orientation == Orientation.Vertical)
             {
@@ -239,6 +242,7 @@ namespace MGUI.Core.UI.Containers
                 Size RemainingSize = AvailableSize;
 
                 int NonCollapsedChildrenCount = Children.Count(x => !x.IsVisibilityCollapsed);
+                int Spacing = EffectiveSpacing;
 
                 if (Orientation == Orientation.Vertical)
                 {

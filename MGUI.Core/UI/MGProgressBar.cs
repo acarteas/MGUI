@@ -35,6 +35,8 @@ namespace MGUI.Core.UI
             get => BorderElement.BorderThickness;
             set => BorderElement.BorderThickness = value;
         }
+
+        protected internal Thickness EffectiveBorderThickness => BorderElement.EffectiveBorderThickness;
         #endregion Border
 
         #region Value
@@ -366,7 +368,7 @@ namespace MGUI.Core.UI
 
         public override void DrawSelf(ElementDrawArgs DA, Rectangle LayoutBounds)
         {
-            Rectangle BorderlessBounds = LayoutBounds.GetCompressed(BorderThickness);
+            Rectangle BorderlessBounds = LayoutBounds.GetCompressed(EffectiveBorderThickness);
             Rectangle CompletedBounds;
             Rectangle IncompleteBounds;
 
