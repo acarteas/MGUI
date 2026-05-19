@@ -105,6 +105,16 @@ namespace MGUI.Tests.UI
         }
 
         [Fact]
+        public void ScaleInt_ClampsOverflow()
+        {
+            MGScaleSettings settings = new();
+            settings.SizeScale = 2.0f;
+
+            Assert.Equal(int.MaxValue, settings.ScaleInt(int.MaxValue, MGScaleCategory.Size));
+            Assert.Equal(int.MinValue, settings.ScaleInt(int.MinValue, MGScaleCategory.Size));
+        }
+
+        [Fact]
         public void BorderAndImage_PreserveNonzeroMinimums()
         {
             MGScaleSettings settings = new();

@@ -92,7 +92,13 @@ namespace MGUI.Core.UI
                 return value;
             }
 
-            int scaledValue = (int)Math.Round(value * GetScale(category), MidpointRounding.AwayFromZero);
+            double scaled = Math.Round((double)value * GetScale(category), MidpointRounding.AwayFromZero);
+            int scaledValue = scaled switch
+            {
+                > int.MaxValue => int.MaxValue,
+                < int.MinValue => int.MinValue,
+                _ => (int)scaled
+            };
 
             if (scaledValue == 0 && ShouldPreserveNonzeroMinimum(category))
             {
