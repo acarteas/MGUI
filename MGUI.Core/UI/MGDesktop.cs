@@ -40,9 +40,43 @@ namespace MGUI.Core.UI
         /// <summary>Invalidates the layout of every element on this desktop, forcing all elements to be re-measured on the next update tick.</summary>
         public void InvalidateAllLayouts()
         {
-            foreach (MGWindow window in Windows)
+            foreach (MGWindow window in GetLayoutWindows())
+            {
                 foreach (MGElement element in window.TraverseVisualTree(true, true, true, true, MGElement.TreeTraversalMode.Preorder))
+                {
                     element.InvalidateLayout();
+                }
+            }
+        }
+
+        private IEnumerable<MGWindow> GetLayoutWindows()
+        {
+            if (OverlayWindow != null)
+            {
+                foreach (MGWindow window in OverlayWindow.RecurseNestedWindows(true, MGElement.TreeTraversalMode.Preorder))
+                {
+                    yield return window;
+                }
+            }
+
+            foreach (MGWindow window in Windows)
+            {
+                foreach (MGWindow nestedWindow in window.RecurseNestedWindows(true, MGElement.TreeTraversalMode.Preorder))
+                {
+                    yield return nestedWindow;
+                }
+            }
+        }
+
+        private void RefreshTextLayoutCaches()
+        {
+            foreach (MGWindow window in GetLayoutWindows())
+            {
+                foreach (MGTextBlock tb in window.TraverseVisualTree<MGTextBlock>(true, true, true, true, MGElement.TreeTraversalMode.Preorder))
+                {
+                    tb.RefreshTextEngine();
+                }
+            }
         }
 
         /// <summary>A <see cref="MouseHandler"/> that is updated at the start of <see cref="Update()"/>, before any <see cref="MGWindow"/>s in <see cref="Windows"/> are updated.<br/>
@@ -343,6 +377,39 @@ namespace MGUI.Core.UI
         /// <summary>Convenience property that just returns <see cref="Resources"/>.<see cref="MGResources.DefaultTheme"/></summary>
         public MGTheme Theme => Resources.DefaultTheme;
 
+        private MGScaleSettings _UIScale;
+        public MGScaleSettings UIScale
+        {
+            get => _UIScale;
+            set
+            {
+                if (value == null)
+                {
+                    throw new ArgumentNullException(nameof(value));
+                }
+
+                if (_UIScale != value)
+                {
+                    if (_UIScale != null)
+                    {
+                        _UIScale.ScaleChanged -= UIScale_ScaleChanged;
+                    }
+
+                    _UIScale = value;
+                    _UIScale.ScaleChanged += UIScale_ScaleChanged;
+                    NPC(nameof(UIScale));
+                    RefreshTextLayoutCaches();
+                    InvalidateAllLayouts();
+                }
+            }
+        }
+
+        private void UIScale_ScaleChanged(object sender, EventArgs e)
+        {
+            RefreshTextLayoutCaches();
+            InvalidateAllLayouts();
+        }
+
         public MGDesktop(MainRenderer Renderer)
         {
             ApartmentState ThreadState = Thread.CurrentThread.GetApartmentState();
@@ -358,6 +425,8 @@ namespace MGUI.Core.UI
             this.Renderer = Renderer;
             Windows = new();
             Resources = new(new MGTheme(Renderer.FontManager.DefaultFontFamily));
+            _UIScale = new();
+            _UIScale.ScaleChanged += UIScale_ScaleChanged;
 
             OverlayWindow = new(this, 0, 0, ValidScreenBounds.Width, ValidScreenBounds.Height)
             {
@@ -446,9 +515,8 @@ namespace MGUI.Core.UI
             //  Recalculate the layout of text-based elements when the text-rendering backend changes
             Renderer.TextEngineChanged += (sender, e) =>
             {
-                foreach (MGWindow window in Windows)
-                    foreach (MGTextBlock tb in window.TraverseVisualTree<MGTextBlock>(true, true, true, true, MGElement.TreeTraversalMode.Preorder))
-                        tb.RefreshTextEngine();
+                RefreshTextLayoutCaches();
+
                 //  Note: We don't need to call InvalidateAllLayouts() because the parent elements of MGTextBlocks will already receive LayoutChanged notifications.
                 //  The only reason InvalidateAllLayouts would be needed is if an MGElement instance other than MGTextBlock rendered text in its DrawSelf method
                 //  (currently, all text-drawing is funnelled through MGTextBlocks, even for things like MGTimer/MGStopWatch/MGTextBox)
