@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using MGUI.Core.UI;
@@ -579,6 +580,90 @@ namespace MGUI.Tests.UI
             Assert.Equal(new MGScaleSnapshot(2.0f, 2.0f, 2.0f, 2.0f, 2.0f), child.EffectiveUIScaleSnapshot);
         }
 
+        [Fact]
+        public void ComboBoxDropdownTemplatedContent_ResolvesCurrentScaleAfterRuntimeDesktopScaleChanges()
+        {
+            MGDesktop desktop = CreateDesktop(scale => scale.SetUniformScale(1.0f));
+            MGWindow parentWindow = CreateWindow(desktop, null);
+            MGWindow dropdownWindow = CreateWindow(desktop, parentWindow);
+            MGStackPanel dropdownStackPanel = CreateStackPanel(desktop, dropdownWindow);
+            MGButton dropdownItem = CreateContentButton(desktop, dropdownWindow);
+            TemplatedElement<string, MGButton> templatedItem = new("Alpha", dropdownItem);
+            desktop.Windows.Add(parentWindow);
+            parentWindow.AddNestedWindow(dropdownWindow);
+            SetField(dropdownWindow, "_Content", dropdownStackPanel);
+            SetField(dropdownStackPanel, "_Parent", dropdownWindow);
+            dropdownStackPanel.TryAddChild(templatedItem.Element);
+            SetField(templatedItem.Element, "_Parent", dropdownStackPanel);
+            SetField(dropdownItem, "_IsLayoutValid", true);
+
+            desktop.SetUniformUIScale(1.5f);
+
+            Assert.Same(dropdownItem, templatedItem.Element);
+            Assert.Equal(new MGScaleSnapshot(1.5f, 1.5f, 1.5f, 1.5f, 1.5f), dropdownItem.EffectiveUIScaleSnapshot);
+            Assert.False(dropdownItem.IsLayoutValid);
+        }
+
+        [Fact]
+        public void ComboBoxDropdownTemplatedContent_ResolvesCurrentScaleAfterRuntimeWindowOverrideChanges()
+        {
+            MGDesktop desktop = CreateDesktop(scale => scale.SetUniformScale(2.0f));
+            MGWindow parentWindow = CreateWindow(desktop, null);
+            MGWindow dropdownWindow = CreateWindow(desktop, parentWindow);
+            MGStackPanel dropdownStackPanel = CreateStackPanel(desktop, dropdownWindow);
+            MGButton dropdownItem = CreateContentButton(desktop, dropdownWindow);
+            TemplatedElement<string, MGButton> templatedItem = new("Alpha", dropdownItem);
+            parentWindow.AddNestedWindow(dropdownWindow);
+            SetField(dropdownWindow, "_Content", dropdownStackPanel);
+            SetField(dropdownStackPanel, "_Parent", dropdownWindow);
+            dropdownStackPanel.TryAddChild(templatedItem.Element);
+            SetField(templatedItem.Element, "_Parent", dropdownStackPanel);
+
+            parentWindow.SetUniformUIScaleOverride(1.25f);
+            parentWindow.SetUniformUIScaleOverride(1.75f);
+
+            Assert.Equal(new MGScaleSnapshot(1.75f, 1.75f, 1.75f, 1.75f, 1.75f), dropdownItem.EffectiveUIScaleSnapshot);
+            Assert.Equal(new MGScaleSnapshot(1.75f, 1.75f, 1.75f, 1.75f, 1.75f), dropdownWindow.ResolvedUIScaleSnapshot);
+        }
+
+        [Fact]
+        public void TabHeaderTemplateContent_ResolvesCurrentScaleAfterRuntimeWindowOverrideChanges()
+        {
+            MGDesktop desktop = CreateDesktop(scale => scale.SetUniformScale(2.0f));
+            MGWindow window = CreateWindow(desktop, null);
+            MGTabControl tabControl = CreateElement<MGTabControl>(desktop, window);
+            MGStackPanel headersPanel = CreateStackPanel(desktop, window);
+            MGTabItem tab = CreateElement<MGTabItem>(desktop, window);
+            TestElement headerContent = CreateElement<TestElement>(desktop, window);
+            MGButton oldHeaderWrapper = CreateContentButton(desktop, window);
+            Dictionary<MGTabItem, MGButton> actualTabHeaders = new()
+            {
+                [tab] = oldHeaderWrapper
+            };
+            SetField(tabControl, "<HeadersPanelElement>k__BackingField", headersPanel);
+            SetField(tabControl, "<ActualTabHeaders>k__BackingField", actualTabHeaders);
+            SetField(tabControl, "_SelectedTab", tab);
+            SetField(tab, "<TabControl>k__BackingField", tabControl);
+            SetField(tab, "_Header", headerContent);
+            SetField(oldHeaderWrapper, "_Parent", headersPanel);
+            headersPanel.TryAddChild(oldHeaderWrapper);
+            SetField(tabControl, "_SelectedTabHeaderTemplate", new Func<MGTabItem, MGButton>(_ => CreateContentButton(desktop, window)));
+            SetField(tabControl, "_UnselectedTabHeaderTemplate", new Func<MGTabItem, MGButton>(_ => CreateContentButton(desktop, window)));
+
+            window.SetUniformUIScaleOverride(1.5f);
+            InvokePrivate(tabControl, "UpdateHeaderWrapper", tab);
+            MGButton newHeaderWrapper = actualTabHeaders[tab];
+
+            Assert.NotSame(oldHeaderWrapper, newHeaderWrapper);
+            Assert.Equal(new MGScaleSnapshot(1.5f, 1.5f, 1.5f, 1.5f, 1.5f), newHeaderWrapper.EffectiveUIScaleSnapshot);
+            Assert.Equal(new MGScaleSnapshot(1.5f, 1.5f, 1.5f, 1.5f, 1.5f), headerContent.EffectiveUIScaleSnapshot);
+
+            window.SetUniformUIScaleOverride(1.75f);
+
+            Assert.Equal(new MGScaleSnapshot(1.75f, 1.75f, 1.75f, 1.75f, 1.75f), newHeaderWrapper.EffectiveUIScaleSnapshot);
+            Assert.Equal(new MGScaleSnapshot(1.75f, 1.75f, 1.75f, 1.75f, 1.75f), headerContent.EffectiveUIScaleSnapshot);
+        }
+
         private static T CreateElement<T>(Action<MGScaleSettings> configureScale)
             where T : MGElement
         {
@@ -596,6 +681,21 @@ namespace MGUI.Tests.UI
             SetField(element, "<ParentWindow>k__BackingField", window);
             SetField(element, "<ElementType>k__BackingField", MGElementType.Border);
             return element;
+        }
+
+        private static MGStackPanel CreateStackPanel(MGDesktop desktop, MGWindow window)
+        {
+            MGStackPanel stackPanel = CreateElement<MGStackPanel>(desktop, window);
+            SetField(stackPanel, "<_Children>k__BackingField", new ObservableCollection<MGElement>());
+            SetField(stackPanel, "_CanChangeContent", true);
+            return stackPanel;
+        }
+
+        private static MGButton CreateContentButton(MGDesktop desktop, MGWindow window)
+        {
+            MGButton button = CreateElement<MGButton>(desktop, window);
+            SetField(button, "_CanChangeContent", true);
+            return button;
         }
 
         private static MGDesktop CreateDesktop(Action<MGScaleSettings> configureScale)
@@ -644,6 +744,17 @@ namespace MGUI.Tests.UI
             }
 
             throw new MissingFieldException(instance.GetType().FullName, name);
+        }
+
+        private static void InvokePrivate(object instance, string name, params object[] args)
+        {
+            MethodInfo? method = instance.GetType().GetMethod(name, BindingFlags.Instance | BindingFlags.NonPublic);
+            if (method == null)
+            {
+                throw new MissingMethodException(instance.GetType().FullName, name);
+            }
+
+            method.Invoke(instance, args);
         }
 
         private sealed class TestElement : MGElement
