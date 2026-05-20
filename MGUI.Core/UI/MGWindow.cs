@@ -300,6 +300,28 @@ namespace MGUI.Core.UI
         }
 
         protected internal MGScaleSettings ResolvedUIScaleSettings => UIScaleOverride ?? ParentWindow?.ResolvedUIScaleSettings ?? Desktop.UIScale;
+        public MGScaleSnapshot ResolvedUIScaleSnapshot => MGScaleSnapshot.From(ResolvedUIScaleSettings);
+
+        public void SetUniformUIScaleOverride(float? scale)
+        {
+            if (scale.HasValue)
+            {
+                if (UIScaleOverride == null)
+                {
+                    MGScaleSettings scaleOverride = new();
+                    scaleOverride.SetUniformScale(scale.Value);
+                    UIScaleOverride = scaleOverride;
+                }
+                else
+                {
+                    UIScaleOverride.SetUniformScale(scale.Value);
+                }
+            }
+            else
+            {
+                UIScaleOverride = null;
+            }
+        }
 
         private void UIScaleOverride_ScaleChanged(object sender, EventArgs e)
         {

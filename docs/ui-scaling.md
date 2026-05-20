@@ -15,7 +15,7 @@
 
 ## Authored And Effective Values
 
-Public properties return the authored value. For example, `Padding="8"` still reads back as `8` after `Desktop.UIScale.SetUniformScale(1.5f)`. During measurement and drawing, MGUI uses the effective value for that category, so that padding behaves like `12` without mutating the property.
+Public properties return the authored value. For example, `Padding="8"` still reads back as `8` after `Desktop.SetUniformUIScale(1.5f)`. During measurement and drawing, MGUI uses the effective value for that category, so that padding behaves like `12` without mutating the property.
 
 This keeps XAML stable and avoids repeated scaling when the UI scale changes from `1.0` to `1.5` and back to `1.0`.
 
@@ -48,9 +48,8 @@ Use `UIScaleMode` when part of the visual tree needs authored values to resolve 
 `MGWindow.UIScaleOverride` replaces the inherited scale for that window subtree. A top-level window with no override uses `MGDesktop.UIScale`; nested and modal windows with no override inherit the nearest parent window scale.
 
 ```csharp
-MGScaleSettings dialogScale = new();
-dialogScale.SetUniformScale(1.5f);
-dialog.UIScaleOverride = dialogScale;
+dialog.SetUniformUIScaleOverride(1.5f);
+dialog.SetUniformUIScaleOverride(null);
 ```
 
 XAML supports a uniform-scale convenience on `Window`:
@@ -61,4 +60,10 @@ XAML supports a uniform-scale convenience on `Window`:
 </Window>
 ```
 
-`UIScaleOverride` does not multiply by `MGDesktop.UIScale`; it replaces the inherited scale settings. `MGWindow.Scale` remains a separate post-layout render transform.
+`UIScaleOverride` does not multiply by `MGDesktop.UIScale`; it replaces the inherited scale settings. Calling `SetUniformUIScaleOverride(null)` clears the override and returns the window to inherited scale. `MGWindow.Scale` remains a separate post-layout render transform.
+
+## Runtime Diagnostics
+
+`MGScaleSnapshot` provides read-only scale values for diagnostics and logging. `MGElement.EffectiveUIScaleSnapshot` reports the scale currently used by an element after `UIScaleMode` and window override resolution. `MGWindow.ResolvedUIScaleSnapshot` reports the resolved window scale before any element-level opt-out is applied.
+
+Snapshots are not a layout mutation mechanism. Change runtime scale through `MGDesktop.SetUniformUIScale`, `MGDesktop.UIScale`, `MGWindow.SetUniformUIScaleOverride`, or `MGWindow.UIScaleOverride`.

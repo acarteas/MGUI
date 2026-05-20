@@ -22,6 +22,19 @@ namespace MGUI.Core.UI
         Disabled
     }
 
+    public readonly record struct MGScaleSnapshot(float FontScale, float SpacingScale, float SizeScale, float BorderScale, float ImageScale)
+    {
+        public static MGScaleSnapshot From(MGScaleSettings settings)
+        {
+            if (settings == null)
+            {
+                throw new ArgumentNullException(nameof(settings));
+            }
+
+            return new(settings.FontScale, settings.SpacingScale, settings.SizeScale, settings.BorderScale, settings.ImageScale);
+        }
+    }
+
     public class MGScaleSettings : ViewModelBase
     {
         internal static MGScaleSettings Unscaled { get; } = CreateReadOnlyUnscaled();

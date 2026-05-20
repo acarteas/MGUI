@@ -404,6 +404,11 @@ namespace MGUI.Core.UI
             }
         }
 
+        public void SetUniformUIScale(float scale)
+        {
+            UIScale.SetUniformScale(scale);
+        }
+
         private void UIScale_ScaleChanged(object sender, EventArgs e)
         {
             RefreshTextLayoutCaches();

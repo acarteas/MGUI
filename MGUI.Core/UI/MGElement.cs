@@ -535,6 +535,8 @@ namespace MGUI.Core.UI
             ? SelfOrParentWindow.ResolvedUIScaleSettings
             : MGScaleSettings.Unscaled;
 
+        public MGScaleSnapshot EffectiveUIScaleSnapshot => MGScaleSnapshot.From(EffectiveScaleSettings);
+
         protected internal Thickness EffectiveMargin => EffectiveScaleSettings.ScaleThickness(Margin, MGScaleCategory.Spacing);
         protected internal Thickness EffectivePadding => EffectiveScaleSettings.ScaleThickness(Padding, MGScaleCategory.Spacing);
 

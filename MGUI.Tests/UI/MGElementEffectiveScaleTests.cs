@@ -456,6 +456,129 @@ namespace MGUI.Tests.UI
             Assert.False(modalWindow.IsLayoutValid);
         }
 
+        [Fact]
+        public void DesktopSetUniformUIScale_UpdatesAllCategoriesAndInvalidatesLayouts()
+        {
+            MGDesktop desktop = CreateDesktop(scale => scale.SetUniformScale(1.0f));
+            MGWindow window = CreateWindow(desktop, null);
+            desktop.Windows.Add(window);
+            SetField(window, "_IsLayoutValid", true);
+
+            desktop.SetUniformUIScale(1.5f);
+
+            Assert.Equal(1.5f, desktop.UIScale.FontScale);
+            Assert.Equal(1.5f, desktop.UIScale.SpacingScale);
+            Assert.Equal(1.5f, desktop.UIScale.SizeScale);
+            Assert.Equal(1.5f, desktop.UIScale.BorderScale);
+            Assert.Equal(1.5f, desktop.UIScale.ImageScale);
+            Assert.False(window.IsLayoutValid);
+        }
+
+        [Theory]
+        [InlineData(float.NaN)]
+        [InlineData(float.PositiveInfinity)]
+        [InlineData(float.NegativeInfinity)]
+        [InlineData(0.0f)]
+        [InlineData(-1.0f)]
+        public void DesktopSetUniformUIScale_InvalidValuesThrow(float scale)
+        {
+            MGDesktop desktop = CreateDesktop(settings => settings.SetUniformScale(1.0f));
+
+            Assert.Throws<ArgumentOutOfRangeException>(() => desktop.SetUniformUIScale(scale));
+        }
+
+        [Fact]
+        public void WindowSetUniformUIScaleOverride_CreatesOverrideAndInvalidatesSubtree()
+        {
+            MGDesktop desktop = CreateDesktop(scale => scale.SetUniformScale(2.0f));
+            MGWindow window = CreateWindow(desktop, null);
+            SetField(window, "_IsLayoutValid", true);
+
+            window.SetUniformUIScaleOverride(1.5f);
+
+            Assert.NotNull(window.UIScaleOverride);
+            Assert.Equal(new MGScaleSnapshot(1.5f, 1.5f, 1.5f, 1.5f, 1.5f), window.ResolvedUIScaleSnapshot);
+            Assert.False(window.IsLayoutValid);
+        }
+
+        [Fact]
+        public void WindowSetUniformUIScaleOverride_ReusesExistingOverride()
+        {
+            MGDesktop desktop = CreateDesktop(scale => scale.SetUniformScale(2.0f));
+            MGWindow window = CreateWindow(desktop, null);
+
+            window.SetUniformUIScaleOverride(1.25f);
+            MGScaleSettings originalOverride = window.UIScaleOverride;
+            window.SetUniformUIScaleOverride(1.75f);
+
+            Assert.Same(originalOverride, window.UIScaleOverride);
+            Assert.Equal(new MGScaleSnapshot(1.75f, 1.75f, 1.75f, 1.75f, 1.75f), window.ResolvedUIScaleSnapshot);
+        }
+
+        [Fact]
+        public void WindowSetUniformUIScaleOverride_NullClearsOverrideAndFallsBackToDesktop()
+        {
+            MGDesktop desktop = CreateDesktop(scale => scale.SetUniformScale(2.0f));
+            MGWindow window = CreateWindow(desktop, null);
+            TestElement element = CreateElement<TestElement>(desktop, window);
+
+            window.SetUniformUIScaleOverride(1.5f);
+            window.SetUniformUIScaleOverride(null);
+
+            Assert.Null(window.UIScaleOverride);
+            Assert.Equal(new MGScaleSnapshot(2.0f, 2.0f, 2.0f, 2.0f, 2.0f), window.ResolvedUIScaleSnapshot);
+            Assert.Equal(new MGScaleSnapshot(2.0f, 2.0f, 2.0f, 2.0f, 2.0f), element.EffectiveUIScaleSnapshot);
+        }
+
+        [Fact]
+        public void EffectiveUIScaleSnapshot_ReflectsDesktopScale()
+        {
+            TestElement element = CreateElement<TestElement>(scale =>
+            {
+                scale.FontScale = 1.25f;
+                scale.SpacingScale = 1.5f;
+                scale.SizeScale = 1.75f;
+                scale.BorderScale = 2.0f;
+                scale.ImageScale = 2.25f;
+            });
+
+            Assert.Equal(new MGScaleSnapshot(1.25f, 1.5f, 1.75f, 2.0f, 2.25f), element.EffectiveUIScaleSnapshot);
+        }
+
+        [Fact]
+        public void EffectiveUIScaleSnapshot_ReflectsWindowOverrideReplacement()
+        {
+            MGDesktop desktop = CreateDesktop(scale => scale.SetUniformScale(2.0f));
+            MGWindow window = CreateWindow(desktop, null);
+            TestElement element = CreateElement<TestElement>(desktop, window);
+
+            window.SetUniformUIScaleOverride(1.5f);
+
+            Assert.Equal(new MGScaleSnapshot(1.5f, 1.5f, 1.5f, 1.5f, 1.5f), window.ResolvedUIScaleSnapshot);
+            Assert.Equal(new MGScaleSnapshot(1.5f, 1.5f, 1.5f, 1.5f, 1.5f), element.EffectiveUIScaleSnapshot);
+        }
+
+        [Fact]
+        public void EffectiveUIScaleSnapshot_DisabledElementReportsUnscaledValues()
+        {
+            TestElement element = CreateElement<TestElement>(scale => scale.SetUniformScale(2.0f));
+            element.UIScaleMode = UIScaleMode.Disabled;
+
+            Assert.Equal(new MGScaleSnapshot(1.0f, 1.0f, 1.0f, 1.0f, 1.0f), element.EffectiveUIScaleSnapshot);
+        }
+
+        [Fact]
+        public void EffectiveUIScaleSnapshot_ExplicitEnabledUnderDisabledParentReportsResolvedScale()
+        {
+            TestElement parent = CreateElement<TestElement>(scale => scale.SetUniformScale(2.0f));
+            TestElement child = CreateElement<TestElement>(parent.GetDesktop(), parent.ParentWindow);
+            SetField(child, "_Parent", parent);
+            parent.UIScaleMode = UIScaleMode.Disabled;
+            child.UIScaleMode = UIScaleMode.Enabled;
+
+            Assert.Equal(new MGScaleSnapshot(2.0f, 2.0f, 2.0f, 2.0f, 2.0f), child.EffectiveUIScaleSnapshot);
+        }
+
         private static T CreateElement<T>(Action<MGScaleSettings> configureScale)
             where T : MGElement
         {
@@ -481,8 +604,8 @@ namespace MGUI.Tests.UI
             configureScale(scale);
 
             MGDesktop desktop = (MGDesktop)RuntimeHelpers.GetUninitializedObject(typeof(MGDesktop));
-            SetField(desktop, "_UIScale", scale);
             SetField(desktop, "<Windows>k__BackingField", new List<MGWindow>());
+            desktop.UIScale = scale;
             return desktop;
         }
 

@@ -175,5 +175,32 @@ namespace MGUI.Tests.UI
             Assert.Throws<InvalidOperationException>(() => MGScaleSettings.Unscaled.FontScale = 1.5f);
             Assert.Throws<InvalidOperationException>(() => MGScaleSettings.Unscaled.SetUniformScale(1.5f));
         }
+
+        [Fact]
+        public void SnapshotFromSettings_CopiesScaleValues()
+        {
+            MGScaleSettings settings = new()
+            {
+                FontScale = 1.25f,
+                SpacingScale = 1.5f,
+                SizeScale = 1.75f,
+                BorderScale = 2.0f,
+                ImageScale = 2.25f
+            };
+
+            MGScaleSnapshot snapshot = MGScaleSnapshot.From(settings);
+
+            Assert.Equal(1.25f, snapshot.FontScale);
+            Assert.Equal(1.5f, snapshot.SpacingScale);
+            Assert.Equal(1.75f, snapshot.SizeScale);
+            Assert.Equal(2.0f, snapshot.BorderScale);
+            Assert.Equal(2.25f, snapshot.ImageScale);
+        }
+
+        [Fact]
+        public void SnapshotFromSettings_NullThrows()
+        {
+            Assert.Throws<ArgumentNullException>(() => MGScaleSnapshot.From(null));
+        }
     }
 }
