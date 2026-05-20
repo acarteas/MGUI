@@ -42,6 +42,17 @@
             <ProgressBar Value="65" ShowValue="True" />
             <ProgressButton Value="40" Minimum="0" Maximum="100" ProgressBarSize="10" ProgressBarMargin="4" Content="ProgressButton chrome" />
 
+            <StackPanel UIScaleMode="Disabled" Orientation="Vertical" Spacing="6" Padding="8" Background="rgb(38,42,48)">
+                <TextBlock Text="Unscaled island: authored padding, spacing, font, checkbox, and button chrome stay at 1.0." />
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <CheckBox IsChecked="True" Content="Unscaled checkbox" />
+                    <Button Content="Unscaled button" />
+                    <TextBlock UIScaleMode="Enabled" Text="Re-enabled text" />
+                </StackPanel>
+            </StackPanel>
+
+            <Button HorizontalAlignment="Left" Content="Open 1.5x override window" CommandName="OpenScaleOverrideWindow" />
+
             <Button HorizontalAlignment="Left" Content="Context menu">
                 <Button.ContextMenu>
                     <ContextMenu>

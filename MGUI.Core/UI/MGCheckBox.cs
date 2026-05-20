@@ -246,9 +246,9 @@ namespace MGUI.Core.UI
                         if (IsCheckMarkShadowed)
                         {
                             Point ShadowOffset = EffectiveScaleSettings.ScalePoint(CheckMarkShadowOffset, MGScaleCategory.Spacing);
-                            DrawCheckMark(GetDesktop(), TargetBounds, e.DA.DT, e.DA.Opacity, e.DA.Offset + ShadowOffset, CheckMarkShadowColor);
+                            DrawCheckMark(GetDesktop(), TargetBounds, e.DA.DT, e.DA.Opacity, e.DA.Offset + ShadowOffset, CheckMarkShadowColor, EffectiveScaleSettings);
                         }
-                        DrawCheckMark(GetDesktop(), TargetBounds, e.DA.DT, e.DA.Opacity, e.DA.Offset, CheckMarkColor);
+                        DrawCheckMark(GetDesktop(), TargetBounds, e.DA.DT, e.DA.Opacity, e.DA.Offset, CheckMarkColor, EffectiveScaleSettings);
                     }
                 };
 
@@ -270,9 +270,10 @@ namespace MGUI.Core.UI
             }
         }
 
-        public static void DrawCheckMark(MGDesktop Desktop, Rectangle Bounds, DrawTransaction DT, float Opacity, Point Offset, Color Color)
+        public static void DrawCheckMark(MGDesktop Desktop, Rectangle Bounds, DrawTransaction DT, float Opacity, Point Offset, Color Color, MGScaleSettings ScaleSettings = null)
         {
 #if true
+            MGScaleSettings ActualScaleSettings = ScaleSettings ?? Desktop.UIScale;
             Vector2 TopLeft = Bounds.TopLeft().ToVector2();
             List<Vector2> CheckMarkVertices = new()
             {
@@ -283,7 +284,7 @@ namespace MGUI.Core.UI
 
             foreach ((Vector2 v0, Vector2 v1) in CheckMarkVertices.SelectConsecutivePairs(false))
             {
-                float StrokeThickness = Desktop.UIScale.ScaleFloat(2, MGScaleCategory.Border);
+                float StrokeThickness = ActualScaleSettings.ScaleFloat(2, MGScaleCategory.Border);
                 DT.StrokeLineSegment(Offset.ToVector2(), v0, v1, Color * Opacity, StrokeThickness);
             }
 #else

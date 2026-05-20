@@ -167,5 +167,13 @@ namespace MGUI.Tests.UI
             Assert.Equal(1.5f, settings.ScaleFloat(1.5f, MGScaleCategory.None));
             Assert.Equal(3.0f, settings.ScaleFloat(1.5f, MGScaleCategory.Image));
         }
+
+        [Fact]
+        public void UnscaledSettings_AreReadOnly()
+        {
+            Assert.True(MGScaleSettings.Unscaled.IsReadOnly);
+            Assert.Throws<InvalidOperationException>(() => MGScaleSettings.Unscaled.FontScale = 1.5f);
+            Assert.Throws<InvalidOperationException>(() => MGScaleSettings.Unscaled.SetUniformScale(1.5f));
+        }
     }
 }

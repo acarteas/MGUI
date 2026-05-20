@@ -53,7 +53,7 @@ namespace MGUI.Core.UI
         {
             if (OverlayWindow != null)
             {
-                foreach (MGWindow window in OverlayWindow.RecurseNestedWindows(true, MGElement.TreeTraversalMode.Preorder))
+                foreach (MGWindow window in OverlayWindow.RecurseNestedAndModalWindows(true, MGElement.TreeTraversalMode.Preorder))
                 {
                     yield return window;
                 }
@@ -61,7 +61,7 @@ namespace MGUI.Core.UI
 
             foreach (MGWindow window in Windows)
             {
-                foreach (MGWindow nestedWindow in window.RecurseNestedWindows(true, MGElement.TreeTraversalMode.Preorder))
+                foreach (MGWindow nestedWindow in window.RecurseNestedAndModalWindows(true, MGElement.TreeTraversalMode.Preorder))
                 {
                     yield return nestedWindow;
                 }

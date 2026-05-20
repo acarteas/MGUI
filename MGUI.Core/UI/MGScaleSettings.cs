@@ -15,8 +15,20 @@ namespace MGUI.Core.UI
         Image
     }
 
+    public enum UIScaleMode
+    {
+        Inherit,
+        Enabled,
+        Disabled
+    }
+
     public class MGScaleSettings : ViewModelBase
     {
+        internal static MGScaleSettings Unscaled { get; } = CreateReadOnlyUnscaled();
+
+        private bool _IsReadOnly;
+        public bool IsReadOnly => _IsReadOnly;
+
         private float _FontScale = 1.0f;
         public float FontScale
         {
@@ -56,6 +68,7 @@ namespace MGUI.Core.UI
 
         public void SetUniformScale(float scale)
         {
+            ThrowIfReadOnly();
             ValidateScale(scale);
 
             bool AnyChanged = false;
@@ -129,6 +142,7 @@ namespace MGUI.Core.UI
 
         private bool SetScaleValue(ref float field, float value, string propertyName, bool raiseScaleChanged)
         {
+            ThrowIfReadOnly();
             ValidateScale(value);
 
             if (field == value)
@@ -157,5 +171,20 @@ namespace MGUI.Core.UI
 
         private static bool ShouldPreserveNonzeroMinimum(MGScaleCategory category)
             => category is MGScaleCategory.Border or MGScaleCategory.Image;
+
+        private void ThrowIfReadOnly()
+        {
+            if (IsReadOnly)
+            {
+                throw new InvalidOperationException($"{nameof(MGScaleSettings)} is read-only.");
+            }
+        }
+
+        private static MGScaleSettings CreateReadOnlyUnscaled()
+        {
+            MGScaleSettings settings = new();
+            settings._IsReadOnly = true;
+            return settings;
+        }
     }
 }

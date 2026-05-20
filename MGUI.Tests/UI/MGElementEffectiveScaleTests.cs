@@ -1,10 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using MGUI.Core.UI;
 using MGUI.Core.UI.Containers;
 using MGUI.Core.UI.Containers.Grids;
 using MGUI.Core.UI.Text;
+using MGUI.Shared.Helpers;
 using Microsoft.Xna.Framework;
 using MonoGame.Extended;
 using Xunit;
@@ -315,25 +317,195 @@ namespace MGUI.Tests.UI
             Assert.Equal(new Thickness(1, 2, 3, 4), border.EffectiveBorderThickness);
         }
 
+        [Fact]
+        public void UIScaleMode_DefaultInherit_PreservesScaledBehavior()
+        {
+            TestElement element = CreateElement<TestElement>(scale => scale.SpacingScale = 1.5f);
+            SetField(element, "_Margin", new Thickness(2, 4, 6, 8));
+
+            Assert.Equal(UIScaleMode.Inherit, element.UIScaleMode);
+            Assert.Equal(UIScaleMode.Enabled, element.DerivedUIScaleMode);
+            Assert.True(element.IsUIScaleEffectivelyEnabled);
+            Assert.Equal(new Thickness(3, 6, 9, 12), element.EffectiveMargin);
+            Assert.Equal(new Thickness(2, 4, 6, 8), element.Margin);
+        }
+
+        [Fact]
+        public void UIScaleMode_DisabledParentMakesChildResolveUnscaledValues()
+        {
+            TestElement parent = CreateElement<TestElement>(scale => scale.SpacingScale = 2.0f);
+            TestElement child = CreateElement<TestElement>(scale => scale.SpacingScale = 2.0f);
+            SetField(child, "_Parent", parent);
+            SetField(parent, "_UIScaleMode", UIScaleMode.Disabled);
+            SetField(child, "_Margin", new Thickness(3));
+            SetField(child, "_Padding", new Thickness(4));
+            SetField(child, "_PreferredWidth", 10);
+
+            Assert.Equal(UIScaleMode.Disabled, child.DerivedUIScaleMode);
+            Assert.False(child.IsUIScaleEffectivelyEnabled);
+            Assert.Equal(new Thickness(3), child.EffectiveMargin);
+            Assert.Equal(new Thickness(4), child.EffectivePadding);
+            Assert.Equal(10, child.EffectivePreferredWidth);
+            Assert.Equal(new Thickness(3), child.Margin);
+            Assert.Equal(new Thickness(4), child.Padding);
+            Assert.Equal(10, child.PreferredWidth);
+        }
+
+        [Fact]
+        public void UIScaleMode_ExplicitChildEnabledReEnablesScalingUnderDisabledParent()
+        {
+            TestElement parent = CreateElement<TestElement>(scale => scale.SpacingScale = 2.0f);
+            TestElement child = CreateElement<TestElement>(scale => scale.SpacingScale = 2.0f);
+            SetField(child, "_Parent", parent);
+            SetField(parent, "_UIScaleMode", UIScaleMode.Disabled);
+            SetField(child, "_UIScaleMode", UIScaleMode.Enabled);
+            SetField(child, "_Margin", new Thickness(3));
+
+            Assert.Equal(UIScaleMode.Enabled, child.DerivedUIScaleMode);
+            Assert.True(child.IsUIScaleEffectivelyEnabled);
+            Assert.Equal(new Thickness(6), child.EffectiveMargin);
+        }
+
+        [Fact]
+        public void PerWindowUIScaleOverride_ReplacesDesktopScale()
+        {
+            MGDesktop desktop = CreateDesktop(scale => scale.SpacingScale = 2.0f);
+            MGWindow window = CreateWindow(desktop, null);
+            MGScaleSettings windowScale = new();
+            windowScale.SpacingScale = 1.5f;
+            SetField(window, "_UIScaleOverride", windowScale);
+
+            TestElement element = CreateElement<TestElement>(desktop, window);
+            SetField(element, "_Margin", new Thickness(10));
+
+            Assert.Same(windowScale, window.ResolvedUIScaleSettings);
+            Assert.Equal(new Thickness(15), element.EffectiveMargin);
+        }
+
+        [Fact]
+        public void NestedWindows_InheritParentOverrideWhenNull()
+        {
+            MGDesktop desktop = CreateDesktop(scale => scale.SpacingScale = 2.0f);
+            MGWindow parentWindow = CreateWindow(desktop, null);
+            MGScaleSettings parentScale = new();
+            parentScale.SpacingScale = 1.25f;
+            SetField(parentWindow, "_UIScaleOverride", parentScale);
+
+            MGWindow nestedWindow = CreateWindow(desktop, parentWindow);
+            TestElement element = CreateElement<TestElement>(desktop, nestedWindow);
+            SetField(element, "_Margin", new Thickness(8));
+
+            Assert.Same(parentScale, nestedWindow.ResolvedUIScaleSettings);
+            Assert.Equal(new Thickness(10), element.EffectiveMargin);
+        }
+
+        [Fact]
+        public void NestedWindows_UseOwnOverrideWhenProvided()
+        {
+            MGDesktop desktop = CreateDesktop(scale => scale.SpacingScale = 2.0f);
+            MGWindow parentWindow = CreateWindow(desktop, null);
+            MGScaleSettings parentScale = new();
+            parentScale.SpacingScale = 1.25f;
+            SetField(parentWindow, "_UIScaleOverride", parentScale);
+
+            MGWindow nestedWindow = CreateWindow(desktop, parentWindow);
+            MGScaleSettings nestedScale = new();
+            nestedScale.SpacingScale = 1.75f;
+            SetField(nestedWindow, "_UIScaleOverride", nestedScale);
+
+            TestElement element = CreateElement<TestElement>(desktop, nestedWindow);
+            SetField(element, "_Margin", new Thickness(8));
+
+            Assert.Same(nestedScale, nestedWindow.ResolvedUIScaleSettings);
+            Assert.Equal(new Thickness(14), element.EffectiveMargin);
+        }
+
+        [Fact]
+        public void UIScaleModeSetter_OnWindowInvalidatesModalWindowSubtree()
+        {
+            MGDesktop desktop = CreateDesktop(scale => scale.SpacingScale = 2.0f);
+            MGWindow parentWindow = CreateWindow(desktop, null);
+            MGWindow modalWindow = CreateWindow(desktop, parentWindow);
+            SetField(parentWindow, "_ModalWindow", modalWindow);
+            SetField(parentWindow, "_IsLayoutValid", true);
+            SetField(modalWindow, "_IsLayoutValid", true);
+
+            parentWindow.UIScaleMode = UIScaleMode.Disabled;
+
+            Assert.False(parentWindow.IsLayoutValid);
+            Assert.False(modalWindow.IsLayoutValid);
+            Assert.Equal(UIScaleMode.Disabled, modalWindow.DerivedUIScaleMode);
+        }
+
+        [Fact]
+        public void DesktopUIScaleSetter_InvalidatesModalWindows()
+        {
+            MGDesktop desktop = CreateDesktop(scale => scale.SpacingScale = 1.0f);
+            MGWindow parentWindow = CreateWindow(desktop, null);
+            MGWindow modalWindow = CreateWindow(desktop, parentWindow);
+            SetField(parentWindow, "_ModalWindow", modalWindow);
+            desktop.Windows.Add(parentWindow);
+            SetField(parentWindow, "_IsLayoutValid", true);
+            SetField(modalWindow, "_IsLayoutValid", true);
+
+            MGScaleSettings replacementScale = new();
+            replacementScale.SpacingScale = 1.5f;
+            desktop.UIScale = replacementScale;
+
+            Assert.False(parentWindow.IsLayoutValid);
+            Assert.False(modalWindow.IsLayoutValid);
+        }
+
         private static T CreateElement<T>(Action<MGScaleSettings> configureScale)
             where T : MGElement
+        {
+            MGDesktop desktop = CreateDesktop(configureScale);
+            MGWindow window = CreateWindow(desktop, null);
+
+            return CreateElement<T>(desktop, window);
+        }
+
+        private static T CreateElement<T>(MGDesktop desktop, MGWindow window)
+            where T : MGElement
+        {
+            T element = (T)RuntimeHelpers.GetUninitializedObject(typeof(T));
+            InitializeElementForScaleRefresh(element);
+            SetField(element, "<ParentWindow>k__BackingField", window);
+            SetField(element, "<ElementType>k__BackingField", MGElementType.Border);
+            return element;
+        }
+
+        private static MGDesktop CreateDesktop(Action<MGScaleSettings> configureScale)
         {
             MGScaleSettings scale = new();
             configureScale(scale);
 
             MGDesktop desktop = (MGDesktop)RuntimeHelpers.GetUninitializedObject(typeof(MGDesktop));
             SetField(desktop, "_UIScale", scale);
-
-            MGWindow window = (MGWindow)RuntimeHelpers.GetUninitializedObject(typeof(MGWindow));
-            SetField(window, "<Desktop>k__BackingField", desktop);
-
-            T element = (T)RuntimeHelpers.GetUninitializedObject(typeof(T));
-            SetField(element, "<ParentWindow>k__BackingField", window);
-            SetField(element, "<ElementType>k__BackingField", MGElementType.Border);
-            return element;
+            SetField(desktop, "<Windows>k__BackingField", new List<MGWindow>());
+            return desktop;
         }
 
-        private static void SetField(object instance, string name, object value)
+        private static MGWindow CreateWindow(MGDesktop desktop, MGWindow? parentWindow)
+        {
+            MGWindow window = (MGWindow)RuntimeHelpers.GetUninitializedObject(typeof(MGWindow));
+            InitializeElementForScaleRefresh(window);
+            SetField(window, "<Desktop>k__BackingField", desktop);
+            SetField(window, "<ParentWindow>k__BackingField", parentWindow);
+            SetField(window, "<ElementType>k__BackingField", MGElementType.Window);
+            SetField(window, "_NestedWindows", new List<MGWindow>());
+            return window;
+        }
+
+        private static void InitializeElementForScaleRefresh(MGElement element)
+        {
+            SetField(element, "<InitializationManager>k__BackingField", new DeferEventsManager(() => { }));
+            SetField(element, "<Components>k__BackingField", new List<MGComponentBase>());
+            SetField(element, "<RecentMeasurementsFull>k__BackingField", new List<ElementMeasurement>());
+            SetField(element, "<RecentMeasurementsSelfOnly>k__BackingField", new List<ElementMeasurement>());
+        }
+
+        private static void SetField(object instance, string name, object? value)
         {
             Type? type = instance.GetType();
             while (type != null)

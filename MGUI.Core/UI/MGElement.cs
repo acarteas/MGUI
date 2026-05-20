@@ -259,7 +259,10 @@ namespace MGUI.Core.UI
                 MGElement Previous = Parent;
                 _Parent = Value;
                 NPC(nameof(Parent));
+                NPC(nameof(DerivedUIScaleMode));
+                NPC(nameof(IsUIScaleEffectivelyEnabled));
                 OnParentChanged?.Invoke(this, new(Previous, Parent));
+                RefreshScaleAffectedSubtree();
             }
         }
 
@@ -367,7 +370,77 @@ namespace MGUI.Core.UI
 			}
 		}
 
-		public event EventHandler<EventArgs<string>> OnNameChanged;
+        public event EventHandler<EventArgs<string>> OnNameChanged;
+
+        #region UI Scale
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private UIScaleMode _UIScaleMode = UIScaleMode.Inherit;
+        public UIScaleMode UIScaleMode
+        {
+            get => _UIScaleMode;
+            set
+            {
+                if (_UIScaleMode != value)
+                {
+                    _UIScaleMode = value;
+                    NPC(nameof(UIScaleMode));
+                    NPC(nameof(DerivedUIScaleMode));
+                    NPC(nameof(IsUIScaleEffectivelyEnabled));
+                    RefreshScaleAffectedSubtree();
+                }
+            }
+        }
+
+        protected internal UIScaleMode DerivedUIScaleMode
+        {
+            get
+            {
+                if (UIScaleMode != UIScaleMode.Inherit)
+                {
+                    return UIScaleMode;
+                }
+
+                if (Parent != null)
+                {
+                    return Parent.DerivedUIScaleMode;
+                }
+
+                if (ParentWindow != null)
+                {
+                    return ParentWindow.DerivedUIScaleMode;
+                }
+
+                return UIScaleMode.Enabled;
+            }
+        }
+
+        protected internal bool IsUIScaleEffectivelyEnabled => DerivedUIScaleMode != UIScaleMode.Disabled;
+
+        internal virtual void RefreshScaleAffectedSubtree()
+        {
+            RefreshScaleAffectedVisualTree();
+        }
+
+        internal void RefreshScaleAffectedVisualTree()
+        {
+            if (InitializationManager == null || InitializationManager.IsDeferringEvents)
+            {
+                return;
+            }
+
+            foreach (MGElement element in TraverseVisualTree(true, true, true, true, TreeTraversalMode.Preorder))
+            {
+                if (element is MGTextBlock textBlock)
+                {
+                    textBlock.RefreshTextEngine();
+                }
+
+                element.InvalidateLayout();
+            }
+
+            LayoutChanged(this, true);
+        }
+        #endregion UI Scale
 
         #region Margin / Padding
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -458,7 +531,9 @@ namespace MGUI.Core.UI
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public Size MarginAndPaddingSize => new(HorizontalMarginAndPadding, VerticalMarginAndPadding);
 
-        protected internal MGScaleSettings EffectiveScaleSettings => GetDesktop().UIScale;
+        protected internal MGScaleSettings EffectiveScaleSettings => IsUIScaleEffectivelyEnabled
+            ? SelfOrParentWindow.ResolvedUIScaleSettings
+            : MGScaleSettings.Unscaled;
 
         protected internal Thickness EffectiveMargin => EffectiveScaleSettings.ScaleThickness(Margin, MGScaleCategory.Spacing);
         protected internal Thickness EffectivePadding => EffectiveScaleSettings.ScaleThickness(Padding, MGScaleCategory.Spacing);
@@ -782,6 +857,12 @@ namespace MGUI.Core.UI
 				{
 					MGToolTip Previous = ToolTip;
 					_ToolTip = value;
+                    if (Previous?.Parent == this)
+                    {
+                        Previous.SetParent(null);
+                    }
+
+                    ToolTip?.SetParent(this);
                     NPC(nameof(ToolTip));
 					ToolTipChanged?.Invoke(this, new(Previous, ToolTip));
 				}
@@ -805,6 +886,12 @@ namespace MGUI.Core.UI
 				{
 					MGContextMenu Previous = ContextMenu;
 					_ContextMenu = value;
+                    if (Previous?.Parent == this)
+                    {
+                        Previous.SetParent(null);
+                    }
+
+                    ContextMenu?.SetParent(this);
                     SyncContextMenuRmbHandler();
                     NPC(nameof(ContextMenu));
 					ContextMenuChanged?.Invoke(this, new(Previous, ContextMenu));
