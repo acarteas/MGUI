@@ -457,13 +457,17 @@ namespace MGUI.Core.UI
             }
         }
 
+        protected internal int? EffectiveProgressBarSize => EffectiveScaleSettings.ScaleNullableInt(ProgressBarSize, MGScaleCategory.Size);
+        protected internal Thickness EffectiveProgressBarMargin => EffectiveScaleSettings.ScaleThickness(ProgressBarMargin, MGScaleCategory.Spacing);
+
         private Rectangle GetProgressBarBounds(Rectangle ElementBounds, bool IncludeProgressBarBorder)
         {
-            Rectangle PaddedBounds = ElementBounds.GetCompressed(ProgressBarMargin);
+            Rectangle PaddedBounds = ElementBounds.GetCompressed(EffectiveProgressBarMargin);
             Thickness ProgressBarBorderThickness = EffectiveProgressBarBorderThickness;
             if (!IncludeProgressBarBorder && ProgressBarBorderBrush != null)
                 PaddedBounds = PaddedBounds.GetCompressed(ProgressBarBorderThickness);
 
+            int? ProgressBarSize = EffectiveProgressBarSize;
             if (ProgressBarSize.HasValue)
             {
                 Size BarSize = new(ProgressBarSize.Value, ProgressBarSize.Value);
@@ -639,7 +643,8 @@ namespace MGUI.Core.UI
                 return base.MeasureSelfOverride(AvailableSize, out SharedSize);
 
             //  Compute the actual dimensions of the progress bar and its margin
-            int Size = ProgressBarSize.Value;
+            int Size = EffectiveProgressBarSize.Value;
+            Thickness ProgressBarMargin = EffectiveProgressBarMargin;
             Thickness ProgressBarThickness = Orientation switch
             {
                 Orientation.Horizontal => new(Size + ProgressBarMargin.Width, Size / 2 + ProgressBarMargin.Height, 0, 0),

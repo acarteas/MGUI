@@ -196,6 +196,9 @@ namespace MGUI.Core.UI
             }
         }
 
+        protected internal int EffectiveNumberLineSize => EffectiveScaleSettings.ScaleInt(NumberLineSize, MGScaleCategory.Size);
+        protected internal Thickness EffectiveNumberLineBorderThickness => EffectiveScaleSettings.ScaleThickness(NumberLineBorderThickness, MGScaleCategory.Border);
+
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private Thickness _NumberLineBorderThickness;
         public Thickness NumberLineBorderThickness
@@ -336,6 +339,8 @@ namespace MGUI.Core.UI
 
         public int ActualTickWidth => TickWidth ?? (IsHorizontal ? DefaultTickPrimarySize : IsVertical ? DefaultTickSecondarySize : throw new NotImplementedException());
         public int ActualTickHeight => TickHeight ?? (IsHorizontal ? DefaultTickSecondarySize : IsVertical ? DefaultTickPrimarySize : throw new NotImplementedException());
+        protected internal int EffectiveActualTickWidth => EffectiveScaleSettings.ScaleInt(ActualTickWidth, MGScaleCategory.Size);
+        protected internal int EffectiveActualTickHeight => EffectiveScaleSettings.ScaleInt(ActualTickHeight, MGScaleCategory.Size);
 
         /*
         /// <summary>True if the numeric values should be drawn at the given <see cref="TickFrequency"/> interval under the number line.<para/>
@@ -389,6 +394,7 @@ namespace MGUI.Core.UI
         }
 
         public IFillBrush ActualTickFillBrush => TickFillBrush ?? Foreground;
+        protected internal Thickness EffectiveTickBorderThickness => EffectiveScaleSettings.ScaleThickness(TickBorderThickness, MGScaleCategory.Border);
         #endregion Ticks
 
         #region Thumb
@@ -444,6 +450,8 @@ namespace MGUI.Core.UI
 
         public int ActualThumbWidth => ThumbWidth ?? (IsHorizontal ? DefaultThumbPrimarySize : IsVertical ? DefaultThumbSecondarySize : throw new NotImplementedException());
         public int ActualThumbHeight => ThumbHeight ?? (IsHorizontal ? DefaultThumbSecondarySize : IsVertical ? DefaultThumbPrimarySize : throw new NotImplementedException());
+        protected internal int EffectiveActualThumbWidth => EffectiveScaleSettings.ScaleInt(ActualThumbWidth, MGScaleCategory.Size);
+        protected internal int EffectiveActualThumbHeight => EffectiveScaleSettings.ScaleInt(ActualThumbHeight, MGScaleCategory.Size);
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private Thickness _ThumbBorderThickness;
@@ -492,6 +500,7 @@ namespace MGUI.Core.UI
         }
 
         public IFillBrush ActualThumbFillBrush => ThumbFillBrush ?? Foreground;
+        protected internal Thickness EffectiveThumbBorderThickness => EffectiveScaleSettings.ScaleThickness(ThumbBorderThickness, MGScaleCategory.Border);
         #endregion Thumb
 
         #region Orientation
@@ -701,7 +710,7 @@ namespace MGUI.Core.UI
             {
                 Point LayoutSpacePosition = ConvertCoordinateSpace(CoordinateSpace.Screen, CoordinateSpace.Layout, InputTracker.Mouse.CurrentPosition);
                 IsHoveringNumberLine = RecentStretchedNumberLineBounds.ContainsInclusive(LayoutSpacePosition);
-                IsHoveringThumb = RecentThumbBounds.GetExpanded(5).ContainsInclusive(LayoutSpacePosition);
+                IsHoveringThumb = RecentThumbBounds.GetExpanded(EffectiveScaleSettings.ScaleInt(5, MGScaleCategory.Spacing)).ContainsInclusive(LayoutSpacePosition);
             }
         }
 
@@ -730,22 +739,22 @@ namespace MGUI.Core.UI
             int Height;
             if (Orientation == Orientation.Horizontal)
             {
-                Width = ActualThumbWidth * 2;
-                Height = Math.Max(ActualThumbHeight, NumberLineSize);
+                Width = EffectiveActualThumbWidth * 2;
+                Height = Math.Max(EffectiveActualThumbHeight, EffectiveNumberLineSize);
                 if (CanDrawTickMarks && DrawTicks)
                 {
-                    Width = Math.Max(Width, ActualTickWidth * 2);
-                    Height = Math.Max(Height, ActualTickHeight);
+                    Width = Math.Max(Width, EffectiveActualTickWidth * 2);
+                    Height = Math.Max(Height, EffectiveActualTickHeight);
                 }
             }
             else if (Orientation == Orientation.Vertical)
             {
-                Width = Math.Max(ActualThumbWidth, NumberLineSize);
-                Height = ActualThumbHeight * 2;
+                Width = Math.Max(EffectiveActualThumbWidth, EffectiveNumberLineSize);
+                Height = EffectiveActualThumbHeight * 2;
                 if (CanDrawTickMarks && DrawTicks)
                 {
-                    Width = Math.Max(Width, ActualTickWidth);
-                    Height = Math.Max(Height, ActualTickHeight * 2);
+                    Width = Math.Max(Width, EffectiveActualTickWidth);
+                    Height = Math.Max(Height, EffectiveActualTickHeight * 2);
                 }
             }
             else
@@ -757,12 +766,13 @@ namespace MGUI.Core.UI
         private Rectangle ComputeNumberLineBounds(Rectangle LayoutBounds)
         {
             //  Apply padding
+            Thickness Padding = EffectivePadding;
             LayoutBounds = new(LayoutBounds.Left + Padding.Left, LayoutBounds.Top + Padding.Top, LayoutBounds.Width - Padding.Width, LayoutBounds.Height - Padding.Height);
 
             if (Orientation == Orientation.Horizontal)
             {
                 //  Compute number line position
-                int XPadding = Math.Max(ActualThumbWidth / 2, DrawTicks ? ActualTickWidth / 2 : 0);
+                int XPadding = Math.Max(EffectiveActualThumbWidth / 2, DrawTicks ? EffectiveActualTickWidth / 2 : 0);
                 int NumberLineStartPosition = (int)Math.Clamp(LayoutBounds.Left + XPadding, LayoutBounds.Left, LayoutBounds.Right);
                 int NumberLineEndPosition = (int)Math.Clamp(LayoutBounds.Right - XPadding, LayoutBounds.Left, LayoutBounds.Right);
                 if (NumberLineStartPosition == NumberLineEndPosition)
@@ -772,13 +782,13 @@ namespace MGUI.Core.UI
                 }
                 int NumberLineWidth = NumberLineEndPosition - NumberLineStartPosition;
 
-                Rectangle NumberLineBounds = ApplyAlignment(LayoutBounds, HorizontalAlignment.Center, VerticalAlignment.Center, new Size(NumberLineWidth, NumberLineSize));
+                Rectangle NumberLineBounds = ApplyAlignment(LayoutBounds, HorizontalAlignment.Center, VerticalAlignment.Center, new Size(NumberLineWidth, EffectiveNumberLineSize));
                 return NumberLineBounds;
             }
             else if (Orientation == Orientation.Vertical)
             {
                 //  Compute number line position
-                int YPadding = Math.Max(ActualThumbHeight / 2, DrawTicks ? ActualTickHeight / 2 : 0);
+                int YPadding = Math.Max(EffectiveActualThumbHeight / 2, DrawTicks ? EffectiveActualTickHeight / 2 : 0);
                 int NumberLineStartPosition = (int)Math.Clamp(LayoutBounds.Top + YPadding, LayoutBounds.Top, LayoutBounds.Bottom);
                 int NumberLineEndPosition = (int)Math.Clamp(LayoutBounds.Bottom - YPadding, LayoutBounds.Top, LayoutBounds.Bottom);
                 if (NumberLineStartPosition == NumberLineEndPosition)
@@ -788,7 +798,7 @@ namespace MGUI.Core.UI
                 }
                 int NumberLineHeight = NumberLineEndPosition - NumberLineStartPosition;
 
-                Rectangle NumberLineBounds = ApplyAlignment(LayoutBounds, HorizontalAlignment.Center, VerticalAlignment.Center, new Size(NumberLineSize, NumberLineHeight));
+                Rectangle NumberLineBounds = ApplyAlignment(LayoutBounds, HorizontalAlignment.Center, VerticalAlignment.Center, new Size(EffectiveNumberLineSize, NumberLineHeight));
                 return NumberLineBounds;
             }
             else
@@ -822,11 +832,11 @@ namespace MGUI.Core.UI
 
                 //  Draw the number line
                 ActualNumberLineFillBrush.Draw(DA, this, NumberLineBounds);
-                NumberLineBorderBrush?.Draw(DA, this, NumberLineBounds, NumberLineBorderThickness);
+                NumberLineBorderBrush?.Draw(DA, this, NumberLineBounds, EffectiveNumberLineBorderThickness);
 
                 if (DrawTicks && NumberLineBounds.Width > 0)
                 {
-                    Size TickSize = new(ActualTickWidth, ActualTickHeight);
+                    Size TickSize = new(EffectiveActualTickWidth, EffectiveActualTickHeight);
                     float IntervalPercent = TickFrequency.Value / Interval;
                     float IntervalPixels = NumberLineBounds.Width * IntervalPercent;
 
@@ -836,17 +846,17 @@ namespace MGUI.Core.UI
                     {
                         Rectangle TickBounds = ApplyAlignment(new((int)CurrentXPosition, LayoutBounds.Top, 0, LayoutBounds.Height), HorizontalAlignment.Center, VerticalAlignment.Center, TickSize);
                         ActualTickFillBrush.Draw(DA, this, TickBounds);
-                        TickBorderBrush?.Draw(DA, this, TickBounds, TickBorderThickness);
+                        TickBorderBrush?.Draw(DA, this, TickBounds, EffectiveTickBorderThickness);
                         CurrentXPosition += IntervalPixels;
                     }
 
                     //  Draw the ticks at the min and max
                     Rectangle MinTickBounds = ApplyAlignment(new(NumberLineBounds.Left, LayoutBounds.Top, 0, LayoutBounds.Height), HorizontalAlignment.Center, VerticalAlignment.Center, TickSize);
                     ActualTickFillBrush.Draw(DA, this, MinTickBounds);
-                    TickBorderBrush?.Draw(DA, this, MinTickBounds, TickBorderThickness);
+                    TickBorderBrush?.Draw(DA, this, MinTickBounds, EffectiveTickBorderThickness);
                     Rectangle MaxTickBounds = ApplyAlignment(new(NumberLineBounds.Right, LayoutBounds.Top, 0, LayoutBounds.Height), HorizontalAlignment.Center, VerticalAlignment.Center, TickSize);
                     ActualTickFillBrush.Draw(DA, this, MaxTickBounds);
-                    TickBorderBrush?.Draw(DA, this, MaxTickBounds, TickBorderThickness);
+                    TickBorderBrush?.Draw(DA, this, MaxTickBounds, EffectiveTickBorderThickness);
                 }
 
                 //  Compute thumb position
@@ -857,11 +867,11 @@ namespace MGUI.Core.UI
                     ThumbXPosition = NumberLineBounds.Left + NumberLineBounds.Width * (Value - Minimum) / Interval;
 
                 //  Draw the thumb
-                Size ThumbSize = new(ActualThumbWidth, ActualThumbHeight);
+                Size ThumbSize = new(EffectiveActualThumbWidth, EffectiveActualThumbHeight);
                 Rectangle ThumbBounds = ApplyAlignment(new((int)ThumbXPosition, LayoutBounds.Top, 0, LayoutBounds.Height), HorizontalAlignment.Center, VerticalAlignment.Center, ThumbSize);
                 RecentThumbBounds = ThumbBounds;
                 ActualThumbFillBrush.Draw(DA, this, ThumbBounds);
-                ThumbBorderBrush?.Draw(DA, this, ThumbBounds, ThumbBorderThickness);
+                ThumbBorderBrush?.Draw(DA, this, ThumbBounds, EffectiveThumbBorderThickness);
 
                 if (!ParentWindow.HasModalWindow && (IsLMBPressed || IsHovered || IsDraggingThumb || IsHoveringThumb))
                 {
@@ -878,10 +888,10 @@ namespace MGUI.Core.UI
                     foreach (Rectangle Bounds in NumberLineChunks)
                     {
                         OverlayFillBrush?.Draw(DA, this, Bounds);
-                        OverlayBorderBrush?.Draw(DA, this, Bounds, NumberLineBorderThickness);
+                        OverlayBorderBrush?.Draw(DA, this, Bounds, EffectiveNumberLineBorderThickness);
                     }
                     OverlayFillBrush?.Draw(DA, this, ThumbBounds);
-                    OverlayBorderBrush?.Draw(DA, this, ThumbBounds, ThumbBorderThickness);
+                    OverlayBorderBrush?.Draw(DA, this, ThumbBounds, EffectiveThumbBorderThickness);
                 }
             }
             else if (Orientation == Orientation.Vertical)
@@ -890,11 +900,11 @@ namespace MGUI.Core.UI
 
                 //  Draw the number line
                 ActualNumberLineFillBrush.Draw(DA, this, NumberLineBounds);
-                NumberLineBorderBrush?.Draw(DA, this, NumberLineBounds, NumberLineBorderThickness);
+                NumberLineBorderBrush?.Draw(DA, this, NumberLineBounds, EffectiveNumberLineBorderThickness);
 
                 if (DrawTicks && NumberLineBounds.Height > 0)
                 {
-                    Size TickSize = new(ActualTickWidth, ActualTickHeight);
+                    Size TickSize = new(EffectiveActualTickWidth, EffectiveActualTickHeight);
                     float IntervalPercent = TickFrequency.Value / Interval;
                     float IntervalPixels = NumberLineBounds.Height * IntervalPercent;
 
@@ -904,17 +914,17 @@ namespace MGUI.Core.UI
                     {
                         Rectangle TickBounds = ApplyAlignment(new(LayoutBounds.Left, (int)CurrentYPosition, LayoutBounds.Width, 0), HorizontalAlignment.Center, VerticalAlignment.Center, TickSize);
                         ActualTickFillBrush.Draw(DA, this, TickBounds);
-                        TickBorderBrush?.Draw(DA, this, TickBounds, TickBorderThickness);
+                        TickBorderBrush?.Draw(DA, this, TickBounds, EffectiveTickBorderThickness);
                         CurrentYPosition += IntervalPixels;
                     }
 
                     //  Draw the ticks at the min and max
                     Rectangle MinTickBounds = ApplyAlignment(new(LayoutBounds.Left, NumberLineBounds.Top, LayoutBounds.Width, 0), HorizontalAlignment.Center, VerticalAlignment.Center, TickSize);
                     ActualTickFillBrush.Draw(DA, this, MinTickBounds);
-                    TickBorderBrush?.Draw(DA, this, MinTickBounds, TickBorderThickness);
+                    TickBorderBrush?.Draw(DA, this, MinTickBounds, EffectiveTickBorderThickness);
                     Rectangle MaxTickBounds = ApplyAlignment(new(LayoutBounds.Right, NumberLineBounds.Top, LayoutBounds.Width, 0), HorizontalAlignment.Center, VerticalAlignment.Center, TickSize);
                     ActualTickFillBrush.Draw(DA, this, MaxTickBounds);
-                    TickBorderBrush?.Draw(DA, this, MaxTickBounds, TickBorderThickness);
+                    TickBorderBrush?.Draw(DA, this, MaxTickBounds, EffectiveTickBorderThickness);
                 }
 
                 //  Compute thumb position
@@ -925,11 +935,11 @@ namespace MGUI.Core.UI
                     ThumbYPosition = NumberLineBounds.Top + NumberLineBounds.Height * (Value - Minimum) / Interval;
 
                 //  Draw the thumb
-                Size ThumbSize = new(ActualThumbWidth, ActualThumbHeight);
+                Size ThumbSize = new(EffectiveActualThumbWidth, EffectiveActualThumbHeight);
                 Rectangle ThumbBounds = ApplyAlignment(new(LayoutBounds.Left, (int)ThumbYPosition, LayoutBounds.Width, 0), HorizontalAlignment.Center, VerticalAlignment.Center, ThumbSize);
                 RecentThumbBounds = ThumbBounds;
                 ActualThumbFillBrush.Draw(DA, this, ThumbBounds);
-                ThumbBorderBrush?.Draw(DA, this, ThumbBounds, ThumbBorderThickness);
+                ThumbBorderBrush?.Draw(DA, this, ThumbBounds, EffectiveThumbBorderThickness);
 
                 if (!ParentWindow.HasModalWindow && (IsLMBPressed || IsHovered || IsDraggingThumb || IsHoveringThumb))
                 {
@@ -946,10 +956,10 @@ namespace MGUI.Core.UI
                     foreach (Rectangle Bounds in NumberLineChunks)
                     {
                         OverlayFillBrush?.Draw(DA, this, Bounds);
-                        OverlayBorderBrush?.Draw(DA, this, Bounds, NumberLineBorderThickness);
+                        OverlayBorderBrush?.Draw(DA, this, Bounds, EffectiveNumberLineBorderThickness);
                     }
                     OverlayFillBrush?.Draw(DA, this, ThumbBounds);
-                    OverlayBorderBrush?.Draw(DA, this, ThumbBounds, ThumbBorderThickness);
+                    OverlayBorderBrush?.Draw(DA, this, ThumbBounds, EffectiveThumbBorderThickness);
                 }
             }
             else

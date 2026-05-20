@@ -64,6 +64,7 @@ namespace MGUI.Core.UI
         public static int DefaultDropdownArrowLeftMargin { get; set; } = 7;
         /// <summary>The default empty width between the right edge of the dropdown arrow and the right edge of this <see cref="MGComboBox{TItemType}"/></summary>
         public static int DefaultDropdownArrowRightMargin { get; set; } = 5;
+        protected internal Size EffectiveDropdownArrowSize => EffectiveScaleSettings.ScaleSize(new Size(DropdownArrowWidth, DropdownArrowHeight), MGScaleCategory.Size);
 
         /// <summary>The default empty width between the right edge of the <see cref="MGSingleContentHost.Content"/> and the left edge of the dropdown arrow<para/>
         /// See also: <see cref="DefaultDropdownArrowLeftMargin"/></summary>
@@ -600,7 +601,7 @@ namespace MGUI.Core.UI
                 DropdownArrowElement.OnEndingDraw += (sender, e) =>
                 {
                     Rectangle ArrowElementFullBounds = DropdownArrowElement.LayoutBounds;
-                    Rectangle ArrowPartBounds = ApplyAlignment(ArrowElementFullBounds, HorizontalAlignment.Center, VerticalAlignment.Center, new Size(DropdownArrowWidth, DropdownArrowHeight));
+                    Rectangle ArrowPartBounds = ApplyAlignment(ArrowElementFullBounds, HorizontalAlignment.Center, VerticalAlignment.Center, EffectiveDropdownArrowSize);
                     List<Vector2> ArrowVertices = new() {
                         ArrowPartBounds.TopLeft().ToVector2(), ArrowPartBounds.TopRight().ToVector2(), new(ArrowPartBounds.Center.X, ArrowPartBounds.Bottom)
                     };

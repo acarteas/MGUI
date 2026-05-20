@@ -190,6 +190,8 @@ namespace MGUI.Core.UI
             }
         }
 
+        protected internal float EffectiveBubbleComponentBorderThickness => EffectiveScaleSettings.ScaleFloat(BubbleComponentBorderThickness, MGScaleCategory.Border);
+
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private VisualStateColorBrush _BubbleComponentBackground;
         /// <summary>The background to use when drawing the checkable part.</summary>
@@ -312,6 +314,7 @@ namespace MGUI.Core.UI
             int BubbleRadius = BubblePartBounds.Width / 2;
 
             Color BubbleComponentFillColor = BubbleComponentBackground.GetUnderlay(VisualState.Primary);
+            float BubbleComponentBorderThickness = EffectiveBubbleComponentBorderThickness;
             DT.FillCircle(BubbleCenter.ToVector2(), BubbleComponentFillColor * Opacity, BubbleRadius - BubbleComponentBorderThickness / 2, CircleDetailLevel);
             DT.StrokeCircle(BubbleCenter.ToVector2(), BubbleComponentBorderColor * Opacity, BubbleRadius, BubbleComponentBorderThickness, CircleDetailLevel);
             //DT.StrokeAndFillCircle(BubbleCenter.ToVector2(), BubbleComponentBorderColor * Opacity, BubbleComponentFillColor * Opacity, BubbleRadius, BubbleComponentBorderThickness, CircleDetailLevel);
@@ -341,7 +344,7 @@ namespace MGUI.Core.UI
 
             if (IsChecked)
             {
-                int InnerRadius = BubbleRadius - 4;
+                int InnerRadius = Math.Max(0, BubbleRadius - EffectiveScaleSettings.ScaleInt(4, MGScaleCategory.Size));
                 DT.FillCircle(BubbleCenter.ToVector2(), BubbleCheckedColor * Opacity, InnerRadius, CircleDetailLevel);
             }
         }

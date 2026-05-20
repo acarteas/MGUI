@@ -225,6 +225,8 @@ namespace MGUI.Core.UI
             }
         }
 
+        protected internal int EffectiveSize => EffectiveScaleSettings.ScaleInt(Size, MGScaleCategory.Size);
+
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private VisualStateFillBrush _CompletedBrush;
         /// <summary>The brush to use for the completed portion of this <see cref="MGProgressBar"/></summary>
@@ -358,8 +360,8 @@ namespace MGUI.Core.UI
         {
             Thickness Self = Orientation switch
             {
-                Orientation.Horizontal => new(Size, Size, 0, 0),
-                Orientation.Vertical => new(Size, Size, 0, 0),
+                Orientation.Horizontal => new(EffectiveSize, EffectiveSize, 0, 0),
+                Orientation.Vertical => new(EffectiveSize, EffectiveSize, 0, 0),
                 _ => throw new NotImplementedException($"Unrecognized {nameof(Orientation)}: {Orientation}")
             };
 

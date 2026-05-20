@@ -21,6 +21,7 @@ namespace MGUI.Core.UI
         public const int HSBHeight = 16;
 
         private const int ScrollBarPadding = 2;
+        private const int MinScrollBarThumbSize = 8;
 
         //TODO: bool AllowClickDragScrolling
         //      if true, this ScrollViewer attempts to handle DragStart, Dragged, and DragEnd events when clicking anywhere within the Viewport's bounds
@@ -30,6 +31,11 @@ namespace MGUI.Core.UI
         /// <summary>Represents how much <see cref="VerticalOffset"/> will be changed when using the mouse scroll wheel.<para/>
         /// Recommended value: Anywhere from 20 to 80 (Scrolling on reddit.com seems to scroll by about 84px? Might be percentage-based)</summary>
         public const int VerticalScrollInterval = 40;
+        protected internal int EffectiveVSBWidth => EffectiveScaleSettings.ScaleInt(VSBWidth, MGScaleCategory.Size);
+        protected internal int EffectiveHSBHeight => EffectiveScaleSettings.ScaleInt(HSBHeight, MGScaleCategory.Size);
+        protected internal int EffectiveScrollBarPadding => EffectiveScaleSettings.ScaleInt(ScrollBarPadding, MGScaleCategory.Spacing);
+        protected internal int EffectiveMinScrollBarThumbSize => EffectiveScaleSettings.ScaleInt(MinScrollBarThumbSize, MGScaleCategory.Size);
+        protected internal int EffectiveVerticalScrollInterval => EffectiveScaleSettings.ScaleInt(VerticalScrollInterval, MGScaleCategory.Size);
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private ScrollBarVisibility _VSBVisibility;
@@ -116,7 +122,7 @@ namespace MGUI.Core.UI
         public event EventHandler<Rectangle?> VerticalScrollBarBoundsChanged;
 
         /// <summary>The screen bounds that the vertical scrollbar will be rendered to, after applying the <see cref="ScrollBarPadding"/></summary>
-        public Rectangle? PaddedVSBBounds => VSBBounds?.GetCompressed(ScrollBarPadding);
+        public Rectangle? PaddedVSBBounds => VSBBounds?.GetCompressed(EffectiveScrollBarPadding);
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private Rectangle? _HSBBounds;
@@ -139,7 +145,7 @@ namespace MGUI.Core.UI
         public event EventHandler<Rectangle?> HorizontalScrollBarBoundsChanged;
 
         /// <summary>The screen bounds that the horizontal scrollbar will be rendered to, after applying the <see cref="ScrollBarPadding"/></summary>
-        public Rectangle? PaddedHSBBounds => HSBBounds?.GetCompressed(ScrollBarPadding);
+        public Rectangle? PaddedHSBBounds => HSBBounds?.GetCompressed(EffectiveScrollBarPadding);
 
         #region Offset
         /// <summary>Invoked when either <see cref="HorizontalOffset"/> or <see cref="VerticalOffset"/> changes.<para/>
@@ -350,9 +356,9 @@ namespace MGUI.Core.UI
                     int ActualVSBWidth = VSBVisibility switch
                     {
                         ScrollBarVisibility.Disabled => 0,
-                        ScrollBarVisibility.Auto => RequestedContentSize.Height > AlignedContentBounds.Height ? VSBWidth : 0,
-                        ScrollBarVisibility.Hidden => VSBWidth,
-                        ScrollBarVisibility.Visible => VSBWidth,
+                        ScrollBarVisibility.Auto => RequestedContentSize.Height > AlignedContentBounds.Height ? EffectiveVSBWidth : 0,
+                        ScrollBarVisibility.Hidden => EffectiveVSBWidth,
+                        ScrollBarVisibility.Visible => EffectiveVSBWidth,
                         ScrollBarVisibility.Collapsed => 0,
                         _ => throw new NotImplementedException($"Unrecognized {nameof(ScrollBarVisibility)}: {VSBVisibility}"),
                     };
@@ -360,16 +366,17 @@ namespace MGUI.Core.UI
                     int ActualHSBHeight = HSBVisibility switch
                     {
                         ScrollBarVisibility.Disabled => 0,
-                        ScrollBarVisibility.Auto => RequestedContentSize.Width > AlignedContentBounds.Width ? HSBHeight : 0,
-                        ScrollBarVisibility.Hidden => HSBHeight,
-                        ScrollBarVisibility.Visible => HSBHeight,
+                        ScrollBarVisibility.Auto => RequestedContentSize.Width > AlignedContentBounds.Width ? EffectiveHSBHeight : 0,
+                        ScrollBarVisibility.Hidden => EffectiveHSBHeight,
+                        ScrollBarVisibility.Visible => EffectiveHSBHeight,
                         ScrollBarVisibility.Collapsed => 0,
                         _ => throw new NotImplementedException($"Unrecognized {nameof(ScrollBarVisibility)}: {HSBVisibility}"),
                     };
 
                     Size ScrollBarsSize = new(ActualVSBWidth, ActualHSBHeight);
                     Size ContentSize = Content?.AllocatedBounds.Size.AsSize() ?? AlignedContentBounds.Size.AsSize();
-                    Size ViewportSize = LayoutBounds.Size.AsSize().Subtract(ScrollBarsSize, 0, 0).Subtract(PaddingSize, 0, 0);
+                    Thickness Padding = EffectivePadding;
+                    Size ViewportSize = LayoutBounds.Size.AsSize().Subtract(ScrollBarsSize, 0, 0).Subtract(Padding.Size, 0, 0);
                     ContentViewport = new(LayoutBounds.Left + Padding.Left, LayoutBounds.Top + Padding.Top, ViewportSize.Width, ViewportSize.Height);
 
                     VSBBounds = ActualVSBWidth == 0 ? null : new(LayoutBounds.Right - ActualVSBWidth, LayoutBounds.Top, ActualVSBWidth, LayoutBounds.Height - ActualHSBHeight);
@@ -380,7 +387,8 @@ namespace MGUI.Core.UI
 #else
                     Size ScrollBarsSize = new(RecentVSBWidth, RecentHSBHeight);
                     Size ContentSize = RecentContentSize.Size; //Content?.AllocatedBounds.Size.AsSize() ?? ActualContentBounds.Size.AsSize();
-                    Size ViewportSize = LayoutBounds.Size.AsSize().Subtract(ScrollBarsSize, 0, 0).Subtract(PaddingSize, 0, 0);
+                    Thickness Padding = EffectivePadding;
+                    Size ViewportSize = LayoutBounds.Size.AsSize().Subtract(ScrollBarsSize, 0, 0).Subtract(Padding.Size, 0, 0);
                     ContentViewport = new(LayoutBounds.Left + Padding.Left, LayoutBounds.Top + Padding.Top, ViewportSize.Width, ViewportSize.Height);
 
                     VSBBounds = RecentVSBWidth == 0 ? null : new(LayoutBounds.Right - RecentVSBWidth, LayoutBounds.Top, RecentVSBWidth, LayoutBounds.Height - RecentHSBHeight);
@@ -495,12 +503,12 @@ namespace MGUI.Core.UI
                         if (e.ScrollWheelDelta > 0 && VerticalOffset > 0)
                         {
                             e.SetHandledBy(this, false);
-                            VerticalOffset -= VerticalScrollInterval;
+                            VerticalOffset -= EffectiveVerticalScrollInterval;
                         }
                         else if (e.ScrollWheelDelta < 0 && VerticalOffset < MaxVerticalOffset)
                         {
                             e.SetHandledBy(this, false);
-                            VerticalOffset += VerticalScrollInterval;
+                            VerticalOffset += EffectiveVerticalScrollInterval;
                         }
                     }
                     //  Scroll horizontally if there is only a horizontal scrollbar but no vertical scrollbar
@@ -509,12 +517,12 @@ namespace MGUI.Core.UI
                         if (e.ScrollWheelDelta > 0 && HorizontalOffset > 0)
                         {
                             e.SetHandledBy(this, false);
-                            HorizontalOffset -= VerticalScrollInterval;
+                            HorizontalOffset -= EffectiveVerticalScrollInterval;
                         }
                         else if (e.ScrollWheelDelta < 0 && HorizontalOffset < MaxHorizontalOffset)
                         {
                             e.SetHandledBy(this, false);
-                            HorizontalOffset += VerticalScrollInterval;
+                            HorizontalOffset += EffectiveVerticalScrollInterval;
                         }
                     }
                 };
@@ -609,8 +617,8 @@ namespace MGUI.Core.UI
             {
                 if (HasContent)
                 {
-                    int ActualAvailableWidth = HSBVisibility == ScrollBarVisibility.Disabled ? AvailableSize.Width - HorizontalPadding : int.MaxValue;
-                    int ActualAvailableHeight = VSBVisibility == ScrollBarVisibility.Disabled ? AvailableSize.Height - VerticalPadding : int.MaxValue;
+                    int ActualAvailableWidth = HSBVisibility == ScrollBarVisibility.Disabled ? AvailableSize.Width - EffectiveHorizontalPadding : int.MaxValue;
+                    int ActualAvailableHeight = VSBVisibility == ScrollBarVisibility.Disabled ? AvailableSize.Height - EffectiveVerticalPadding : int.MaxValue;
                     Size ActualAvailableSize = new(ActualAvailableWidth, ActualAvailableHeight);
                     Content.UpdateMeasurement(ActualAvailableSize, out _, out RequestedContentSize, out _, out _);
                 }
@@ -619,9 +627,9 @@ namespace MGUI.Core.UI
             int ActualVSBWidth = VSBVisibility switch
             {
                 ScrollBarVisibility.Disabled => 0,
-                ScrollBarVisibility.Auto => RequestedContentSize.Height > AvailableSize.Height - VerticalPadding ? VSBWidth : 0,
-                ScrollBarVisibility.Hidden => VSBWidth,
-                ScrollBarVisibility.Visible => VSBWidth,
+                ScrollBarVisibility.Auto => RequestedContentSize.Height > AvailableSize.Height - EffectiveVerticalPadding ? EffectiveVSBWidth : 0,
+                ScrollBarVisibility.Hidden => EffectiveVSBWidth,
+                ScrollBarVisibility.Visible => EffectiveVSBWidth,
                 ScrollBarVisibility.Collapsed => 0,
                 _ => throw new NotImplementedException($"Unrecognized {nameof(ScrollBarVisibility)}: {VSBVisibility}"),
             };
@@ -629,9 +637,9 @@ namespace MGUI.Core.UI
             int ActualHSBHeight = HSBVisibility switch
             {
                 ScrollBarVisibility.Disabled => 0,
-                ScrollBarVisibility.Auto => RequestedContentSize.Width > AvailableSize.Width - HorizontalPadding ? HSBHeight : 0,
-                ScrollBarVisibility.Hidden => HSBHeight,
-                ScrollBarVisibility.Visible => HSBHeight,
+                ScrollBarVisibility.Auto => RequestedContentSize.Width > AvailableSize.Width - EffectiveHorizontalPadding ? EffectiveHSBHeight : 0,
+                ScrollBarVisibility.Hidden => EffectiveHSBHeight,
+                ScrollBarVisibility.Visible => EffectiveHSBHeight,
                 ScrollBarVisibility.Collapsed => 0,
                 _ => throw new NotImplementedException($"Unrecognized {nameof(ScrollBarVisibility)}: {HSBVisibility}"),
             };
@@ -647,7 +655,7 @@ namespace MGUI.Core.UI
                 bool IsVSBRendered = VSBBounds.HasValue && VSBVisibility != ScrollBarVisibility.Hidden && VSBVisibility != ScrollBarVisibility.Collapsed;
                 bool IsHSBRendered = HSBBounds.HasValue && HSBVisibility != ScrollBarVisibility.Hidden && HSBVisibility != ScrollBarVisibility.Collapsed;
 
-                int MinSize = 8; // Minimum size of the inner rectangle of a ScrollBar
+                int MinSize = EffectiveMinScrollBarThumbSize;
                 Size ContentSize = Content.AllocatedBounds.Size.AsSize();
 
                 if (IsVSBRendered)

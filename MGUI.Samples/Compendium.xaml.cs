@@ -152,6 +152,7 @@ namespace MGUI.Samples
         #region Features
         public StylesSamples StylesSamples { get; }
         public DataBindingSamples DataBindingSamples { get; }
+        public UIScalingSamples UIScalingSamples { get; }
         public IFillBrushSamples IFillBrushSamples { get; }
         public IBorderBrushSamples IBorderBrushSamples { get; }
         #endregion Features
@@ -206,6 +207,7 @@ namespace MGUI.Samples
             #region Features
             StylesSamples = new(Content, Desktop);
             DataBindingSamples = new(Content, Desktop);
+            UIScalingSamples = new(Content, Desktop);
             IFillBrushSamples = new(Content, Desktop);
             IBorderBrushSamples = new(Content, Desktop, this);
             #endregion Features

@@ -188,6 +188,12 @@ namespace MGUI.Core.UI
 
         protected internal Vector2 EffectiveTextShadowOffset(Vector2 authoredOffset)
             => EffectiveScaleSettings.ScalePoint(authoredOffset.ToPoint(), MGScaleCategory.Font).ToVector2();
+
+        public Vector2 MeasureImage(MGTextRunImage Image)
+        {
+            Size Size = EffectiveScaleSettings.ScaleSize(new Size(Image.TargetWidth, Image.TargetHeight), MGScaleCategory.Image);
+            return new Vector2(Size.Width, Size.Height);
+        }
         #endregion Font Style
 
         #region Shadow
@@ -748,8 +754,6 @@ namespace MGUI.Core.UI
             Color DefaultForeground = ActualForeground;
 
             Matrix Transform = Matrix.CreateTranslation(new Vector3(DA.Offset.ToVector2(), 0));
-            float ImageSizeScalar = 1.0f;
-
             ActionBounds.Clear();
             ToolTipBounds.Clear();
 
@@ -772,11 +776,12 @@ namespace MGUI.Core.UI
 
                     if (Run.RunType == TextRunType.Image && Run is MGTextRunImage ImageRun)
                     {
-                        int ImgWidth = ImageRun.TargetWidth;
-                        int ImgHeight = ImageRun.TargetHeight;
+                        Vector2 ImageSize = MeasureImage(ImageRun);
+                        int ImgWidth = (int)ImageSize.X;
+                        int ImgHeight = (int)ImageSize.Y;
                         int YPosition = ApplyAlignment(LineBounds, HorizontalAlignment.Center, VerticalContentAlignment, new Size(ImgWidth, ImgHeight)).Top;
                         Point Position = new Vector2((int)CurrentX, YPosition).TransformBy(Transform).ToPoint();
-                        Desktop.Resources.TryDrawTexture(DT, ImageRun.SourceName, Position, (int)(ImgWidth * ImageSizeScalar), (int)(ImgHeight * ImageSizeScalar), DA.Opacity);
+                        Desktop.Resources.TryDrawTexture(DT, ImageRun.SourceName, Position, ImgWidth, ImgHeight, DA.Opacity);
                         RunBounds = new(CurrentX, YPosition, ImgWidth, ImgHeight);
                         CurrentX += ImgWidth;
                     }

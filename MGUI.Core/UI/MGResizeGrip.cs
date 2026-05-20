@@ -34,6 +34,9 @@ namespace MGUI.Core.UI
         /// <summary>Determines how much width and height this element takes up. This value is derived from <see cref="MaxDots"/>, <see cref="Spacing"/>, and <see cref="MGElement.Margin"/>.<br/>
         /// Formula: 1 + (<see cref="MaxDots"/> - 1) * <see cref="Spacing"/> + <see cref="MGElement.Margin"/>.Right</summary>
         public int Size => 1 + (MaxDots - 1) * Spacing + Margin.Right;
+        protected internal int EffectiveSpacing => EffectiveScaleSettings.ScaleInt(Spacing, MGScaleCategory.Spacing);
+        protected internal int EffectiveDotSize => Math.Max(1, EffectiveScaleSettings.ScaleInt(1, MGScaleCategory.Size));
+        protected internal int EffectiveSize => EffectiveDotSize + (MaxDots - 1) * EffectiveSpacing + EffectiveMargin.Right;
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private int _MaxDots;
@@ -113,7 +116,7 @@ namespace MGUI.Core.UI
 
         private void Host_LayoutUpdated(object sender, EventArgs e)
         {
-            UpdateLayout(ApplyAlignment(Host.LayoutBounds, HorizontalAlignment.Right, VerticalAlignment.Bottom, new Size(Size, Size)));
+            UpdateLayout(ApplyAlignment(Host.LayoutBounds, HorizontalAlignment.Right, VerticalAlignment.Bottom, new Size(EffectiveSize, EffectiveSize)));
         }
 
         private void Host_BeginUpdateContents(object sender, ElementUpdateEventArgs e)
@@ -209,13 +212,13 @@ namespace MGUI.Core.UI
 
         public override Thickness MeasureSelfOverride(Size AvailableSize, out Thickness SharedSize)
         {
-            SharedSize = new(0, 0, Size, Size);
-            return new(0, 0, Size, Size);
+            SharedSize = new(0, 0, EffectiveSize, EffectiveSize);
+            return new(0, 0, EffectiveSize, EffectiveSize);
         }
 
         public override void DrawSelf(ElementDrawArgs DA, Rectangle LayoutBounds)
         {
-            Rectangle Region = ApplyAlignment(LayoutBounds, HorizontalAlignment.Right, VerticalAlignment.Bottom, new Size(Size, Size));
+            Rectangle Region = ApplyAlignment(LayoutBounds, HorizontalAlignment.Right, VerticalAlignment.Bottom, new Size(EffectiveSize, EffectiveSize));
             Vector2 BottomRight = Region.BottomRight().ToVector2().Translate(-1, -1);
 
             //  Draw several small dots in the shape of a right-triangle
@@ -224,7 +227,7 @@ namespace MGUI.Core.UI
             {
                 for (int j = 0; j < MaxDots - i; j++)
                 {
-                    Vector2 Position = BottomRight.Translate(i * -Spacing, j * -Spacing);
+                    Vector2 Position = BottomRight.Translate(i * -EffectiveSpacing, j * -EffectiveSpacing);
                     Points.Add(Position);
                 }
             }
@@ -233,7 +236,7 @@ namespace MGUI.Core.UI
             {
                 foreach (Vector2 Point in Points)
                 {
-                    DA.DT.FillPoint(Point + DA.Offset.ToVector2(), Color, 1);
+                    DA.DT.FillPoint(Point + DA.Offset.ToVector2(), Color, EffectiveDotSize);
                 }
             }
 

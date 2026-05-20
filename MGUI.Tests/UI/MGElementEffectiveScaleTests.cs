@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using MGUI.Core.UI;
 using MGUI.Core.UI.Containers;
 using MGUI.Core.UI.Containers.Grids;
+using MGUI.Core.UI.Text;
 using Microsoft.Xna.Framework;
 using MonoGame.Extended;
 using Xunit;
@@ -165,6 +166,122 @@ namespace MGUI.Tests.UI
 
             Assert.Equal(new Thickness(1, 2, 0, -1), progressButton.ProgressBarBorderThickness);
             Assert.Equal(new Thickness(1, 1, 0, -1), progressButton.EffectiveProgressBarBorderThickness);
+        }
+
+        [Fact]
+        public void EffectiveControlHelpers_ScaleWithoutChangingAuthoredValues()
+        {
+            MGProgressBar progressBar = CreateElement<MGProgressBar>(scale => scale.SizeScale = 1.5f);
+            SetField(progressBar, "_Size", 11);
+            Assert.Equal(11, progressBar.Size);
+            Assert.Equal(17, progressBar.EffectiveSize);
+
+            MGProgressButton progressButton = CreateElement<MGProgressButton>(scale =>
+            {
+                scale.SizeScale = 1.5f;
+                scale.SpacingScale = 2.0f;
+            });
+            SetField(progressButton, "_ProgressBarSize", 10);
+            SetField(progressButton, "_ProgressBarMargin", new Thickness(1, 2, 3, 4));
+            Assert.Equal(10, progressButton.ProgressBarSize);
+            Assert.Equal(new Thickness(1, 2, 3, 4), progressButton.ProgressBarMargin);
+            Assert.Equal(15, progressButton.EffectiveProgressBarSize);
+            Assert.Equal(new Thickness(2, 4, 6, 8), progressButton.EffectiveProgressBarMargin);
+        }
+
+        [Fact]
+        public void EffectiveImageAndInlineImageHelpers_ScaleByImage()
+        {
+            MGImage image = CreateElement<MGImage>(scale => scale.ImageScale = 1.5f);
+            SetField(image, "_ActualSource", new MGTextureData(null, null, 1f, new Size(10, 12)));
+            Assert.Equal(new Size(15, 18), image.EffectiveUnstretchedSize);
+
+            MGTextBlock textBlock = CreateElement<MGTextBlock>(scale => scale.ImageScale = 2.0f);
+            Vector2 inlineSize = textBlock.MeasureImage(new MGTextRunImage("Icon", 7, 9, null, null));
+            Assert.Equal(new Vector2(14, 18), inlineSize);
+        }
+
+        [Fact]
+        public void MGImageIntrinsicMeasurement_UsesEffectiveImageSizeForFallbacksAndAspect()
+        {
+            MGImage image = CreateElement<MGImage>(scale => scale.ImageScale = 1.5f);
+            SetField(image, "_ActualSource", new MGTextureData(null, null, 1f, new Size(3, 2)));
+
+            SetField(image, "_Stretch", Stretch.Fill);
+            Thickness fillMeasured = image.MeasureSelfOverride(new Size(1000000, 1000000), out Thickness fillSharedSize);
+            Assert.Equal(new Thickness(0), fillSharedSize);
+            Assert.Equal(new Thickness(5, 3, 0, 0), fillMeasured);
+
+            SetField(image, "_Stretch", Stretch.Uniform);
+            Thickness uniformMeasured = image.MeasureSelfOverride(new Size(1000000, 12), out Thickness uniformSharedSize);
+            Assert.Equal(new Thickness(0), uniformSharedSize);
+            Assert.Equal(new Thickness(20, 12, 0, 0), uniformMeasured);
+        }
+
+        [Fact]
+        public void EffectiveSliderHelpers_ScaleSizesAndBordersWithoutChangingAuthoredValues()
+        {
+            MGSlider slider = CreateElement<MGSlider>(scale =>
+            {
+                scale.SizeScale = 1.5f;
+                scale.BorderScale = 0.25f;
+            });
+            SetField(slider, "_Orientation", Orientation.Horizontal);
+            SetField(slider, "_NumberLineSize", 8);
+            SetField(slider, "_TickWidth", 2);
+            SetField(slider, "_TickHeight", 18);
+            SetField(slider, "_ThumbWidth", 12);
+            SetField(slider, "_ThumbHeight", 24);
+            SetField(slider, "_NumberLineBorderThickness", new Thickness(2));
+            SetField(slider, "_TickBorderThickness", new Thickness(2));
+            SetField(slider, "_ThumbBorderThickness", new Thickness(2));
+
+            Assert.Equal(8, slider.NumberLineSize);
+            Assert.Equal(12, slider.EffectiveNumberLineSize);
+            Assert.Equal(3, slider.EffectiveActualTickWidth);
+            Assert.Equal(27, slider.EffectiveActualTickHeight);
+            Assert.Equal(18, slider.EffectiveActualThumbWidth);
+            Assert.Equal(36, slider.EffectiveActualThumbHeight);
+            Assert.Equal(new Thickness(1), slider.EffectiveNumberLineBorderThickness);
+            Assert.Equal(new Thickness(1), slider.EffectiveTickBorderThickness);
+            Assert.Equal(new Thickness(1), slider.EffectiveThumbBorderThickness);
+        }
+
+        [Fact]
+        public void EffectiveScrollResizeSpacerAndChoiceHelpers_ScaleControlChrome()
+        {
+            MGScrollViewer scrollViewer = CreateElement<MGScrollViewer>(scale =>
+            {
+                scale.SizeScale = 1.5f;
+                scale.SpacingScale = 2.0f;
+            });
+            Assert.Equal(24, scrollViewer.EffectiveVSBWidth);
+            Assert.Equal(24, scrollViewer.EffectiveHSBHeight);
+            Assert.Equal(4, scrollViewer.EffectiveScrollBarPadding);
+            Assert.Equal(12, scrollViewer.EffectiveMinScrollBarThumbSize);
+            Assert.Equal(60, scrollViewer.EffectiveVerticalScrollInterval);
+
+            MGResizeGrip resizeGrip = CreateElement<MGResizeGrip>(scale =>
+            {
+                scale.SizeScale = 2.0f;
+                scale.SpacingScale = 1.5f;
+            });
+            SetField(resizeGrip, "_MaxDots", 4);
+            SetField(resizeGrip, "_Spacing", 3);
+            SetField(resizeGrip, "_Margin", new Thickness(0, 0, 2, 0));
+            Assert.Equal(5, resizeGrip.EffectiveSpacing);
+            Assert.Equal(2, resizeGrip.EffectiveDotSize);
+            Assert.Equal(20, resizeGrip.EffectiveSize);
+
+            MGSpacer spacer = CreateElement<MGSpacer>(scale => scale.SizeScale = 1.5f);
+            SetField(spacer, "_Width", 10);
+            SetField(spacer, "_Height", 12);
+            Assert.Equal(15, spacer.EffectiveWidth);
+            Assert.Equal(18, spacer.EffectiveHeight);
+
+            MGRadioButton radioButton = CreateElement<MGRadioButton>(scale => scale.BorderScale = 0.25f);
+            SetField(radioButton, "_BubbleComponentBorderThickness", 2.0f);
+            Assert.Equal(0.5f, radioButton.EffectiveBubbleComponentBorderThickness);
         }
 
         [Fact]
