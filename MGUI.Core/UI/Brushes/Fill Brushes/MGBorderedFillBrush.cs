@@ -41,11 +41,12 @@ namespace MGUI.Core.UI.Brushes.Fill_Brushes
             {
                 if (FillBrush != null)
                 {
-                    Rectangle FillBounds = PadFillBoundsByBorderThickness ? Bounds.GetCompressed(BorderThickness) : Bounds;
+                    Thickness EffectiveBorderThickness = Element.EffectiveScaleSettings.ScaleThickness(BorderThickness, MGScaleCategory.Border);
+                    Rectangle FillBounds = PadFillBoundsByBorderThickness ? Bounds.GetCompressed(EffectiveBorderThickness) : Bounds;
                     FillBrush.Draw(DA, Element, FillBounds);
                 }
 
-                BorderBrush?.Draw(DA, Element, Bounds, BorderThickness);
+                BorderBrush?.Draw(DA, Element, Bounds, Element.EffectiveScaleSettings.ScaleThickness(BorderThickness, MGScaleCategory.Border));
             }
         }
 

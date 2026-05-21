@@ -271,6 +271,76 @@ namespace MGUI.Core.UI
 
         public bool IsWindowScaled => !Scale.IsAlmostEqual(1.0f);
 
+        private MGScaleSettings _UIScaleOverride;
+        /// <summary>Optional layout-aware UI scale source for this window subtree.
+        /// If null, this window inherits its parent window scale, or <see cref="MGDesktop.UIScale"/> for a top-level window.</summary>
+        public MGScaleSettings UIScaleOverride
+        {
+            get => _UIScaleOverride;
+            set
+            {
+                if (_UIScaleOverride != value)
+                {
+                    if (_UIScaleOverride != null)
+                    {
+                        _UIScaleOverride.ScaleChanged -= UIScaleOverride_ScaleChanged;
+                    }
+
+                    _UIScaleOverride = value;
+
+                    if (_UIScaleOverride != null)
+                    {
+                        _UIScaleOverride.ScaleChanged += UIScaleOverride_ScaleChanged;
+                    }
+
+                    NPC(nameof(UIScaleOverride));
+                    RefreshScaleAffectedWindowSubtree();
+                }
+            }
+        }
+
+        protected internal MGScaleSettings ResolvedUIScaleSettings => UIScaleOverride ?? ParentWindow?.ResolvedUIScaleSettings ?? Desktop.UIScale;
+        public MGScaleSnapshot ResolvedUIScaleSnapshot => MGScaleSnapshot.From(ResolvedUIScaleSettings);
+
+        public void SetUniformUIScaleOverride(float? scale)
+        {
+            if (scale.HasValue)
+            {
+                if (UIScaleOverride == null)
+                {
+                    MGScaleSettings scaleOverride = new();
+                    scaleOverride.SetUniformScale(scale.Value);
+                    UIScaleOverride = scaleOverride;
+                }
+                else
+                {
+                    UIScaleOverride.SetUniformScale(scale.Value);
+                }
+            }
+            else
+            {
+                UIScaleOverride = null;
+            }
+        }
+
+        private void UIScaleOverride_ScaleChanged(object sender, EventArgs e)
+        {
+            RefreshScaleAffectedWindowSubtree();
+        }
+
+        internal override void RefreshScaleAffectedSubtree()
+        {
+            RefreshScaleAffectedWindowSubtree();
+        }
+
+        private void RefreshScaleAffectedWindowSubtree()
+        {
+            foreach (MGWindow window in RecurseNestedAndModalWindows(true, TreeTraversalMode.Preorder))
+            {
+                window.RefreshScaleAffectedVisualTree();
+            }
+        }
+
         private Matrix _UnscaledScreenSpaceToScaledScreenSpace;
         /// <summary>A <see cref="Matrix"/> that converts coordinates that haven't accounted for <see cref="Scale"/> to coordinates that have.<para/>
         /// If <see cref="Scale"/> is 1.0f, this value is <see cref="Matrix.Identity"/><para/>
@@ -467,6 +537,35 @@ namespace MGUI.Core.UI
 
             if (IncludeSelf && TraversalMode == TreeTraversalMode.Postorder)
                 yield return this;
+        }
+
+        internal IEnumerable<MGWindow> RecurseNestedAndModalWindows(bool IncludeSelf, TreeTraversalMode TraversalMode = TreeTraversalMode.Postorder)
+        {
+            if (IncludeSelf && TraversalMode == TreeTraversalMode.Preorder)
+            {
+                yield return this;
+            }
+
+            if (ModalWindow != null)
+            {
+                foreach (MGWindow Item in ModalWindow.RecurseNestedAndModalWindows(true, TraversalMode))
+                {
+                    yield return Item;
+                }
+            }
+
+            foreach (MGWindow Nested in NestedWindows)
+            {
+                foreach (MGWindow Item in Nested.RecurseNestedAndModalWindows(true, TraversalMode))
+                {
+                    yield return Item;
+                }
+            }
+
+            if (IncludeSelf && TraversalMode == TreeTraversalMode.Postorder)
+            {
+                yield return this;
+            }
         }
         #endregion Nested Windows
 

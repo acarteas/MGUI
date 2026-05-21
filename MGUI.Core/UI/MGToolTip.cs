@@ -52,6 +52,8 @@ namespace MGUI.Core.UI
             }
         }
 
+        protected internal Point EffectiveDrawOffset => EffectiveScaleSettings.ScalePoint(DrawOffset, MGScaleCategory.Spacing);
+
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private TimeSpan? _ShowDelayOverride;
         /// <summary>The amount of time that the mouse must hover a particular <see cref="MGElement"/> before its <see cref="MGElement.ToolTip"/> can be shown.<para/>
@@ -112,7 +114,7 @@ namespace MGUI.Core.UI
             }
         }
 
-        public void DrawAtDefaultPosition(ElementDrawArgs DA) => DrawAtMousePosition(DA, DrawOffset.X, DrawOffset.Y);
+        public void DrawAtDefaultPosition(ElementDrawArgs DA) => DrawAtMousePosition(DA, EffectiveDrawOffset.X, EffectiveDrawOffset.Y);
         public void DrawAtMousePosition(ElementDrawArgs DA, int XOffset = 5, int YOffset = 5)
         {
             Point CurrentMousePosition = InputTracker.Mouse.CurrentPosition;

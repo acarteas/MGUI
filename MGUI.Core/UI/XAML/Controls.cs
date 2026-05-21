@@ -2585,6 +2585,8 @@ namespace MGUI.Core.UI.XAML
 
         [Category("Layout")]
         public float? Scale { get; set; }
+        [Category("Layout")]
+        public float? UIScaleOverride { get; set; }
 
         public ResizeGrip ResizeGrip { get; set; } = new();
         [Category("Layout")]
@@ -2674,6 +2676,13 @@ namespace MGUI.Core.UI.XAML
 
             if (IsUserResizable.HasValue)
                 Window.IsUserResizable = IsUserResizable.Value;
+
+            if (UIScaleOverride.HasValue)
+            {
+                MGScaleSettings scaleOverride = new();
+                scaleOverride.SetUniformScale(UIScaleOverride.Value);
+                Window.UIScaleOverride = scaleOverride;
+            }
 
             if (ModalWindow != null)
                 Window.ModalWindow = ModalWindow.ToElement<MGWindow>(Window, Window);

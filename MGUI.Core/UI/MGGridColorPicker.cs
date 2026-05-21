@@ -272,6 +272,7 @@ namespace MGUI.Core.UI
             get => BorderElement.BorderThickness;
             set => BorderElement.BorderThickness = value;
         }
+        protected internal Thickness EffectiveBorderThickness => BorderElement.EffectiveBorderThickness;
         #endregion Border
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -380,6 +381,10 @@ namespace MGUI.Core.UI
             }
         }
 
+        protected internal Size EffectiveColorSize => EffectiveScaleSettings.ScaleSize(ColorSize, MGScaleCategory.Size);
+        protected internal int EffectiveRowSpacing => EffectiveScaleSettings.ScaleInt(RowSpacing, MGScaleCategory.Spacing);
+        protected internal int EffectiveColumnSpacing => EffectiveScaleSettings.ScaleInt(ColumnSpacing, MGScaleCategory.Spacing);
+
         #region Borders
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private IBorderBrush _SelectedColorBorderBrush;
@@ -458,6 +463,9 @@ namespace MGUI.Core.UI
             yield return UnselectedColorBorderBrush;
         }
         #endregion Borders
+
+        protected internal Thickness EffectiveSelectedColorBorderThickness => EffectiveScaleSettings.ScaleThickness(SelectedColorBorderThickness, MGScaleCategory.Border);
+        protected internal Thickness EffectiveUnselectedColorBorderThickness => EffectiveScaleSettings.ScaleThickness(UnselectedColorBorderThickness, MGScaleCategory.Border);
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private int? _HoveredColorIndex;
@@ -710,7 +718,7 @@ namespace MGUI.Core.UI
         public bool TryGetHoveredColorIndex(Point MousePosition, out GridCellIndex? CellIndex, out int? LinearIndex)
         {
             Point LayoutPosition = ConvertCoordinateSpace(CoordinateSpace.Screen, CoordinateSpace.Layout, MousePosition);
-            Rectangle PaddedBounds = LayoutBounds.GetCompressed(BorderThickness).GetCompressed(Padding);
+            Rectangle PaddedBounds = LayoutBounds.GetCompressed(EffectiveBorderThickness).GetCompressed(EffectivePadding);
             if (!PaddedBounds.Contains(LayoutPosition))
             {
                 CellIndex = null;
@@ -719,7 +727,8 @@ namespace MGUI.Core.UI
             }
 
             int RelativeX = LayoutPosition.X - PaddedBounds.Left;
-            int SpacedWidth = ColorSize.Width + ColumnSpacing;
+            Size ColorSize = EffectiveColorSize;
+            int SpacedWidth = ColorSize.Width + EffectiveColumnSpacing;
             int Column = RelativeX / SpacedWidth;
             if (RelativeX % SpacedWidth >= ColorSize.Width) // Check if the position is between 2 columns
             {
@@ -729,7 +738,7 @@ namespace MGUI.Core.UI
             }
 
             int RelativeY = LayoutPosition.Y - PaddedBounds.Top;
-            int SpacedHeight = ColorSize.Height + RowSpacing;
+            int SpacedHeight = ColorSize.Height + EffectiveRowSpacing;
             int Row = RelativeY / SpacedHeight;
             if (RelativeY % SpacedHeight >= ColorSize.Height) // Check if the position is between 2 rows
             {
@@ -754,8 +763,9 @@ namespace MGUI.Core.UI
         public override Thickness MeasureSelfOverride(Size AvailableSize, out Thickness SharedSize)
         {
             SharedSize = new(0);
-            int Width = ColorSize.Width * Columns + ColumnSpacing * (Columns - 1);
-            int Height = ColorSize.Height * Rows + RowSpacing * (Rows - 1);
+            Size ColorSize = EffectiveColorSize;
+            int Width = ColorSize.Width * Columns + EffectiveColumnSpacing * (Columns - 1);
+            int Height = ColorSize.Height * Rows + EffectiveRowSpacing * (Rows - 1);
             return new(Width, Height, 0, 0);
         }
 
@@ -763,7 +773,8 @@ namespace MGUI.Core.UI
         {
             base.DrawSelf(DA, LayoutBounds);
 
-            Rectangle PaddedBounds = LayoutBounds.GetCompressed(BorderThickness).GetCompressed(Padding);
+            Rectangle PaddedBounds = LayoutBounds.GetCompressed(EffectiveBorderThickness).GetCompressed(EffectivePadding);
+            Size ColorSize = EffectiveColorSize;
 
             int StartX = PaddedBounds.Left;
             int StartY = PaddedBounds.Top;
@@ -771,8 +782,8 @@ namespace MGUI.Core.UI
             int Column = 0;
             foreach (Color Color in Colors)
             {
-                int X = StartX + Column * ColorSize.Width + Column * ColumnSpacing;
-                int Y = StartY + Row * ColorSize.Height + Row * RowSpacing;
+                int X = StartX + Column * ColorSize.Width + Column * EffectiveColumnSpacing;
+                int Y = StartY + Row * ColorSize.Height + Row * EffectiveRowSpacing;
                 Rectangle Bounds = new(X, Y, ColorSize.Width, ColorSize.Height);
                 DA.DT.FillRectangle(DA.Offset.ToVector2(), Bounds, Color);
 
@@ -780,10 +791,12 @@ namespace MGUI.Core.UI
                 if (IsIndexSelected(Index))
                 {
                     SelectedColorOverlay?.Draw(DA, this, Bounds);
-                    SelectedColorBorderBrush?.Draw(DA, this, Bounds, SelectedColorBorderThickness);
+                    SelectedColorBorderBrush?.Draw(DA, this, Bounds, EffectiveSelectedColorBorderThickness);
                 }
                 else
-                    UnselectedColorBorderBrush?.Draw(DA, this, Bounds, UnselectedColorBorderThickness);
+                {
+                    UnselectedColorBorderBrush?.Draw(DA, this, Bounds, EffectiveUnselectedColorBorderThickness);
+                }
 
                 if (HoveredColorIndex.HasValue && HoveredColorIndex.Value == Index)
                     HoveredColorOverlay?.Draw(DA, this, Bounds);

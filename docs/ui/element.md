@@ -19,6 +19,8 @@ Abstract base for all XAML-authored UI elements in MGUI.
 | `Name` | `string` |
 | `Margin` | `Thickness?` |
 | `Padding` | `Thickness?` |
+| `ViewportFit` | `ViewportFitMode` |
+| `ViewportMargin` | `Thickness?` |
 | `HorizontalAlignment` | `HorizontalAlignment?` |
 | `VerticalAlignment` | `VerticalAlignment?` |
 | `HorizontalContentAlignment` | `HorizontalAlignment?` |
@@ -63,4 +65,3 @@ Abstract base for all XAML-authored UI elements in MGUI.
 | `Tag` | `object` |
 
 ## Related
-

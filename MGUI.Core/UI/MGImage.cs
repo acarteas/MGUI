@@ -140,6 +140,10 @@ namespace MGUI.Core.UI
 
         private int UnstretchedWidth => ActualSource?.RenderSize.Width ?? 0;
         private int UnstretchedHeight => ActualSource?.RenderSize.Height ?? 0;
+        protected internal Size EffectiveUnstretchedSize => EffectiveScaleSettings.ScaleSize(ActualSource?.RenderSize ?? Size.Empty, MGScaleCategory.Image);
+        protected internal int EffectiveUnstretchedWidth => EffectiveUnstretchedSize.Width;
+        protected internal int EffectiveUnstretchedHeight => EffectiveUnstretchedSize.Height;
+        private double EffectiveUnstretchedAspectRatio => EffectiveUnstretchedHeight == 0 ? 1.0 : EffectiveUnstretchedWidth * 1.0 / EffectiveUnstretchedHeight;
         private double UnstretchedAspectRatio => UnstretchedHeight == 0 ? 1.0 : UnstretchedWidth * 1.0 / UnstretchedHeight;
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -226,22 +230,22 @@ namespace MGUI.Core.UI
             int Width;
             int Height;
 
-            double AspectRatio = UnstretchedAspectRatio;
+            double AspectRatio = EffectiveUnstretchedAspectRatio;
             if (Stretch == Stretch.None)
             {
-                Width = UnstretchedWidth;
-                Height = UnstretchedHeight;
+                Width = EffectiveUnstretchedWidth;
+                Height = EffectiveUnstretchedHeight;
             }
             else if (Stretch == Stretch.Uniform)
             {
                 //int Width = Math.Min(AvailableSize.Width, UnstretchedWidth);
                 //int Height = (int)Math.Round(Math.Min(AvailableSize.Width, UnstretchedWidth) * 1 / UnstretchedAspectRatio, MidpointRounding.ToEven);
 
-                if (IsPseudoInfiniteWidth && IsPseudoInfiniteWidth)
+                if (IsPseudoInfiniteWidth && IsPseduoInfiniteHeight)
                 {
                     //  If both dimensions are infinite, it's ambiguous as to how much space to request
-                    Width = UnstretchedWidth;
-                    Height = UnstretchedHeight;
+                    Width = EffectiveUnstretchedWidth;
+                    Height = EffectiveUnstretchedHeight;
                 }
                 else if (IsPseudoInfiniteWidth)
                 {
@@ -264,10 +268,10 @@ namespace MGUI.Core.UI
                 //int Width = Math.Min(AvailableSize.Width, UnstretchedWidth);
                 //int Height = Math.Max(UnstretchedHeight, (int)Math.Round(Math.Min(AvailableSize.Width, UnstretchedWidth) * 1 / UnstretchedAspectRatio, MidpointRounding.ToEven));
 
-                if (IsPseudoInfiniteWidth && IsPseudoInfiniteWidth)
+                if (IsPseudoInfiniteWidth && IsPseduoInfiniteHeight)
                 {
-                    Width = UnstretchedWidth;
-                    Height = UnstretchedHeight;
+                    Width = EffectiveUnstretchedWidth;
+                    Height = EffectiveUnstretchedHeight;
                 }
                 else if (IsPseudoInfiniteWidth)
                 {
@@ -287,20 +291,20 @@ namespace MGUI.Core.UI
             }
             else if (Stretch == Stretch.Fill)
             {
-                if (IsPseudoInfiniteWidth && IsPseudoInfiniteWidth)
+                if (IsPseudoInfiniteWidth && IsPseduoInfiniteHeight)
                 {
-                    Width = UnstretchedWidth;
-                    Height = UnstretchedHeight;
+                    Width = EffectiveUnstretchedWidth;
+                    Height = EffectiveUnstretchedHeight;
                 }
                 else if (IsPseudoInfiniteWidth)
                 {
-                    Width = UnstretchedWidth;
+                    Width = EffectiveUnstretchedWidth;
                     Height = AvailableHeight;
                 }
                 else if (IsPseduoInfiniteHeight)
                 {
                     Width = AvailableWidth;
-                    Height = UnstretchedHeight;
+                    Height = EffectiveUnstretchedHeight;
                 }
                 else
                 {
@@ -321,13 +325,13 @@ namespace MGUI.Core.UI
             if (ActualSource?.Texture == null)
                 return;
 
-            Rectangle PaddedBounds = LayoutBounds.GetCompressed(Padding);
-            double AspectRatio = UnstretchedAspectRatio;
+            Rectangle PaddedBounds = LayoutBounds.GetCompressed(EffectivePadding);
+            double AspectRatio = EffectiveUnstretchedAspectRatio;
 
             Rectangle Bounds;
             if (Stretch == Stretch.None)
             {
-                Bounds = ApplyAlignment(PaddedBounds, HorizontalContentAlignment, VerticalContentAlignment, new Size(UnstretchedWidth, UnstretchedHeight));
+                Bounds = ApplyAlignment(PaddedBounds, HorizontalContentAlignment, VerticalContentAlignment, EffectiveUnstretchedSize);
             }
             else if (Stretch == Stretch.Uniform)
             {

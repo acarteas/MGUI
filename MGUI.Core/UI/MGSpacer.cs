@@ -48,6 +48,9 @@ namespace MGUI.Core.UI
             }
         }
 
+        protected internal int EffectiveWidth => EffectiveScaleSettings.ScaleInt(Width, MGScaleCategory.Size);
+        protected internal int EffectiveHeight => EffectiveScaleSettings.ScaleInt(Height, MGScaleCategory.Size);
+
         public MGSpacer(MGWindow Window, int Width, int Height)
             : base(Window, MGElementType.Spacer)
         {
@@ -63,7 +66,7 @@ namespace MGUI.Core.UI
         public override Thickness MeasureSelfOverride(Size AvailableSize, out Thickness SharedSize)
         {
             SharedSize = new(0);
-            return new(Width, Height, 0, 0);
+            return new(EffectiveWidth, EffectiveHeight, 0, 0);
         }
 
         protected override void UpdateContents(ElementUpdateArgs UA) { }

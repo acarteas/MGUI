@@ -22,11 +22,17 @@ namespace MGUI.Core.UI.XAML
         public string Name { get; set; }
         public NameScopeMode NameScopeMode { get; set; } = NameScopeMode.Inherit;
         public string NameScopeLabel { get; set; }
+        [Category("Layout")]
+        public UIScaleMode UIScaleMode { get; set; } = UIScaleMode.Inherit;
 
         [Category("Layout")]
         public Thickness? Margin { get; set; }
         [Category("Layout")]
         public Thickness? Padding { get; set; }
+        [Category("Layout")]
+        public ViewportFitMode ViewportFit { get; set; } = ViewportFitMode.None;
+        [Category("Layout")]
+        public Thickness? ViewportMargin { get; set; }
 
         [Category("Layout")]public HorizontalAlignment? HorizontalAlignment { get; set; }
         [Category("Layout")]public VerticalAlignment? VerticalAlignment { get; set; }
@@ -206,11 +212,15 @@ namespace MGUI.Core.UI.XAML
                     Element.Name = Name;
                 Element.NameScopeMode = NameScopeMode;
                 Element.NameScopeLabel = NameScopeLabel;
+                Element.UIScaleMode = UIScaleMode;
 
                 if (Margin.HasValue)
                     Element.Margin = Margin.Value.ToThickness();
                 if (Padding.HasValue)
                     Element.Padding = Padding.Value.ToThickness();
+                Element.ViewportFit = ViewportFit;
+                if (ViewportMargin.HasValue)
+                    Element.ViewportMargin = ViewportMargin.Value.ToThickness();
 
                 if (HorizontalAlignment.HasValue)
                     Element.HorizontalAlignment = HorizontalAlignment.Value;

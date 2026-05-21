@@ -227,22 +227,28 @@ namespace MGUI.Core.UI
                 {
                     if (!this.IsChecked.HasValue)
                     {
-                        Rectangle TargetBounds = ButtonElement.LayoutBounds.GetCompressed(ButtonElement.Padding).GetScaledFromCenter(0.60f);
+                        Rectangle TargetBounds = ButtonElement.LayoutBounds.GetCompressed(ButtonElement.EffectivePadding).GetScaledFromCenter(0.60f);
                         //  Force the bounds to be an even width/height
                         if (TargetBounds.Width % 2 != 0 || TargetBounds.Height % 2 != 0)
                             TargetBounds = new(TargetBounds.Left, TargetBounds.Top, TargetBounds.Width / 2 * 2, TargetBounds.Height / 2 * 2);
 
                         if (IsCheckMarkShadowed)
-                            e.DA.DT.FillRectangle(e.DA.Offset.ToVector2(), TargetBounds.GetTranslated(CheckMarkShadowOffset), CheckMarkShadowColor * e.DA.Opacity);
+                        {
+                            Point ShadowOffset = EffectiveScaleSettings.ScalePoint(CheckMarkShadowOffset, MGScaleCategory.Spacing);
+                            e.DA.DT.FillRectangle(e.DA.Offset.ToVector2(), TargetBounds.GetTranslated(ShadowOffset), CheckMarkShadowColor * e.DA.Opacity);
+                        }
                         e.DA.DT.FillRectangle(e.DA.Offset.ToVector2(), TargetBounds, CheckMarkColor * e.DA.Opacity);
 
                     }
                     else if (this.IsChecked.Value)
                     {
-                        Rectangle TargetBounds = ButtonElement.LayoutBounds.GetCompressed(ButtonElement.Padding);
+                        Rectangle TargetBounds = ButtonElement.LayoutBounds.GetCompressed(ButtonElement.EffectivePadding);
                         if (IsCheckMarkShadowed)
-                            DrawCheckMark(GetDesktop(), TargetBounds, e.DA.DT, e.DA.Opacity, e.DA.Offset + CheckMarkShadowOffset, CheckMarkShadowColor);
-                        DrawCheckMark(GetDesktop(), TargetBounds, e.DA.DT, e.DA.Opacity, e.DA.Offset, CheckMarkColor);
+                        {
+                            Point ShadowOffset = EffectiveScaleSettings.ScalePoint(CheckMarkShadowOffset, MGScaleCategory.Spacing);
+                            DrawCheckMark(GetDesktop(), TargetBounds, e.DA.DT, e.DA.Opacity, e.DA.Offset + ShadowOffset, CheckMarkShadowColor, EffectiveScaleSettings);
+                        }
+                        DrawCheckMark(GetDesktop(), TargetBounds, e.DA.DT, e.DA.Opacity, e.DA.Offset, CheckMarkColor, EffectiveScaleSettings);
                     }
                 };
 
@@ -264,9 +270,10 @@ namespace MGUI.Core.UI
             }
         }
 
-        public static void DrawCheckMark(MGDesktop Desktop, Rectangle Bounds, DrawTransaction DT, float Opacity, Point Offset, Color Color)
+        public static void DrawCheckMark(MGDesktop Desktop, Rectangle Bounds, DrawTransaction DT, float Opacity, Point Offset, Color Color, MGScaleSettings ScaleSettings = null)
         {
 #if true
+            MGScaleSettings ActualScaleSettings = ScaleSettings ?? Desktop.UIScale;
             Vector2 TopLeft = Bounds.TopLeft().ToVector2();
             List<Vector2> CheckMarkVertices = new()
             {
@@ -277,7 +284,8 @@ namespace MGUI.Core.UI
 
             foreach ((Vector2 v0, Vector2 v1) in CheckMarkVertices.SelectConsecutivePairs(false))
             {
-                DT.StrokeLineSegment(Offset.ToVector2(), v0, v1, Color * Opacity, 2);
+                float StrokeThickness = ActualScaleSettings.ScaleFloat(2, MGScaleCategory.Border);
+                DT.StrokeLineSegment(Offset.ToVector2(), v0, v1, Color * Opacity, StrokeThickness);
             }
 #else
             Rectangle CheckMarkBounds = Bounds.GetScaledFromCenter(0.75f).GetTranslated(Offset);

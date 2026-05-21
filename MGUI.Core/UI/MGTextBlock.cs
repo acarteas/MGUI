@@ -30,6 +30,8 @@ namespace MGUI.Core.UI
         /// <summary>To set this value, use <see cref="TrySetFont(string, int)"/> or <see cref="TrySetFontSize(int)"/></summary>
         public int FontSize { get => _FontSize; set => _ = TrySetFontSize(value); }
 
+        protected internal int EffectiveFontSize => Math.Max(1, EffectiveScaleSettings.ScaleInt(FontSize, MGScaleCategory.Font));
+
         /// <summary>
         /// Cached space-character width from <see cref="RF_Regular"/>.
         /// Consumed by <see cref="MGUI.Core.UI.Text.TextRenderInfo"/> for default caret sizing.
@@ -59,21 +61,23 @@ namespace MGUI.Core.UI
         {
             if (this.FontFamily != FontFamily || this.FontSize != FontSize)
             {
-                string PreviousFontFamily = FontFamily;
-                int PreviousFontSize = FontSize;
+                string PreviousFontFamily = this.FontFamily;
+                int PreviousFontSize = this.FontSize;
 
                 _FontFamily = FontFamily;
                 _FontSize = FontSize;
 
                 try
                 {
+                    int EffectiveFontSize = this.EffectiveFontSize;
+
                     // Resolve ITextEngine handles for all 4 style variants before committing
                     // so validation works for both SpriteFont and custom text engines.
                     ITextEngine engine = TextEngine;
-                    RF_Regular    = engine.ResolveFont(new FontSpec(_FontFamily, _FontSize, CustomFontStyles.Normal));
-                    RF_Bold       = engine.ResolveFont(new FontSpec(_FontFamily, _FontSize, CustomFontStyles.Bold));
-                    RF_Italic     = engine.ResolveFont(new FontSpec(_FontFamily, _FontSize, CustomFontStyles.Italic));
-                    RF_BoldItalic = engine.ResolveFont(new FontSpec(_FontFamily, _FontSize, CustomFontStyles.Bold | CustomFontStyles.Italic));
+                    RF_Regular    = engine.ResolveFont(new FontSpec(_FontFamily, EffectiveFontSize, CustomFontStyles.Normal));
+                    RF_Bold       = engine.ResolveFont(new FontSpec(_FontFamily, EffectiveFontSize, CustomFontStyles.Bold));
+                    RF_Italic     = engine.ResolveFont(new FontSpec(_FontFamily, EffectiveFontSize, CustomFontStyles.Italic));
+                    RF_BoldItalic = engine.ResolveFont(new FontSpec(_FontFamily, EffectiveFontSize, CustomFontStyles.Bold | CustomFontStyles.Italic));
                 }
                 catch
                 {
@@ -106,10 +110,11 @@ namespace MGUI.Core.UI
         internal void RefreshTextEngine()
         {
             ITextEngine engine = TextEngine;
-            RF_Regular    = engine.ResolveFont(new FontSpec(_FontFamily, _FontSize, CustomFontStyles.Normal));
-            RF_Bold       = engine.ResolveFont(new FontSpec(_FontFamily, _FontSize, CustomFontStyles.Bold));
-            RF_Italic     = engine.ResolveFont(new FontSpec(_FontFamily, _FontSize, CustomFontStyles.Italic));
-            RF_BoldItalic = engine.ResolveFont(new FontSpec(_FontFamily, _FontSize, CustomFontStyles.Bold | CustomFontStyles.Italic));
+            int EffectiveFontSize = this.EffectiveFontSize;
+            RF_Regular    = engine.ResolveFont(new FontSpec(_FontFamily, EffectiveFontSize, CustomFontStyles.Normal));
+            RF_Bold       = engine.ResolveFont(new FontSpec(_FontFamily, EffectiveFontSize, CustomFontStyles.Bold));
+            RF_Italic     = engine.ResolveFont(new FontSpec(_FontFamily, EffectiveFontSize, CustomFontStyles.Italic));
+            RF_BoldItalic = engine.ResolveFont(new FontSpec(_FontFamily, EffectiveFontSize, CustomFontStyles.Bold | CustomFontStyles.Italic));
             SpaceWidth    = RF_Regular.SpaceWidth;
             InvokeLayoutChanged(); // clears RecentSelfMeasurements + fires LayoutChanged
         }
@@ -180,6 +185,15 @@ namespace MGUI.Core.UI
             IsShadowed ? new MGTextRunShadowConfig(ShadowColor ?? GetTheme().FontSettings.DefaultFontShadowColor, ShadowOffset?.ToVector2() ?? GetTheme().FontSettings.DefaultFontShadowOffset.ToVector2()) : default;
 
         private MGTextRunConfig DefaultTextRunSettings => new(IsBold, IsItalic, 1, null, DefaultUnderlineSettings, default, DefaultShadowSettings);
+
+        protected internal Vector2 EffectiveTextShadowOffset(Vector2 authoredOffset)
+            => EffectiveScaleSettings.ScalePoint(authoredOffset.ToPoint(), MGScaleCategory.Font).ToVector2();
+
+        public Vector2 MeasureImage(MGTextRunImage Image)
+        {
+            Size Size = EffectiveScaleSettings.ScaleSize(new Size(Image.TargetWidth, Image.TargetHeight), MGScaleCategory.Image);
+            return new Vector2(Size.Width, Size.Height);
+        }
         #endregion Font Style
 
         #region Shadow
@@ -456,7 +470,7 @@ namespace MGUI.Core.UI
 
         internal void UpdateLines()
         {
-            Lines = MGTextLine.ParseLines(this, LayoutBounds.Width - Padding.Width, WrapText, Runs, IgnoreEmptySpaceLines).ToList().AsReadOnly();
+            Lines = MGTextLine.ParseLines(this, LayoutBounds.Width - EffectivePadding.Width, WrapText, Runs, IgnoreEmptySpaceLines).ToList().AsReadOnly();
             NPC(nameof(Lines));
         }
 
@@ -492,6 +506,8 @@ namespace MGUI.Core.UI
                 }
             }
         }
+
+        protected internal float EffectiveLinePadding => EffectiveScaleSettings.ScaleFloat(LinePadding, MGScaleCategory.Font);
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private int _MinLines;
@@ -646,11 +662,11 @@ namespace MGUI.Core.UI
 
         public override Thickness MeasureSelfOverride(Size AvailableSize, out Thickness SharedSize)
         {
-            Size PaddedSize = AvailableSize.Subtract(PaddingSize, 0, 0);
+            Size PaddedSize = AvailableSize.Subtract(EffectivePaddingSize, 0, 0);
 
             Size RemainingSize = new(
-                Math.Max(0, PreferredWidth.HasValue ? PreferredWidth.Value - HorizontalPadding : PaddedSize.Width),
-                Math.Max(0, PreferredHeight.HasValue ? PreferredHeight.Value - VerticalPadding : PaddedSize.Height)
+                Math.Max(0, EffectivePreferredWidth.HasValue ? EffectivePreferredWidth.Value - EffectiveHorizontalPadding : PaddedSize.Width),
+                Math.Max(0, EffectivePreferredHeight.HasValue ? EffectivePreferredHeight.Value - EffectiveVerticalPadding : PaddedSize.Height)
             );
 
             SharedSize = new(0);
@@ -662,6 +678,7 @@ namespace MGUI.Core.UI
             if (MaxLines.HasValue && MeasuredLines.Count > MaxLines.Value)
                 MeasuredLines = MeasuredLines.Take(MaxLines.Value).ToList();
 
+            float LinePadding = EffectiveLinePadding;
             Vector2 Size = new(MeasuredLines.Select(x => x.LineWidth).DefaultIfEmpty(0).Max(), MeasuredLines.Sum(x => x.LineTotalHeight) + LinePadding * Math.Max(0, MeasuredLines.Count - 1));
             if (MinLines > MeasuredLines.Count)
                 Size = Size.SetY(Size.Y + (MinLines - MeasuredLines.Count) * (RF_Regular.LineHeight + LinePadding));
@@ -737,13 +754,14 @@ namespace MGUI.Core.UI
             Color DefaultForeground = ActualForeground;
 
             Matrix Transform = Matrix.CreateTranslation(new Vector3(DA.Offset.ToVector2(), 0));
-            float ImageSizeScalar = 1.0f;
-
             ActionBounds.Clear();
             ToolTipBounds.Clear();
 
             int RemainingCharacters = TextProgress.HasValue ? (int)(TextProgress.Value * NumCharacters) : NumCharacters;
 
+            Thickness Padding = EffectivePadding;
+            Size PaddingSize = EffectivePaddingSize;
+            float LinePadding = EffectiveLinePadding;
             float CurrentY = LayoutBounds.Top + Padding.Top;
 
             foreach (MGTextLine Line in Lines)
@@ -758,11 +776,12 @@ namespace MGUI.Core.UI
 
                     if (Run.RunType == TextRunType.Image && Run is MGTextRunImage ImageRun)
                     {
-                        int ImgWidth = ImageRun.TargetWidth;
-                        int ImgHeight = ImageRun.TargetHeight;
+                        Vector2 ImageSize = MeasureImage(ImageRun);
+                        int ImgWidth = (int)ImageSize.X;
+                        int ImgHeight = (int)ImageSize.Y;
                         int YPosition = ApplyAlignment(LineBounds, HorizontalAlignment.Center, VerticalContentAlignment, new Size(ImgWidth, ImgHeight)).Top;
                         Point Position = new Vector2((int)CurrentX, YPosition).TransformBy(Transform).ToPoint();
-                        Desktop.Resources.TryDrawTexture(DT, ImageRun.SourceName, Position, (int)(ImgWidth * ImageSizeScalar), (int)(ImgHeight * ImageSizeScalar), DA.Opacity);
+                        Desktop.Resources.TryDrawTexture(DT, ImageRun.SourceName, Position, ImgWidth, ImgHeight, DA.Opacity);
                         RunBounds = new(CurrentX, YPosition, ImgWidth, ImgHeight);
                         CurrentX += ImgWidth;
                     }
@@ -814,7 +833,7 @@ namespace MGUI.Core.UI
                         {
                             //  Draw text twice, once for the shadow, then again for itself
                             Color ShadowColor = (TextRun.Settings.Shadow.ShadowColor ?? DefaultForeground) * ActualOpacity;
-                            Vector2 ShadowOffset = TextRun.Settings.Shadow.ShadowOffset ?? new(1, 1);
+                            Vector2 ShadowOffset = EffectiveTextShadowOffset(TextRun.Settings.Shadow.ShadowOffset ?? new(1, 1));
 
                             DT.DrawTextViaEngine(resolved, ActualText, Position + ShadowOffset, ShadowColor, resolved.DrawOrigin, drawScale);
                             DT.DrawTextViaEngine(resolved, ActualText, Position,               Foreground,  resolved.DrawOrigin, drawScale);

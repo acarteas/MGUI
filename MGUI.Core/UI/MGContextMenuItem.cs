@@ -214,6 +214,7 @@ namespace MGUI.Core.UI
 
         /// <summary>The default empty width between the right edge of an <see cref="MGContextMenuItem"/> and the left edge of the dropdown arrow that appears when the <see cref="MGContextMenuItem"/> has a nested <see cref="Submenu"/></summary>
         public static int DefaultSubmenuArrowRightMargin = 8;
+        protected internal Size EffectiveSubmenuArrowSize => EffectiveScaleSettings.ScaleSize(new Size(SubmenuArrowWidth, SubmenuArrowHeight), MGScaleCategory.Size);
 
         /// <summary>Provides direct access to the dropdown arrow that appears on the right-edge of this <see cref="MGContextMenuItem"/> if there is a nested <see cref="Submenu"/>.</summary>
         public MGComponent<MGRectangle> SubmenuArrowComponent { get; }
@@ -340,7 +341,7 @@ namespace MGUI.Core.UI
             Container.OnEndDraw += (sender, e) =>
             {
                 Rectangle ArrowElementFullBounds = SubmenuArrowElement.LayoutBounds;
-                Rectangle ArrowPartBounds = ApplyAlignment(ArrowElementFullBounds, HorizontalAlignment.Center, VerticalAlignment.Center, new Size(SubmenuArrowWidth, SubmenuArrowHeight));
+                Rectangle ArrowPartBounds = ApplyAlignment(ArrowElementFullBounds, HorizontalAlignment.Center, VerticalAlignment.Center, EffectiveSubmenuArrowSize);
                 List<Vector2> ArrowVertices = new() {
                     ArrowPartBounds.TopLeft().ToVector2(), new(ArrowPartBounds.Right, ArrowPartBounds.Center.Y), ArrowPartBounds.BottomLeft().ToVector2()
                 };
@@ -353,14 +354,15 @@ namespace MGUI.Core.UI
             {
                 if (Submenu?.IsContextMenuOpen == false)
                 {
-                    Rectangle ScreenBounds = ConvertCoordinateSpace(CoordinateSpace.Layout, CoordinateSpace.Screen, LayoutBounds.GetExpanded(new Thickness(2, 0, 2, 0)));
+                    Thickness Expansion = EffectiveScaleSettings.ScaleThickness(new Thickness(2, 0, 2, 0), MGScaleCategory.Spacing);
+                    Rectangle ScreenBounds = ConvertCoordinateSpace(CoordinateSpace.Layout, CoordinateSpace.Screen, LayoutBounds.GetExpanded(Expansion));
                     Submenu.TryOpenContextMenu(ScreenBounds);
                 }
             }
 
             void CloseSubmenuIfNotHovered()
             {
-                if (Submenu?.IsContextMenuOpen == true && !Menu.IsHoveringSubmenu(5))
+                if (Submenu?.IsContextMenuOpen == true && !Menu.IsHoveringSubmenu(EffectiveScaleSettings.ScaleInt(5, MGScaleCategory.Spacing)))
                 {
                     Submenu.TryCloseContextMenu();
                 }

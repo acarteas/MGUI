@@ -259,7 +259,10 @@ namespace MGUI.Core.UI
                 MGElement Previous = Parent;
                 _Parent = Value;
                 NPC(nameof(Parent));
+                NPC(nameof(DerivedUIScaleMode));
+                NPC(nameof(IsUIScaleEffectivelyEnabled));
                 OnParentChanged?.Invoke(this, new(Previous, Parent));
+                RefreshScaleAffectedSubtree();
             }
         }
 
@@ -367,7 +370,77 @@ namespace MGUI.Core.UI
 			}
 		}
 
-		public event EventHandler<EventArgs<string>> OnNameChanged;
+        public event EventHandler<EventArgs<string>> OnNameChanged;
+
+        #region UI Scale
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private UIScaleMode _UIScaleMode = UIScaleMode.Inherit;
+        public UIScaleMode UIScaleMode
+        {
+            get => _UIScaleMode;
+            set
+            {
+                if (_UIScaleMode != value)
+                {
+                    _UIScaleMode = value;
+                    NPC(nameof(UIScaleMode));
+                    NPC(nameof(DerivedUIScaleMode));
+                    NPC(nameof(IsUIScaleEffectivelyEnabled));
+                    RefreshScaleAffectedSubtree();
+                }
+            }
+        }
+
+        protected internal UIScaleMode DerivedUIScaleMode
+        {
+            get
+            {
+                if (UIScaleMode != UIScaleMode.Inherit)
+                {
+                    return UIScaleMode;
+                }
+
+                if (Parent != null)
+                {
+                    return Parent.DerivedUIScaleMode;
+                }
+
+                if (ParentWindow != null)
+                {
+                    return ParentWindow.DerivedUIScaleMode;
+                }
+
+                return UIScaleMode.Enabled;
+            }
+        }
+
+        protected internal bool IsUIScaleEffectivelyEnabled => DerivedUIScaleMode != UIScaleMode.Disabled;
+
+        internal virtual void RefreshScaleAffectedSubtree()
+        {
+            RefreshScaleAffectedVisualTree();
+        }
+
+        internal void RefreshScaleAffectedVisualTree()
+        {
+            if (InitializationManager == null || InitializationManager.IsDeferringEvents)
+            {
+                return;
+            }
+
+            foreach (MGElement element in TraverseVisualTree(true, true, true, true, TreeTraversalMode.Preorder))
+            {
+                if (element is MGTextBlock textBlock)
+                {
+                    textBlock.RefreshTextEngine();
+                }
+
+                element.InvalidateLayout();
+            }
+
+            LayoutChanged(this, true);
+        }
+        #endregion UI Scale
 
         #region Margin / Padding
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -457,6 +530,27 @@ namespace MGUI.Core.UI
         /// Height = <see cref="Thickness.Top"/> + <see cref="Thickness.Bottom"/>;</summary>
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public Size MarginAndPaddingSize => new(HorizontalMarginAndPadding, VerticalMarginAndPadding);
+
+        protected internal MGScaleSettings EffectiveScaleSettings => IsUIScaleEffectivelyEnabled
+            ? SelfOrParentWindow.ResolvedUIScaleSettings
+            : MGScaleSettings.Unscaled;
+
+        public MGScaleSnapshot EffectiveUIScaleSnapshot => MGScaleSnapshot.From(EffectiveScaleSettings);
+
+        protected internal Thickness EffectiveMargin => EffectiveScaleSettings.ScaleThickness(Margin, MGScaleCategory.Spacing);
+        protected internal Thickness EffectivePadding => EffectiveScaleSettings.ScaleThickness(Padding, MGScaleCategory.Spacing);
+
+        protected internal int EffectiveHorizontalMargin => EffectiveMargin.Width;
+        protected internal int EffectiveVerticalMargin => EffectiveMargin.Height;
+        protected internal Size EffectiveMarginSize => EffectiveMargin.Size;
+
+        protected internal int EffectiveHorizontalPadding => EffectivePadding.Width;
+        protected internal int EffectiveVerticalPadding => EffectivePadding.Height;
+        protected internal Size EffectivePaddingSize => EffectivePadding.Size;
+
+        protected internal int EffectiveHorizontalMarginAndPadding => EffectiveHorizontalMargin + EffectiveHorizontalPadding;
+        protected internal int EffectiveVerticalMarginAndPadding => EffectiveVerticalMargin + EffectiveVerticalPadding;
+        protected internal Size EffectiveMarginAndPaddingSize => new(EffectiveHorizontalMarginAndPadding, EffectiveVerticalMarginAndPadding);
         #endregion Margin / Padding
 
         #region Alignment
@@ -553,10 +647,66 @@ namespace MGUI.Core.UI
                     NPC(nameof(VerticalContentAlignment));
                 }
 			}
-		}
+        }
         #endregion Alignment
 
         #region Size
+        #region Viewport Fit
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private ViewportFitMode _ViewportFit = ViewportFitMode.None;
+        public ViewportFitMode ViewportFit
+        {
+            get => _ViewportFit;
+            set
+            {
+                if (_ViewportFit != value)
+                {
+                    _ViewportFit = value;
+                    LayoutChanged(this, true);
+                    NPC(nameof(ViewportFit));
+                    NPC(nameof(EffectiveMaxSizeIncludingMargin));
+                }
+            }
+        }
+
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private Thickness _ViewportMargin;
+        /// <summary>Screen-space inset, in pixels, reserved inside the current viewport before applying <see cref="ViewportFit"/> constraints.</summary>
+        public Thickness ViewportMargin
+        {
+            get => _ViewportMargin;
+            set
+            {
+                if (!_ViewportMargin.Equals(value))
+                {
+                    _ViewportMargin = value;
+                    LayoutChanged(this, true);
+                    NPC(nameof(ViewportMargin));
+                    NPC(nameof(EffectiveMaxSizeIncludingMargin));
+                }
+            }
+        }
+
+        private Size EffectiveViewportMaxSizeIncludingMargin
+        {
+            get
+            {
+                if (ViewportFit == ViewportFitMode.None)
+                {
+                    return new Size(int.MaxValue, int.MaxValue);
+                }
+
+                Rectangle viewport = GetDesktop().ValidScreenBounds;
+                int viewportWidth = Math.Max(0, viewport.Width - ViewportMargin.Width);
+                int viewportHeight = Math.Max(0, viewport.Height - ViewportMargin.Height);
+                bool fitWidth = ViewportFit == ViewportFitMode.Width || ViewportFit == ViewportFitMode.WidthAndHeight;
+                bool fitHeight = ViewportFit == ViewportFitMode.Height || ViewportFit == ViewportFitMode.WidthAndHeight;
+
+                return new Size(fitWidth ? viewportWidth : int.MaxValue, fitHeight ? viewportHeight : int.MaxValue);
+            }
+        }
+        #endregion Viewport Fit
+
         #region Min / Max Size
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private int? _MinWidth;
@@ -654,6 +804,21 @@ namespace MGUI.Core.UI
         /// See also: <see cref="MaxSize"/>, <see cref="MinSize"/>, <see cref="MinSizeIncludingMargin"/></summary>
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public Size MaxSizeIncludingMargin => new(MaxWidth.HasValue ? MaxWidth.Value + HorizontalMargin : int.MaxValue, MaxHeight.HasValue ? MaxHeight.Value + VerticalMargin : int.MaxValue);
+
+        protected internal int? EffectiveMinWidth => EffectiveScaleSettings.ScaleNullableInt(MinWidth, MGScaleCategory.Size);
+        protected internal int? EffectiveMinHeight => EffectiveScaleSettings.ScaleNullableInt(MinHeight, MGScaleCategory.Size);
+        protected internal int? EffectiveMaxWidth => EffectiveScaleSettings.ScaleNullableInt(MaxWidth, MGScaleCategory.Size);
+        protected internal int? EffectiveMaxHeight => EffectiveScaleSettings.ScaleNullableInt(MaxHeight, MGScaleCategory.Size);
+
+        protected internal Size EffectiveMinSize => new(EffectiveMinWidth ?? 0, EffectiveMinHeight ?? 0);
+        protected internal Size EffectiveMinSizeIncludingMargin => new(
+            EffectiveMinWidth.HasValue ? ClampInt64((long)EffectiveMinWidth.Value + EffectiveHorizontalMargin) : 0,
+            EffectiveMinHeight.HasValue ? ClampInt64((long)EffectiveMinHeight.Value + EffectiveVerticalMargin) : 0);
+
+        protected internal Size EffectiveMaxSize => new(EffectiveMaxWidth ?? int.MaxValue, EffectiveMaxHeight ?? int.MaxValue);
+        protected internal Size EffectiveMaxSizeIncludingMargin => new(
+            Math.Min(EffectiveMaxWidth.HasValue ? ClampInt64((long)EffectiveMaxWidth.Value + EffectiveHorizontalMargin) : int.MaxValue, EffectiveViewportMaxSizeIncludingMargin.Width),
+            Math.Min(EffectiveMaxHeight.HasValue ? ClampInt64((long)EffectiveMaxHeight.Value + EffectiveVerticalMargin) : int.MaxValue, EffectiveViewportMaxSizeIncludingMargin.Height));
         #endregion Min / Max Size
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -710,6 +875,32 @@ namespace MGUI.Core.UI
         /// <summary>Same as <see cref="PreferredHeight"/>, except this includes the <see cref="VerticalMargin"/></summary>
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public int? ActualPreferredHeight => PreferredHeight.HasValue ? Math.Max(0, PreferredHeight.Value + VerticalMargin) : PreferredHeight;
+
+        protected internal int? EffectivePreferredWidth => EffectiveScaleSettings.ScaleNullableInt(PreferredWidth, MGScaleCategory.Size);
+        protected internal int? EffectivePreferredHeight => EffectiveScaleSettings.ScaleNullableInt(PreferredHeight, MGScaleCategory.Size);
+
+        protected internal int? EffectivePreferredWidthIncludingMargin => EffectivePreferredWidth.HasValue ?
+            Math.Max(0, ClampInt64((long)EffectivePreferredWidth.Value + EffectiveHorizontalMargin)) :
+            EffectivePreferredWidth;
+
+        protected internal int? EffectivePreferredHeightIncludingMargin => EffectivePreferredHeight.HasValue ?
+            Math.Max(0, ClampInt64((long)EffectivePreferredHeight.Value + EffectiveVerticalMargin)) :
+            EffectivePreferredHeight;
+
+        private static int ClampInt64(long value)
+        {
+            if (value > int.MaxValue)
+            {
+                return int.MaxValue;
+            }
+
+            if (value < int.MinValue)
+            {
+                return int.MinValue;
+            }
+
+            return (int)value;
+        }
         #endregion Size
 
         #region ToolTip
@@ -724,6 +915,12 @@ namespace MGUI.Core.UI
 				{
 					MGToolTip Previous = ToolTip;
 					_ToolTip = value;
+                    if (Previous?.Parent == this)
+                    {
+                        Previous.SetParent(null);
+                    }
+
+                    ToolTip?.SetParent(this);
                     NPC(nameof(ToolTip));
 					ToolTipChanged?.Invoke(this, new(Previous, ToolTip));
 				}
@@ -747,6 +944,12 @@ namespace MGUI.Core.UI
 				{
 					MGContextMenu Previous = ContextMenu;
 					_ContextMenu = value;
+                    if (Previous?.Parent == this)
+                    {
+                        Previous.SetParent(null);
+                    }
+
+                    ContextMenu?.SetParent(this);
                     SyncContextMenuRmbHandler();
                     NPC(nameof(ContextMenu));
 					ContextMenuChanged?.Invoke(this, new(Previous, ContextMenu));
@@ -985,6 +1188,8 @@ namespace MGUI.Core.UI
                 }
             }
         }
+
+        protected internal Thickness EffectiveBackgroundRenderPadding => EffectiveScaleSettings.ScaleThickness(BackgroundRenderPadding, MGScaleCategory.Spacing);
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private VisualStateFillBrush _BackgroundBrush;
@@ -1788,8 +1993,8 @@ namespace MGUI.Core.UI
 
         private Rectangle GetBackgroundBounds(Rectangle LayoutBounds)
         {
-            Rectangle BorderlessBounds = !HasBorder ? LayoutBounds : LayoutBounds.GetCompressed(GetBorder().BorderThickness);
-            Rectangle BackgroundBounds = BorderlessBounds.GetCompressed(BackgroundRenderPadding);
+            Rectangle BorderlessBounds = !HasBorder ? LayoutBounds : LayoutBounds.GetCompressed(GetBorder().EffectiveBorderThickness);
+            Rectangle BackgroundBounds = BorderlessBounds.GetCompressed(EffectiveBackgroundRenderPadding);
             return BackgroundBounds;
         }
 
@@ -1807,7 +2012,7 @@ namespace MGUI.Core.UI
         protected void DrawSelfBaseImplementation(ElementDrawArgs DA, Rectangle LayoutBounds)
         {
             if (HasBorder)
-                BackgroundBrush.GetBorderOverlay(DA.VisualState.Secondary)?.Draw(DA, this, LayoutBounds, GetBorder().BorderThickness);
+                BackgroundBrush.GetBorderOverlay(DA.VisualState.Secondary)?.Draw(DA, this, LayoutBounds, GetBorder().EffectiveBorderThickness);
         }
         #endregion Draw
 
@@ -1895,8 +2100,8 @@ namespace MGUI.Core.UI
                         UpdateMeasurement(BoundsSize, out RequestedSelfSize, out RequestedFullSize, out SharedSize, out RequestedContentSize);
                     }
 
-                    int ConsumedWidth = Math.Min(MaxSizeIncludingMargin.Width, HorizontalAlignment == HorizontalAlignment.Stretch ? BoundsSize.Width : Math.Min(BoundsSize.Width, RequestedFullSize.Width));
-                    int ConsumedHeight = Math.Min(MaxSizeIncludingMargin.Height, VerticalAlignment == VerticalAlignment.Stretch ? BoundsSize.Height : Math.Min(BoundsSize.Height, RequestedFullSize.Height));
+                    int ConsumedWidth = Math.Min(EffectiveMaxSizeIncludingMargin.Width, HorizontalAlignment == HorizontalAlignment.Stretch ? BoundsSize.Width : Math.Min(BoundsSize.Width, RequestedFullSize.Width));
+                    int ConsumedHeight = Math.Min(EffectiveMaxSizeIncludingMargin.Height, VerticalAlignment == VerticalAlignment.Stretch ? BoundsSize.Height : Math.Min(BoundsSize.Height, RequestedFullSize.Height));
                     if (ConsumedWidth <= 0 || ConsumedHeight <= 0)
                     {
                         RenderBounds = Rectangle.Empty;
@@ -1906,19 +2111,20 @@ namespace MGUI.Core.UI
                     }
                     else
                     {
-                        //  Account for cases where stretching horizontally or vertically would cause the bounds to exceed MaxWidth and/or MaxHeight
-                        HorizontalAlignment ActualHorizontalAlignment = MaxWidth.HasValue && HorizontalAlignment == HorizontalAlignment.Stretch && AllocatedBounds.Width > MaxWidth.Value + HorizontalMargin ?
+                        //  Account for cases where stretching horizontally or vertically would cause the bounds to exceed max constraints.
+                        HorizontalAlignment ActualHorizontalAlignment = HorizontalAlignment == HorizontalAlignment.Stretch && AllocatedBounds.Width > ConsumedWidth ?
                             HorizontalAlignment.Center :
                             HorizontalAlignment;
-                        VerticalAlignment ActualVerticalAlignment = MaxHeight.HasValue && VerticalAlignment == VerticalAlignment.Stretch && AllocatedBounds.Height > MaxHeight.Value + VerticalMargin ?
+                        VerticalAlignment ActualVerticalAlignment = VerticalAlignment == VerticalAlignment.Stretch && AllocatedBounds.Height > ConsumedHeight ?
                             VerticalAlignment.Center :
                             VerticalAlignment;
 
                         Size RenderSize = new(ConsumedWidth, ConsumedHeight);
                         RenderBounds = ApplyAlignment(AllocatedBounds, ActualHorizontalAlignment, ActualVerticalAlignment, RenderSize);
 
+                        Thickness Margin = EffectiveMargin;
                         LayoutBounds = new(RenderBounds.Left + Margin.Left, RenderBounds.Top + Margin.Top,
-                            RenderBounds.Width - HorizontalMargin, RenderBounds.Height - VerticalMargin);
+                            RenderBounds.Width - EffectiveHorizontalMargin, RenderBounds.Height - EffectiveVerticalMargin);
                         if (LayoutBounds.Width <= 0 || LayoutBounds.Height <= 0)
                         {
                             LayoutBounds = Rectangle.Empty;
@@ -2109,10 +2315,10 @@ namespace MGUI.Core.UI
 
 			AvailableSize = AvailableSize.AsZeroOrGreater();
 
-            //  Truncate the available size based on this element's MaxSize and preferred width/height
+			//  Truncate the available size based on this element's MaxSize and preferred width/height
 			Size RemainingSize = new(
-                Math.Clamp(AvailableSize.Width, 0, Math.Min(ActualPreferredWidth ?? int.MaxValue, MaxSizeIncludingMargin.Width)), 
-                Math.Clamp(AvailableSize.Height, 0, Math.Min(ActualPreferredHeight ?? int.MaxValue, MaxSizeIncludingMargin.Height))
+                Math.Clamp(AvailableSize.Width, 0, Math.Min(EffectivePreferredWidthIncludingMargin ?? int.MaxValue, EffectiveMaxSizeIncludingMargin.Width)), 
+                Math.Clamp(AvailableSize.Height, 0, Math.Min(EffectivePreferredHeightIncludingMargin ?? int.MaxValue, EffectiveMaxSizeIncludingMargin.Height))
             );
 
             if (!TryGetRecentSelfMeasurement(RemainingSize, out SelfSize, out SharedSize, out ContentSize))
@@ -2132,14 +2338,20 @@ namespace MGUI.Core.UI
 				UnsharedSelfSize.Bottom + Math.Max(SharedSize.Bottom, ContentSize.Bottom));
 
 			//  Adjust width/height based on preferred values
-			if (ActualPreferredWidth.HasValue || ActualPreferredHeight.HasValue)
+			if (EffectivePreferredWidthIncludingMargin.HasValue || EffectivePreferredHeightIncludingMargin.HasValue)
 			{
-				Size PreferredSize = new(ActualPreferredWidth ?? FullSize.Width, ActualPreferredHeight ?? FullSize.Height);
+				Size PreferredSize = new(EffectivePreferredWidthIncludingMargin ?? FullSize.Width, EffectivePreferredHeightIncludingMargin ?? FullSize.Height);
 				FullSize = FullSize.Clamp(PreferredSize, PreferredSize);
 			}
 
-			//  Adjust width/height based on min/max sizes
-			FullSize = FullSize.Clamp(MinSizeIncludingMargin, MaxSizeIncludingMargin).Clamp(Size.Empty, AvailableSize);
+            Size effectiveMinSizeIncludingMargin = EffectiveMinSizeIncludingMargin;
+            Size effectiveMaxSizeIncludingMargin = EffectiveMaxSizeIncludingMargin;
+            Size effectiveUpperBound = new(
+                Math.Max(effectiveMinSizeIncludingMargin.Width, effectiveMaxSizeIncludingMargin.Width),
+                Math.Max(effectiveMinSizeIncludingMargin.Height, effectiveMaxSizeIncludingMargin.Height));
+
+            //  Adjust width/height based on min/max sizes
+            FullSize = FullSize.Clamp(effectiveMinSizeIncludingMargin, effectiveUpperBound).Clamp(Size.Empty, AvailableSize);
 
             if ((FullSize.Width <= 0 || FullSize.Height <= 0) && !CanConsumeSpaceInSingleDimension)
                 FullSize = new(0);
@@ -2166,9 +2378,10 @@ namespace MGUI.Core.UI
 			Thickness Total = new(0);
             Size RemainingSize = AvailableSize;
 
-			Thickness MarginAndPadding = Margin.Add(Padding);
+			Thickness Padding = EffectivePadding;
+			Thickness MarginAndPadding = EffectiveMargin.Add(Padding);
 			Total = Total.Add(MarginAndPadding);
-            RemainingSize = RemainingSize.Subtract(MarginSize, 0, 0);
+            RemainingSize = RemainingSize.Subtract(EffectiveMarginSize, 0, 0);
 
             Thickness Overridden = MeasureSelfOverride(RemainingSize, out SharedSize);
 			Total = Total.Add(Overridden);
@@ -2177,7 +2390,7 @@ namespace MGUI.Core.UI
             Thickness TotalComponentSize = new(0);
 			foreach (MGComponentBase Component in Components)
 			{
-				Size RemainingSizeForComponent = Component.UsesOwnersPadding ? RemainingSize.Subtract(PaddingSize, 0, 0) : RemainingSize;
+				Size RemainingSizeForComponent = Component.UsesOwnersPadding ? RemainingSize.Subtract(EffectivePaddingSize, 0, 0) : RemainingSize;
 
 				MGElement Element = Component.BaseElement;
                 Element.UpdateMeasurement(RemainingSizeForComponent, out _, out Thickness ComponentSize, out _, out _);

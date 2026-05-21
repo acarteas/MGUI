@@ -1,0 +1,89 @@
+﻿<Window xmlns="clr-namespace:MGUI.Core.UI.XAML;assembly=MGUI.Core"
+        Left="440" Top="20" Width="760" Height="640" TitleText="UI Scaling" Padding="10">
+    <Window.Styles>
+        <Style TargetType="Button">
+            <Setter Property="Padding" Value="8,4" />
+        </Style>
+        <Style TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12" />
+        </Style>
+        <Style TargetType="Separator">
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="Height" Value="2" />
+            <Setter Property="Background" Value="White" />
+            <Setter Property="Opacity" Value="0.25" />
+        </Style>
+    </Window.Styles>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Background="rgb(54,58,64)" Padding="6">
+        <StackPanel Orientation="Vertical" Spacing="10">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+                <Button Content="1.0" CommandName="UIScale_1_0" />
+                <Button Content="1.25" CommandName="UIScale_1_25" />
+                <Button Content="1.5" CommandName="UIScale_1_5" />
+                <Button Content="2.0" CommandName="UIScale_2_0" />
+            </StackPanel>
+
+            <TextBlock Name="ScaleStatus" IsBold="True" Text="Desktop.UIScale = 1.0" />
+            <Separator/>
+
+            <DockPanel LastChildFill="True" MinHeight="140">
+                <Image Dock="Left" SourceName="Computer" Stretch="None" Margin="0,0,12,0" />
+                <StackPanel Orientation="Vertical" Spacing="6">
+                    <TextBlock Text="Text with an inline image: [Image=Computer 16x16]  Controls below remeasure from authored values." />
+                    <Button Content="Button with padding and border" HorizontalAlignment="Left" ToolTip="Tooltip offset scales with spacing." />
+                    <CheckBox IsChecked="True" Content="Checkbox checkmark stroke and shadow scale" />
+                    <RadioButton GroupName="UIScaling" Content="Radio option A" />
+                    <RadioButton GroupName="UIScaling" Content="Radio option B" />
+                </StackPanel>
+            </DockPanel>
+
+            <Slider Minimum="0" Maximum="100" Value="45" DrawTicks="True" TickFrequency="25" />
+            <ProgressBar Value="65" ShowValue="True" />
+            <ProgressButton Value="40" Minimum="0" Maximum="100" ProgressBarSize="10" ProgressBarMargin="4" Content="ProgressButton chrome" />
+
+            <StackPanel UIScaleMode="Disabled" Orientation="Vertical" Spacing="6" Padding="8" Background="rgb(38,42,48)">
+                <TextBlock Text="Unscaled island: authored padding, spacing, font, checkbox, and button chrome stay at 1.0." />
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <CheckBox IsChecked="True" Content="Unscaled checkbox" />
+                    <Button Content="Unscaled button" />
+                    <TextBlock UIScaleMode="Enabled" Text="Re-enabled text" />
+                </StackPanel>
+            </StackPanel>
+
+            <Button HorizontalAlignment="Left" Content="Open 1.5x override window" CommandName="OpenScaleOverrideWindow" />
+
+            <Button HorizontalAlignment="Left" Content="Context menu">
+                <Button.ContextMenu>
+                    <ContextMenu>
+                        <ContextMenuButton>
+                            <TextBlock Text="Scaled menu item" />
+                        </ContextMenuButton>
+                        <ContextMenuButton>
+                            <TextBlock Text="Submenu" />
+                            <ContextMenuButton.Submenu>
+                                <ContextMenu>
+                                    <ContextMenuButton>
+                                        <TextBlock Text="Nested item" />
+                                    </ContextMenuButton>
+                                </ContextMenu>
+                            </ContextMenuButton.Submenu>
+                        </ContextMenuButton>
+                    </ContextMenu>
+                </Button.ContextMenu>
+            </Button>
+
+            <ScrollViewer Height="140" VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled" Background="rgb(38,42,48)" Padding="4">
+                <StackPanel Orientation="Vertical" Spacing="6">
+                    <TextBlock Text="Scroll viewer scrollbar width, padding, thumb minimum, and wheel interval scale." />
+                    <Button Content="Row one" />
+                    <Button Content="Row two" />
+                    <Button Content="Row three" />
+                    <Button Content="Row four" />
+                    <Button Content="Row five" />
+                    <Button Content="Row six" />
+                </StackPanel>
+            </ScrollViewer>
+        </StackPanel>
+    </ScrollViewer>
+</Window>

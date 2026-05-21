@@ -54,8 +54,8 @@ namespace MGUI.Core.UI.Text
             _Lines.Clear();
 
             Rectangle LayoutBounds = TextBlockElement.LayoutBounds;
-            Thickness Padding = TextBlockElement.Padding;
-            float LinePadding = TextBlockElement.LinePadding;
+            Thickness Padding = TextBlockElement.EffectivePadding;
+            float LinePadding = TextBlockElement.EffectiveLinePadding;
 
             // engine is shared; fonts are resolved per-run to respect inline bold/italic formatting
             ITextEngine engine = TextBlockElement.GetTextEngine();
@@ -74,7 +74,7 @@ namespace MGUI.Core.UI.Text
                 foreach (MGTextLine Line in TextBlockElement.Lines)
                 {
                     int CharacterIndexInWrappedLines = 0;
-                    Rectangle LineBounds = new(LayoutBounds.Left + Padding.Left, (int)CurrentY, LayoutBounds.Width - TextBox.PaddingSize.Width, (int)Line.LineTotalHeight);
+                    Rectangle LineBounds = new(LayoutBounds.Left + Padding.Left, (int)CurrentY, LayoutBounds.Width - Padding.Width, (int)Line.LineTotalHeight);
                     float CurrentX = MGElement.ApplyAlignment(LineBounds, TextBlockElement.TextAlignment, VerticalAlignment.Center, new Size((int)Line.LineWidth, (int)Line.LineTotalHeight)).Left;
 
                     LineRenderInfo LineInfo = new(this, Line, LineIndex, LineBounds.Top, Line.LineTotalHeight);

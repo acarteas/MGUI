@@ -19,6 +19,8 @@ namespace MGUI.Core.UI.Text
         /// kerning between characters is accounted for correctly.
         /// </summary>
         Vector2 MeasureText(string Text, bool IsBold, bool IsItalic);
+
+        Vector2 MeasureImage(MGTextRunImage Image) => new(Image.TargetWidth, Image.TargetHeight);
     }
 
     public record class MGTextLine
@@ -305,7 +307,7 @@ namespace MGUI.Core.UI.Text
                 List<Vector2> TextRunSizes = CurrentLine.Where(x => x.RunType == TextRunType.Text).Cast<MGTextRunText>()
                     .Select(x => Measurer.MeasureText(x.Text, x.Settings.IsBold, x.Settings.IsItalic)).ToList();
                 List<Vector2> ImageRunSizes = CurrentLine.Where(x => x.RunType == TextRunType.Image).Cast<MGTextRunImage>()
-                    .Select(x => new Vector2(x.TargetWidth, x.TargetHeight)).ToList();
+                    .Select(Measurer.MeasureImage).ToList();
 
                 float LineWidth = TextRunSizes.Sum(x => x.X) + ImageRunSizes.Sum(x => x.X);
                 float LineTextHeight = TextRunSizes.DefaultIfEmpty(Vector2.Zero).Max(x => x.Y);
@@ -348,7 +350,7 @@ namespace MGUI.Core.UI.Text
                     }
                     else
                     {
-                        int ImgWidth = ImageRun.TargetWidth;
+                        int ImgWidth = (int)Measurer.MeasureImage(ImageRun).X;
                         if (CurrentLine.Any() && CommittedRunsWidth + ImgWidth > MaxLineWidth && FlushLine(out Line, false))
                             yield return Line;
 

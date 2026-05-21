@@ -702,7 +702,7 @@ namespace MGUI.Core.UI
 
                 MouseHandler.MovedOutside += (sender, e) =>
                 {
-                    if (IsContextMenuOpen && !IsSubmenu && !IsHoveringSubmenu(5) && AutoCloseThreshold.HasValue)
+                    if (IsContextMenuOpen && !IsSubmenu && !IsHoveringSubmenu(EffectiveScaleSettings.ScaleInt(5, MGScaleCategory.Spacing)) && AutoCloseThreshold.HasValue)
                     {
                         Point LayoutSpacePosition = ConvertCoordinateSpace(CoordinateSpace.Screen, CoordinateSpace.Layout, e.CurrentPosition);
                         if (((RectangleF)LayoutBounds).SquaredDistanceTo(LayoutSpacePosition.ToVector2()) >= AutoCloseThreshold.Value * AutoCloseThreshold.Value)

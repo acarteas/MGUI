@@ -35,6 +35,8 @@ namespace MGUI.Core.UI
             get => BorderElement.BorderThickness;
             set => BorderElement.BorderThickness = value;
         }
+
+        protected internal Thickness EffectiveBorderThickness => BorderElement.EffectiveBorderThickness;
         #endregion Border
 
         #region Value
@@ -223,6 +225,8 @@ namespace MGUI.Core.UI
             }
         }
 
+        protected internal int EffectiveSize => EffectiveScaleSettings.ScaleInt(Size, MGScaleCategory.Size);
+
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private VisualStateFillBrush _CompletedBrush;
         /// <summary>The brush to use for the completed portion of this <see cref="MGProgressBar"/></summary>
@@ -356,8 +360,8 @@ namespace MGUI.Core.UI
         {
             Thickness Self = Orientation switch
             {
-                Orientation.Horizontal => new(Size, Size, 0, 0),
-                Orientation.Vertical => new(Size, Size, 0, 0),
+                Orientation.Horizontal => new(EffectiveSize, EffectiveSize, 0, 0),
+                Orientation.Vertical => new(EffectiveSize, EffectiveSize, 0, 0),
                 _ => throw new NotImplementedException($"Unrecognized {nameof(Orientation)}: {Orientation}")
             };
 
@@ -366,7 +370,7 @@ namespace MGUI.Core.UI
 
         public override void DrawSelf(ElementDrawArgs DA, Rectangle LayoutBounds)
         {
-            Rectangle BorderlessBounds = LayoutBounds.GetCompressed(BorderThickness);
+            Rectangle BorderlessBounds = LayoutBounds.GetCompressed(EffectiveBorderThickness);
             Rectangle CompletedBounds;
             Rectangle IncompleteBounds;
 

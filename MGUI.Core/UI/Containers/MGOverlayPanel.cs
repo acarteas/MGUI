@@ -34,6 +34,8 @@ namespace MGUI.Core.UI.Containers
             public bool HasZIndex => ZIndex.HasValue;
         }
 
+        protected internal Thickness EffectiveChildOffset(Thickness Offset) => EffectiveScaleSettings.ScaleThickness(Offset, MGScaleCategory.Spacing);
+
         private readonly List<OverlayPanelChild> PanelChildren = new();
         private IEnumerable<OverlayPanelChild> SortedChildren => PanelChildren.OrderBy(x => x.HasZIndex).ThenBy(x => x.ZIndex ?? int.MinValue);
 
@@ -109,7 +111,7 @@ namespace MGUI.Core.UI.Containers
         {
             foreach (OverlayPanelChild Child in SortedChildren)
             {
-                Thickness Offset = Child.Offset;
+                Thickness Offset = EffectiveChildOffset(Child.Offset);
                 Child.Item.UpdateLayout(Bounds.GetCompressed(Offset));
             }
         }
@@ -123,7 +125,7 @@ namespace MGUI.Core.UI.Containers
                 foreach (OverlayPanelChild Child in PanelChildren)
                 {
                     Child.Item.UpdateMeasurement(AvailableSize, out Thickness SelfSize, out Thickness FullSize, out _, out _);
-                    Thickness Offset = Child.Offset;
+                    Thickness Offset = EffectiveChildOffset(Child.Offset);
                     RequestedSizes.Add(Child.Item, FullSize.Size.Add(Offset.Size, 0, 0));
                 }
 

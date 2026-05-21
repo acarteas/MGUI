@@ -13,6 +13,7 @@ Each page lists the direct properties introduced by that type. Inherited members
 
 ## Foundations
 
+- [UI Scaling](./ui-scaling.md)
 - [Element](./ui/element.md)
 - [SingleContentHost](./ui/single-content-host.md)
 - [MultiContentHost](./ui/multi-content-host.md)
