@@ -432,6 +432,18 @@
       </xs:simpleType>
     </xs:union>
   </xs:simpleType>
+  <xs:simpleType name="ViewportFitModeEnum">
+    <xs:union memberTypes="mgui:MguiBindingMarkupExtension">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="None" />
+          <xs:enumeration value="Width" />
+          <xs:enumeration value="Height" />
+          <xs:enumeration value="WidthAndHeight" />
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:union>
+  </xs:simpleType>
   <xs:simpleType name="VisibilityEnum">
     <xs:union memberTypes="mgui:MguiBindingMarkupExtension">
       <xs:simpleType>
@@ -1590,6 +1602,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="Element.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="Name" type="xs:string" />
@@ -1598,6 +1619,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -2432,6 +2455,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="ChatBox.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="Border" type="xs:string" />
@@ -2450,6 +2482,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -3223,6 +3257,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="ContextualContentPresenter.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="Value" type="mgui:MguiBoolean" />
@@ -3234,6 +3277,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -4226,6 +4271,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="GridColorPicker.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="Border" type="xs:string" />
@@ -4255,6 +4309,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -4686,6 +4742,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="GridSplitter.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="Size" type="mgui:MguiBindableInt" />
@@ -4697,6 +4762,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -5380,6 +5447,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="Image.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="SourceName" type="xs:string" />
@@ -5391,6 +5467,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -5912,6 +5990,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="MultiContentHost.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="Name" type="xs:string" />
@@ -5920,6 +6007,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -6663,6 +6752,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="ProgressBar.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="Border" type="xs:string" />
@@ -6686,6 +6784,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -7145,6 +7245,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="RatingControl.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="ItemShape" type="mgui:RatingItemShapeEnum" />
@@ -7171,6 +7280,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -7602,6 +7713,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="Rectangle.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="Stroke" type="xs:string" />
@@ -7613,6 +7733,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -8027,6 +8149,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="ResizeGrip.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="Foreground" type="xs:string" />
@@ -8038,6 +8169,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -8443,6 +8576,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="Separator.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="Orientation" type="mgui:OrientationEnum" />
@@ -8453,6 +8595,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -8974,6 +9118,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="SingleContentHost.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="Content" type="xs:string" />
@@ -8983,6 +9136,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -9525,6 +9680,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="Slider.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="Minimum" type="mgui:MguiBindableFloat" />
@@ -9557,6 +9721,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -10071,6 +10237,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="Spacer.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="Name" type="xs:string" />
@@ -10079,6 +10254,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -10525,6 +10702,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="Stopwatch.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="Border" type="xs:string" />
@@ -10541,6 +10727,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -11032,6 +11220,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="TabControl.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="Border" type="xs:string" />
@@ -11048,6 +11245,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -11480,6 +11679,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="TextBlock.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="FontFamily" type="xs:string" />
@@ -11506,6 +11714,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -12015,6 +12225,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="TextBox.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="Border" type="xs:string" />
@@ -12054,6 +12273,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -12735,6 +12956,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="Timer.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="Border" type="xs:string" />
@@ -12753,6 +12983,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -13284,6 +13516,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="XAMLDesigner.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="Name" type="xs:string" />
@@ -13292,6 +13533,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -13836,6 +14079,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="Border.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="BorderBrush" type="xs:string" />
@@ -13847,6 +14099,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -14400,6 +14654,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="Button.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="Border" type="xs:string" />
@@ -14416,6 +14679,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -14973,6 +15238,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="CheckBox.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="Button" type="xs:string" />
@@ -14992,6 +15266,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -15710,6 +15986,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="ComboBox.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="Border" type="xs:string" />
@@ -15733,6 +16018,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -16254,6 +16541,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="ContentPresenter.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="Content" type="xs:string" />
@@ -16263,6 +16559,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -16784,6 +17082,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="ContextMenuItem.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="Content" type="xs:string" />
@@ -16793,6 +17100,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -17314,6 +17623,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="DockPanel.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="LastChildFill" type="mgui:MguiBoolean" />
@@ -17323,6 +17641,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -17990,6 +18310,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="Expander.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="ExpanderToggleButton" type="xs:string" />
@@ -18014,6 +18343,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -18621,6 +18952,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="Grid.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="RowLengths" type="xs:string" />
@@ -18642,6 +18982,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -19270,6 +19612,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="GroupBox.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="BorderBrush" type="xs:string" />
@@ -19288,6 +19639,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -19871,6 +20224,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="HeaderedContentPresenter.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="Header" type="xs:string" />
@@ -19883,6 +20245,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -20404,6 +20768,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="InputConsumer.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="HandlesMousePresses" type="mgui:MguiBoolean" />
@@ -20417,6 +20790,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -21249,6 +21624,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="ListBox.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="OuterBorder" type="xs:string" />
@@ -21277,6 +21661,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -21719,6 +22105,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="ListView.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="RowHeight" type="mgui:MguiBindableInt" />
@@ -21732,6 +22127,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -22227,6 +22624,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="MenuBar.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="ButtonWrapperTemplate" type="xs:string" />
@@ -22238,6 +22644,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -22730,6 +23138,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="MenuBarItem.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="Text" type="xs:string" />
@@ -22741,6 +23158,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -23303,6 +23722,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="Overlay.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="Border" type="xs:string" />
@@ -23318,6 +23746,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -23865,6 +24295,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="OverlayHost.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="OverlayBackground" type="xs:string" />
@@ -23876,6 +24315,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -24397,6 +24838,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="OverlayPanel.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="Name" type="xs:string" />
@@ -24405,6 +24855,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -24914,6 +25366,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="PasswordBox.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="PasswordCharacter" type="xs:string" />
@@ -24954,6 +25415,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -25573,6 +26036,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="ProgressButton.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="Border" type="xs:string" />
@@ -25604,6 +26076,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -26170,6 +26644,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="RadioButton.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="Button" type="xs:string" />
@@ -26190,6 +26673,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -26779,6 +27264,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="ScrollViewer.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="VerticalScrollBarVisibility" type="mgui:ScrollBarVisibilityEnum" />
@@ -26796,6 +27290,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -27366,6 +27862,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="Spoiler.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="Button" type="xs:string" />
@@ -27382,6 +27887,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -27935,6 +28442,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="StackPanel.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="Border" type="xs:string" />
@@ -27948,6 +28464,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -28531,6 +29049,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="TabItem.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="Header" type="xs:string" />
@@ -28542,6 +29069,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -29121,6 +29650,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="ToggleButton.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="Border" type="xs:string" />
@@ -29136,6 +29674,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -29706,6 +30246,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="TreeView.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="Border" type="xs:string" />
@@ -29719,6 +30268,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -30240,6 +30791,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="TreeViewItem.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="Header" type="xs:string" />
@@ -30250,6 +30810,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -30865,6 +31427,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="UniformGrid.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="Rows" type="mgui:MguiBindableInt" />
@@ -30892,6 +31463,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -31503,6 +32076,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="Window.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="ThemeName" type="xs:string" />
@@ -31535,6 +32117,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -32135,6 +32719,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="ContextMenu.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="ButtonWrapperTemplate" type="xs:string" />
@@ -32176,6 +32769,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -32706,6 +33301,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="ContextMenuSeparator.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="Separator" type="xs:string" />
@@ -32716,6 +33320,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -33336,6 +33942,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="ToolTip.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="ShowOnDisabled" type="mgui:MguiBoolean" />
@@ -33371,6 +33986,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -33901,6 +34518,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="WrappedContextMenuItem.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="Submenu" type="xs:string" />
@@ -33911,6 +34537,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -34450,6 +35078,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="ContextMenuButton.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="CommandId" type="xs:string" />
@@ -34463,6 +35100,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -34993,6 +35632,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="ContextMenuRadioButton.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="GroupName" type="xs:string" />
@@ -35007,6 +35655,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />
@@ -35537,6 +36187,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="ContextMenuToggle.ViewportMargin">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:Thickness" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
     <xs:attribute name="CommandId" type="xs:string" />
@@ -35550,6 +36209,8 @@
     <xs:attribute name="UIScaleMode" type="mgui:UIScaleModeEnum" />
     <xs:attribute name="Margin" type="xs:string" />
     <xs:attribute name="Padding" type="xs:string" />
+    <xs:attribute name="ViewportFit" type="mgui:ViewportFitModeEnum" />
+    <xs:attribute name="ViewportMargin" type="xs:string" />
     <xs:attribute name="HorizontalAlignment" type="mgui:HorizontalAlignmentEnum" />
     <xs:attribute name="VerticalAlignment" type="mgui:VerticalAlignmentEnum" />
     <xs:attribute name="HorizontalContentAlignment" type="mgui:HorizontalAlignmentEnum" />

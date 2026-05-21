@@ -122,6 +122,13 @@ All elements expose these common properties for sizing:
 | int? | `PreferredWidth` / `PreferredHeight` | Desired Width/Height in pixels, does not include `Margin`.<br>If null, element is dynamically sized to be just big enough to draw itself and its `Content`<br>This value is clamped to the range [`MinWidth`, `MaxWidth`] or [`MinHeight`, `MaxHeight`] when possible |
 | int | `ActualWidth` / `ActualHeight` | Readonly. The actual Width/Height in pixels, does not include `Margin`.<br>This value isn't updated immediately when changing size-related properties.<br>It's updated the next time the layout of the element is recalculated, during an Update tick |
 
+Elements can also opt into viewport-based caps with `ViewportFit`. This is intended for dialogs, overlays, popups, and other bounded UI that should remain usable on small windows or at high UI scale.
+
+| Type | Property | Description |
+| ---- | -------- | ----------- |
+| `ViewportFitMode` | `ViewportFit` | Adds a measurement cap based on the current desktop valid screen bounds. Supported values are `None`, `Width`, `Height`, and `WidthAndHeight`. The cap is combined with authored `MaxWidth` / `MaxHeight`; it does not mutate authored size properties. |
+| `Thickness` | `ViewportMargin` | A viewport inset in screen pixels. For example, `ViewportMargin="48"` reserves 48px on each side before the viewport cap is calculated. This is not authored UI spacing and is not scaled like `Margin` or `Padding`. |
+
 All elements expose these common properties for alignment:
 
 | Type | Property |

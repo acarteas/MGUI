@@ -647,10 +647,66 @@ namespace MGUI.Core.UI
                     NPC(nameof(VerticalContentAlignment));
                 }
 			}
-		}
+        }
         #endregion Alignment
 
         #region Size
+        #region Viewport Fit
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private ViewportFitMode _ViewportFit = ViewportFitMode.None;
+        public ViewportFitMode ViewportFit
+        {
+            get => _ViewportFit;
+            set
+            {
+                if (_ViewportFit != value)
+                {
+                    _ViewportFit = value;
+                    LayoutChanged(this, true);
+                    NPC(nameof(ViewportFit));
+                    NPC(nameof(EffectiveMaxSizeIncludingMargin));
+                }
+            }
+        }
+
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private Thickness _ViewportMargin;
+        /// <summary>Screen-space inset, in pixels, reserved inside the current viewport before applying <see cref="ViewportFit"/> constraints.</summary>
+        public Thickness ViewportMargin
+        {
+            get => _ViewportMargin;
+            set
+            {
+                if (!_ViewportMargin.Equals(value))
+                {
+                    _ViewportMargin = value;
+                    LayoutChanged(this, true);
+                    NPC(nameof(ViewportMargin));
+                    NPC(nameof(EffectiveMaxSizeIncludingMargin));
+                }
+            }
+        }
+
+        private Size EffectiveViewportMaxSizeIncludingMargin
+        {
+            get
+            {
+                if (ViewportFit == ViewportFitMode.None)
+                {
+                    return new Size(int.MaxValue, int.MaxValue);
+                }
+
+                Rectangle viewport = GetDesktop().ValidScreenBounds;
+                int viewportWidth = Math.Max(0, viewport.Width - ViewportMargin.Width);
+                int viewportHeight = Math.Max(0, viewport.Height - ViewportMargin.Height);
+                bool fitWidth = ViewportFit == ViewportFitMode.Width || ViewportFit == ViewportFitMode.WidthAndHeight;
+                bool fitHeight = ViewportFit == ViewportFitMode.Height || ViewportFit == ViewportFitMode.WidthAndHeight;
+
+                return new Size(fitWidth ? viewportWidth : int.MaxValue, fitHeight ? viewportHeight : int.MaxValue);
+            }
+        }
+        #endregion Viewport Fit
+
         #region Min / Max Size
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private int? _MinWidth;
@@ -761,8 +817,8 @@ namespace MGUI.Core.UI
 
         protected internal Size EffectiveMaxSize => new(EffectiveMaxWidth ?? int.MaxValue, EffectiveMaxHeight ?? int.MaxValue);
         protected internal Size EffectiveMaxSizeIncludingMargin => new(
-            EffectiveMaxWidth.HasValue ? ClampInt64((long)EffectiveMaxWidth.Value + EffectiveHorizontalMargin) : int.MaxValue,
-            EffectiveMaxHeight.HasValue ? ClampInt64((long)EffectiveMaxHeight.Value + EffectiveVerticalMargin) : int.MaxValue);
+            Math.Min(EffectiveMaxWidth.HasValue ? ClampInt64((long)EffectiveMaxWidth.Value + EffectiveHorizontalMargin) : int.MaxValue, EffectiveViewportMaxSizeIncludingMargin.Width),
+            Math.Min(EffectiveMaxHeight.HasValue ? ClampInt64((long)EffectiveMaxHeight.Value + EffectiveVerticalMargin) : int.MaxValue, EffectiveViewportMaxSizeIncludingMargin.Height));
         #endregion Min / Max Size
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -2055,11 +2111,11 @@ namespace MGUI.Core.UI
                     }
                     else
                     {
-                        //  Account for cases where stretching horizontally or vertically would cause the bounds to exceed MaxWidth and/or MaxHeight
-                        HorizontalAlignment ActualHorizontalAlignment = EffectiveMaxWidth.HasValue && HorizontalAlignment == HorizontalAlignment.Stretch && AllocatedBounds.Width > EffectiveMaxSizeIncludingMargin.Width ?
+                        //  Account for cases where stretching horizontally or vertically would cause the bounds to exceed max constraints.
+                        HorizontalAlignment ActualHorizontalAlignment = HorizontalAlignment == HorizontalAlignment.Stretch && AllocatedBounds.Width > ConsumedWidth ?
                             HorizontalAlignment.Center :
                             HorizontalAlignment;
-                        VerticalAlignment ActualVerticalAlignment = EffectiveMaxHeight.HasValue && VerticalAlignment == VerticalAlignment.Stretch && AllocatedBounds.Height > EffectiveMaxSizeIncludingMargin.Height ?
+                        VerticalAlignment ActualVerticalAlignment = VerticalAlignment == VerticalAlignment.Stretch && AllocatedBounds.Height > ConsumedHeight ?
                             VerticalAlignment.Center :
                             VerticalAlignment;
 
@@ -2288,8 +2344,14 @@ namespace MGUI.Core.UI
 				FullSize = FullSize.Clamp(PreferredSize, PreferredSize);
 			}
 
-			//  Adjust width/height based on min/max sizes
-			FullSize = FullSize.Clamp(EffectiveMinSizeIncludingMargin, EffectiveMaxSizeIncludingMargin).Clamp(Size.Empty, AvailableSize);
+            Size effectiveMinSizeIncludingMargin = EffectiveMinSizeIncludingMargin;
+            Size effectiveMaxSizeIncludingMargin = EffectiveMaxSizeIncludingMargin;
+            Size effectiveUpperBound = new(
+                Math.Max(effectiveMinSizeIncludingMargin.Width, effectiveMaxSizeIncludingMargin.Width),
+                Math.Max(effectiveMinSizeIncludingMargin.Height, effectiveMaxSizeIncludingMargin.Height));
+
+            //  Adjust width/height based on min/max sizes
+            FullSize = FullSize.Clamp(effectiveMinSizeIncludingMargin, effectiveUpperBound).Clamp(Size.Empty, AvailableSize);
 
             if ((FullSize.Width <= 0 || FullSize.Height <= 0) && !CanConsumeSpaceInSingleDimension)
                 FullSize = new(0);
