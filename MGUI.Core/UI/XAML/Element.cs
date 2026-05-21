@@ -29,6 +29,10 @@ namespace MGUI.Core.UI.XAML
         public Thickness? Margin { get; set; }
         [Category("Layout")]
         public Thickness? Padding { get; set; }
+        [Category("Layout")]
+        public ViewportFitMode ViewportFit { get; set; } = ViewportFitMode.None;
+        [Category("Layout")]
+        public Thickness? ViewportMargin { get; set; }
 
         [Category("Layout")]public HorizontalAlignment? HorizontalAlignment { get; set; }
         [Category("Layout")]public VerticalAlignment? VerticalAlignment { get; set; }
@@ -214,6 +218,9 @@ namespace MGUI.Core.UI.XAML
                     Element.Margin = Margin.Value.ToThickness();
                 if (Padding.HasValue)
                     Element.Padding = Padding.Value.ToThickness();
+                Element.ViewportFit = ViewportFit;
+                if (ViewportMargin.HasValue)
+                    Element.ViewportMargin = ViewportMargin.Value.ToThickness();
 
                 if (HorizontalAlignment.HasValue)
                     Element.HorizontalAlignment = HorizontalAlignment.Value;

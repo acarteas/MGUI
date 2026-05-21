@@ -100,6 +100,14 @@ namespace MGUI.Core.UI
         Create = 1
     }
 
+    public enum ViewportFitMode
+    {
+        None = 0,
+        Width = 1,
+        Height = 2,
+        WidthAndHeight = 3
+    }
+
     /// <summary>Describes how a child element is vertically positioned or stretched within a parent's layout slot</summary>
     public enum VerticalAlignment
     {
