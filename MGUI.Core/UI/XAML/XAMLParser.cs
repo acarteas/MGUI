@@ -75,6 +75,7 @@ namespace MGUI.Core.UI.XAML
 
             { "PasswordBox", nameof(PasswordBox) },
             { "ProgressBar", nameof(ProgressBar) },
+            { "ProgressButton", nameof(ProgressButton) },
             { "RadioButton", nameof(RadioButton) },
             { "RatingControl", nameof(RatingControl) },
             { "Rectangle", nameof(Rectangle) },

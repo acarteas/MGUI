@@ -53,14 +53,13 @@
 
             <Button HorizontalAlignment="Left" Content="Open 1.5x override window" CommandName="OpenScaleOverrideWindow" />
 
-            <Button HorizontalAlignment="Left" Content="Context menu">
+            <Button HorizontalAlignment="Left">
                 <Button.ContextMenu>
                     <ContextMenu>
                         <ContextMenuButton>
                             <TextBlock Text="Scaled menu item" />
                         </ContextMenuButton>
                         <ContextMenuButton>
-                            <TextBlock Text="Submenu" />
                             <ContextMenuButton.Submenu>
                                 <ContextMenu>
                                     <ContextMenuButton>
@@ -68,9 +67,11 @@
                                     </ContextMenuButton>
                                 </ContextMenu>
                             </ContextMenuButton.Submenu>
+                            <TextBlock Text="Submenu" />
                         </ContextMenuButton>
                     </ContextMenu>
                 </Button.ContextMenu>
+                <TextBlock Text="Context menu" />
             </Button>
 
             <ScrollViewer Height="140" VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled" Background="rgb(38,42,48)" Padding="4">
