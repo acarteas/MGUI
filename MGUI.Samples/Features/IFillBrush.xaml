@@ -506,9 +506,9 @@
                                 <Slider Width="250" Minimum="13" Maximum="104" UseDiscreteValues="True" DiscreteValueInterval="1" DrawTicks="False"
                                             Value="{MGBinding Path=NineSliceTargetMargin, Mode=TwoWay}" />
                             </StackPanel>
-                            <Border BorderThickness="0" MinHeight="300">
+                            <Border BorderThickness="0" BorderBrush="Transparent" MinHeight="300">
                                 <Border Width="320" Height="240" MinWidth="200" MinHeight="200" MaxWidth="800" MaxHeight="500"
-                                        Name="NineSliceResult" BorderBrush="Black" BorderThickness="2" Padding="5" 
+                                        Name="NineSliceResult" Padding="5" BorderThickness="0" BorderBrush="Transparent"
                                         HorizontalAlignment="Left" VerticalAlignment="Top">
                                     <Border.Background>
                                         <NineSliceFillBrush SourceName="Samples_9SliceTexture1" SourceMargin="52" TargetMargin="26" />
