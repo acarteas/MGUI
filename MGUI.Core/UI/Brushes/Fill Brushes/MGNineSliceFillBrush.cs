@@ -16,6 +16,7 @@ namespace MGUI.Core.UI.Brushes.Fill_Brushes
     /// See also: <see href="https://en.wikipedia.org/wiki/9-slice_scaling"/></summary>
     public readonly struct MGNineSliceFillBrush : IFillBrush
     {
+        /// <summary>The unscaled UI thickness used for destination slices. Rendering scales this through <see cref="MGScaleCategory.Border"/> on the owning element.</summary>
         public readonly Thickness TargetMargin;
 
         public readonly MGTextureData TopLeft;
@@ -29,8 +30,8 @@ namespace MGUI.Core.UI.Brushes.Fill_Brushes
         public readonly MGTextureData BottomRight;
 
         /// <param name="Source">The texture that will be divided up into 9 rectangular regions.</param>
-        /// <param name="TargetMargin">Determines the size of each slice when rendering the texture to the destination bounds.<para/>
-        /// EX: If margin.Left=10 and margin.Top=16, the top-left region of the source texture will be drawn to the topleft 10x16 pixels of the destination bounds whenever this brush is rendered.</param>
+        /// <param name="TargetMargin">Determines the unscaled UI size of each slice when rendering the texture to the destination bounds. This value is scaled with the owning element's border UI scale.<para/>
+        /// EX: If margin.Left=10 and margin.Top=16, the top-left region of the source texture will be drawn to the topleft 10x16 pixels (assuming 1x UI scaling) of the destination bounds whenever this brush is rendered.</param>
         /// <param name="SourceMargin">Optional. Determines how the source texture is divided up into 9 rectangular regions.<para/>
         /// If <see langword="null"/>, each region of the source texture is assumed to be equally-sized (and thus its dimensions should be an exact multiple of 3)</param>
         public MGNineSliceFillBrush(Thickness TargetMargin, MGTextureData Source, Thickness? SourceMargin = null)
@@ -61,32 +62,20 @@ namespace MGUI.Core.UI.Brushes.Fill_Brushes
                 Margin = new(Bounds.Width / 3, Bounds.Height / 3);
             }
 
-            int LeftColumnSize = Margin.Left;
-            int RightColumnSize = Margin.Right;
-            int CenterColumnSize = Bounds.Width - LeftColumnSize - RightColumnSize;
-
-            int TopRowSize = Margin.Top;
-            int BottomRowSize = Margin.Bottom;
-            int CenterRowSize = Bounds.Height - TopRowSize - BottomRowSize;
-
-            //  Compute the top row regions
-            TopLeft = new(Texture, new(Bounds.Left, Bounds.Top, LeftColumnSize, TopRowSize), Source.Opacity, Source.RenderSizeOverride);
-            TopCenter = new(Texture, new(Bounds.Left + LeftColumnSize, Bounds.Top, CenterColumnSize, TopRowSize), Source.Opacity, Source.RenderSizeOverride);
-            TopRight = new(Texture, new(Bounds.Left + LeftColumnSize + CenterColumnSize, Bounds.Top, RightColumnSize, TopRowSize), Source.Opacity, Source.RenderSizeOverride);
-
-            //  Compute the center row regions
-            MiddleLeft = new(Texture, new(Bounds.Left, Bounds.Top + TopRowSize, LeftColumnSize, CenterRowSize), Source.Opacity, Source.RenderSizeOverride);
-            MiddleCenter = new(Texture, new(Bounds.Left + LeftColumnSize, Bounds.Top + TopRowSize, CenterColumnSize, CenterRowSize), Source.Opacity, Source.RenderSizeOverride);
-            MiddleRight = new(Texture, new(Bounds.Left + LeftColumnSize + CenterColumnSize, Bounds.Top + TopRowSize, RightColumnSize, CenterRowSize), Source.Opacity, Source.RenderSizeOverride);
-
-            //  Compute the bottom row regions
-            BottomLeft = new(Texture, new(Bounds.Left, Bounds.Top + TopRowSize + CenterRowSize, LeftColumnSize, BottomRowSize), Source.Opacity, Source.RenderSizeOverride);
-            BottomCenter = new(Texture, new(Bounds.Left + LeftColumnSize, Bounds.Top + TopRowSize + CenterRowSize, CenterColumnSize, BottomRowSize), Source.Opacity, Source.RenderSizeOverride);
-            BottomRight = new(Texture, new(Bounds.Left + LeftColumnSize + CenterColumnSize, Bounds.Top + TopRowSize + CenterRowSize, RightColumnSize, BottomRowSize), Source.Opacity, Source.RenderSizeOverride);
+            NineSliceRegions SourceRegions = GetRegions(Bounds, Margin);
+            TopLeft = new(Texture, SourceRegions.TopLeft, Source.Opacity, Source.RenderSizeOverride);
+            TopCenter = new(Texture, SourceRegions.TopCenter, Source.Opacity, Source.RenderSizeOverride);
+            TopRight = new(Texture, SourceRegions.TopRight, Source.Opacity, Source.RenderSizeOverride);
+            MiddleLeft = new(Texture, SourceRegions.MiddleLeft, Source.Opacity, Source.RenderSizeOverride);
+            MiddleCenter = new(Texture, SourceRegions.MiddleCenter, Source.Opacity, Source.RenderSizeOverride);
+            MiddleRight = new(Texture, SourceRegions.MiddleRight, Source.Opacity, Source.RenderSizeOverride);
+            BottomLeft = new(Texture, SourceRegions.BottomLeft, Source.Opacity, Source.RenderSizeOverride);
+            BottomCenter = new(Texture, SourceRegions.BottomCenter, Source.Opacity, Source.RenderSizeOverride);
+            BottomRight = new(Texture, SourceRegions.BottomRight, Source.Opacity, Source.RenderSizeOverride);
         }
 
-        /// <param name="TargetMargin">Determines the size of each slice when rendering the texture to the destination bounds.<para/>
-        /// EX: If margin.Left=10 and margin.Top=16, the top-left region of the source texture will be drawn to the topleft 10x16 pixels of the destination bounds whenever this brush is rendered.</param>
+        /// <param name="TargetMargin">Determines the unscaled UI size of each slice when rendering the texture to the destination bounds. This value is scaled with the owning element's border UI scale.<para/>
+        /// EX: If margin.Left=10 and margin.Top=16, the top-left region of the source texture will be drawn to the topleft 10x16 pixels (assuming 1x UI scaling) of the destination bounds whenever this brush is rendered.</param>
         public MGNineSliceFillBrush(Thickness TargetMargin,
             MGTextureData TopLeft, MGTextureData TopCenter, MGTextureData TopRight,
             MGTextureData MiddleLeft, MGTextureData MiddleCenter, MGTextureData MiddleRight,
@@ -107,18 +96,44 @@ namespace MGUI.Core.UI.Brushes.Fill_Brushes
 
         public IFillBrush Copy() => new MGNineSliceFillBrush(TargetMargin, TopLeft, TopCenter, TopRight, MiddleLeft, MiddleCenter, MiddleRight, BottomLeft, BottomCenter, BottomRight);
 
+        internal static Thickness GetEffectiveTargetMargin(MGElement Element, Thickness TargetMargin)
+            => Element.EffectiveScaleSettings.ScaleThickness(TargetMargin, MGScaleCategory.Border);
+
+        internal static NineSliceRegions GetRegions(Rectangle Bounds, Thickness Margin)
+        {
+            int LeftColumnSize = Margin.Left;
+            int RightColumnSize = Margin.Right;
+            int CenterColumnSize = Bounds.Width - LeftColumnSize - RightColumnSize;
+
+            int TopRowSize = Margin.Top;
+            int BottomRowSize = Margin.Bottom;
+            int CenterRowSize = Bounds.Height - TopRowSize - BottomRowSize;
+
+            return new NineSliceRegions(
+                new Rectangle(Bounds.Left, Bounds.Top, LeftColumnSize, TopRowSize),
+                new Rectangle(Bounds.Left + LeftColumnSize, Bounds.Top, CenterColumnSize, TopRowSize),
+                new Rectangle(Bounds.Left + LeftColumnSize + CenterColumnSize, Bounds.Top, RightColumnSize, TopRowSize),
+                new Rectangle(Bounds.Left, Bounds.Top + TopRowSize, LeftColumnSize, CenterRowSize),
+                new Rectangle(Bounds.Left + LeftColumnSize, Bounds.Top + TopRowSize, CenterColumnSize, CenterRowSize),
+                new Rectangle(Bounds.Left + LeftColumnSize + CenterColumnSize, Bounds.Top + TopRowSize, RightColumnSize, CenterRowSize),
+                new Rectangle(Bounds.Left, Bounds.Top + TopRowSize + CenterRowSize, LeftColumnSize, BottomRowSize),
+                new Rectangle(Bounds.Left + LeftColumnSize, Bounds.Top + TopRowSize + CenterRowSize, CenterColumnSize, BottomRowSize),
+                new Rectangle(Bounds.Left + LeftColumnSize + CenterColumnSize, Bounds.Top + TopRowSize + CenterRowSize, RightColumnSize, BottomRowSize));
+        }
+
         public void Draw(ElementDrawArgs DA, MGElement Element, Rectangle Bounds)
         {
             DrawTransaction DT = DA.DT;
 
             Bounds = Bounds.GetTranslated(DA.Offset);
+            Thickness EffectiveTargetMargin = GetEffectiveTargetMargin(Element, TargetMargin);
 
-            int LeftColumnSize = TargetMargin.Left;
-            int RightColumnSize = TargetMargin.Right;
+            int LeftColumnSize = EffectiveTargetMargin.Left;
+            int RightColumnSize = EffectiveTargetMargin.Right;
             int CenterColumnSize = Bounds.Width - LeftColumnSize - RightColumnSize;
 
-            int TopRowSize = TargetMargin.Top;
-            int BottomRowSize = TargetMargin.Bottom;
+            int TopRowSize = EffectiveTargetMargin.Top;
+            int BottomRowSize = EffectiveTargetMargin.Bottom;
             int CenterRowSize = Bounds.Height - TopRowSize - BottomRowSize;
 
             //  Draw the top row
@@ -168,5 +183,16 @@ namespace MGUI.Core.UI.Brushes.Fill_Brushes
                     BottomRight.Draw(DT, new Rectangle(Bounds.Left + LeftColumnSize + CenterColumnSize, Bounds.Top + TopRowSize + CenterRowSize, RightColumnSize, BottomRowSize), null, DA.Opacity);
             }
         }
+
+        internal readonly record struct NineSliceRegions(
+            Rectangle TopLeft,
+            Rectangle TopCenter,
+            Rectangle TopRight,
+            Rectangle MiddleLeft,
+            Rectangle MiddleCenter,
+            Rectangle MiddleRight,
+            Rectangle BottomLeft,
+            Rectangle BottomCenter,
+            Rectangle BottomRight);
     }
 }

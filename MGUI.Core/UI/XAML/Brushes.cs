@@ -311,6 +311,8 @@ namespace MGUI.Core.UI.XAML
     {
         public string SourceName { get; set; }
         public Thickness? SourceMargin { get; set; }
+
+        /// <summary>The unscaled UI thickness used for destination slices. Rendering scales this through border UI scaling.</summary>
         public Thickness TargetMargin { get; set; }
 
         public override IFillBrush ToFillBrush(MGDesktop Desktop, MGElement Element)
