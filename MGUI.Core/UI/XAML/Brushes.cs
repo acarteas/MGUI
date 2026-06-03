@@ -311,6 +311,7 @@ namespace MGUI.Core.UI.XAML
     {
         public string SourceName { get; set; }
         public Thickness? SourceMargin { get; set; }
+        public FillBrush InteriorBrush { get; set; }
 
         /// <summary>The unscaled UI thickness used for destination slices. Rendering scales this through border UI scaling.</summary>
         public Thickness TargetMargin { get; set; }
@@ -322,8 +323,15 @@ namespace MGUI.Core.UI.XAML
             if (!Desktop.Resources.TryGetTexture(SourceName, out MGTextureData Source))
                 throw new InvalidOperationException($"No Texture was found with the name '{SourceName}' in {nameof(MGResources)}.{nameof(MGResources.Textures)}.");
 
-            IFillBrush Brush = new MGNineSliceFillBrush(TargetMargin.ToThickness(), Source, SourceMargin?.ToThickness());
+            IFillBrush Brush = new MGNineSliceFillBrush(TargetMargin.ToThickness(), Source, SourceMargin?.ToThickness(), InteriorBrush?.ToFillBrush(Desktop, Element));
             return Brush;
+        }
+
+        protected internal override IEnumerable<(XAMLBindableBase, string)> GetNestedBindableObjects()
+        {
+            foreach (var Item in base.GetNestedBindableObjects())
+                yield return Item;
+            yield return (InteriorBrush, nameof(InteriorBrush));
         }
     }
     #endregion Fill Brush

@@ -28,19 +28,24 @@ namespace MGUI.Core.UI.Brushes.Fill_Brushes
         public readonly MGTextureData BottomLeft;
         public readonly MGTextureData BottomCenter;
         public readonly MGTextureData BottomRight;
+        public readonly IFillBrush InteriorBrush;
 
         /// <param name="Source">The texture that will be divided up into 9 rectangular regions.</param>
         /// <param name="TargetMargin">Determines the unscaled UI size of each slice when rendering the texture to the destination bounds. This value is scaled with the owning element's border UI scale.<para/>
         /// EX: If margin.Left=10 and margin.Top=16, the top-left region of the source texture will be drawn to the topleft 10x16 pixels (assuming 1x UI scaling) of the destination bounds whenever this brush is rendered.</param>
         /// <param name="SourceMargin">Optional. Determines how the source texture is divided up into 9 rectangular regions.<para/>
         /// If <see langword="null"/>, each region of the source texture is assumed to be equally-sized (and thus its dimensions should be an exact multiple of 3)</param>
-        public MGNineSliceFillBrush(Thickness TargetMargin, MGTextureData Source, Thickness? SourceMargin = null)
+        /// <param name="InteriorBrush">Optional. If specified, replaces the center source region and is drawn to the interior destination bounds.</param>
+        public MGNineSliceFillBrush(Thickness TargetMargin, MGTextureData Source, Thickness? SourceMargin = null, IFillBrush InteriorBrush = null)
         {
             this.TargetMargin = TargetMargin;
+            this.InteriorBrush = InteriorBrush;
 
             Texture2D Texture = Source.Texture;
             if (Texture == null)
+            {
                 throw new ArgumentNullException(nameof(Source));
+            }
 
             Rectangle Bounds = Source.SourceRect ?? Texture.Bounds;
 
@@ -49,7 +54,10 @@ namespace MGUI.Core.UI.Brushes.Fill_Brushes
             if (SourceMargin.HasValue)
             {
                 if (SourceMargin.Value.Sides().Any(x => x <= 0))
+                {
                     throw new InvalidDataException($"Invalid {nameof(SourceMargin)}. All sides must have a value greater than zero. Actual value: {SourceMargin.Value}");
+                }
+
                 Margin = SourceMargin.Value;
             }
             else
@@ -79,9 +87,11 @@ namespace MGUI.Core.UI.Brushes.Fill_Brushes
         public MGNineSliceFillBrush(Thickness TargetMargin,
             MGTextureData TopLeft, MGTextureData TopCenter, MGTextureData TopRight,
             MGTextureData MiddleLeft, MGTextureData MiddleCenter, MGTextureData MiddleRight,
-            MGTextureData BottomLeft, MGTextureData BottomCenter, MGTextureData BottomRight)
+            MGTextureData BottomLeft, MGTextureData BottomCenter, MGTextureData BottomRight,
+            IFillBrush InteriorBrush = null)
         {
             this.TargetMargin = TargetMargin;
+            this.InteriorBrush = InteriorBrush;
 
             this.TopLeft = TopLeft;
             this.TopCenter = TopCenter;
@@ -94,10 +104,13 @@ namespace MGUI.Core.UI.Brushes.Fill_Brushes
             this.BottomRight = BottomRight;
         }
 
-        public IFillBrush Copy() => new MGNineSliceFillBrush(TargetMargin, TopLeft, TopCenter, TopRight, MiddleLeft, MiddleCenter, MiddleRight, BottomLeft, BottomCenter, BottomRight);
+        public IFillBrush Copy() => new MGNineSliceFillBrush(TargetMargin, TopLeft, TopCenter, TopRight, MiddleLeft, MiddleCenter, MiddleRight, BottomLeft, BottomCenter, BottomRight, InteriorBrush?.Copy());
 
         internal static Thickness GetEffectiveTargetMargin(MGElement Element, Thickness TargetMargin)
             => Element.EffectiveScaleSettings.ScaleThickness(TargetMargin, MGScaleCategory.Border);
+
+        internal static NineSliceRegions GetDestinationRegions(MGElement Element, Rectangle Bounds, Thickness TargetMargin)
+            => GetRegions(Bounds, GetEffectiveTargetMargin(Element, TargetMargin));
 
         internal static NineSliceRegions GetRegions(Rectangle Bounds, Thickness Margin)
         {
@@ -123,36 +136,37 @@ namespace MGUI.Core.UI.Brushes.Fill_Brushes
 
         public void Draw(ElementDrawArgs DA, MGElement Element, Rectangle Bounds)
         {
+            static Rectangle Translate(Rectangle rectangle, Point offset) => rectangle.GetTranslated(offset);
+
             DrawTransaction DT = DA.DT;
+            NineSliceRegions Regions = GetDestinationRegions(Element, Bounds, TargetMargin);
 
-            Bounds = Bounds.GetTranslated(DA.Offset);
-            Thickness EffectiveTargetMargin = GetEffectiveTargetMargin(Element, TargetMargin);
-
-            int LeftColumnSize = EffectiveTargetMargin.Left;
-            int RightColumnSize = EffectiveTargetMargin.Right;
-            int CenterColumnSize = Bounds.Width - LeftColumnSize - RightColumnSize;
-
-            int TopRowSize = EffectiveTargetMargin.Top;
-            int BottomRowSize = EffectiveTargetMargin.Bottom;
-            int CenterRowSize = Bounds.Height - TopRowSize - BottomRowSize;
-
-            //  Draw the top row
-            if (TopRowSize > 0)
+            if (Regions.TopLeft.Height > 0)
             {
-                if (LeftColumnSize > 0)
-                    TopLeft.Draw(DT, new Rectangle(Bounds.Left, Bounds.Top, LeftColumnSize, TopRowSize), null, DA.Opacity);
-                if (CenterColumnSize > 0)
-                    TopCenter.Draw(DT, new Rectangle(Bounds.Left + LeftColumnSize, Bounds.Top, CenterColumnSize, TopRowSize), null, DA.Opacity);
-                if (RightColumnSize > 0)
-                    TopRight.Draw(DT, new Rectangle(Bounds.Left + LeftColumnSize + CenterColumnSize, Bounds.Top, RightColumnSize, TopRowSize), null, DA.Opacity);
+                if (Regions.TopLeft.Width > 0)
+                {
+                    TopLeft.Draw(DT, Translate(Regions.TopLeft, DA.Offset), null, DA.Opacity);
+                }
+
+                if (Regions.TopCenter.Width > 0)
+                {
+                    TopCenter.Draw(DT, Translate(Regions.TopCenter, DA.Offset), null, DA.Opacity);
+                }
+
+                if (Regions.TopRight.Width > 0)
+                {
+                    TopRight.Draw(DT, Translate(Regions.TopRight, DA.Offset), null, DA.Opacity);
+                }
             }
 
-            //  Draw the center row
-            if (CenterRowSize > 0)
+            if (Regions.MiddleLeft.Height > 0)
             {
-                if (LeftColumnSize > 0)
-                    MiddleLeft.Draw(DT, new Rectangle(Bounds.Left, Bounds.Top + TopRowSize, LeftColumnSize, CenterRowSize), null, DA.Opacity);
-                if (CenterColumnSize > 0)
+                if (Regions.MiddleLeft.Width > 0)
+                {
+                    MiddleLeft.Draw(DT, Translate(Regions.MiddleLeft, DA.Offset), null, DA.Opacity);
+                }
+
+                if (Regions.MiddleCenter.Width > 0)
                 {
 #if NEVER   // trying to tile the texture but LinearWrap isn't working unless I draw the entire texture, using the destination's width/height as the SourceRect
             // But the problem is I only want to tile the center region of the input texture, not the entire thing...
@@ -165,22 +179,39 @@ namespace MGUI.Core.UI.Brushes.Fill_Brushes
                         DT.DrawTextureTo(MiddleCenter.Texture, SourceRect, Destination, Color.White * MiddleCenter.Opacity * DA.Opacity);
                     }
 #else
-                    MiddleCenter.Draw(DT, new Rectangle(Bounds.Left + LeftColumnSize, Bounds.Top + TopRowSize, CenterColumnSize, CenterRowSize), null, DA.Opacity);
+                    if (InteriorBrush != null)
+                    {
+                        InteriorBrush.Draw(DA, Element, Regions.MiddleCenter);
+                    }
+                    else
+                    {
+                        MiddleCenter.Draw(DT, Translate(Regions.MiddleCenter, DA.Offset), null, DA.Opacity);
+                    }
 #endif
                 }
-                if (RightColumnSize > 0)
-                    MiddleRight.Draw(DT, new Rectangle(Bounds.Left + LeftColumnSize + CenterColumnSize, Bounds.Top + TopRowSize, RightColumnSize, CenterRowSize), null, DA.Opacity);
+
+                if (Regions.MiddleRight.Width > 0)
+                {
+                    MiddleRight.Draw(DT, Translate(Regions.MiddleRight, DA.Offset), null, DA.Opacity);
+                }
             }
 
-            //  Draw the bottom row
-            if (BottomRowSize > 0)
+            if (Regions.BottomLeft.Height > 0)
             {
-                if (LeftColumnSize > 0)
-                    BottomLeft.Draw(DT, new Rectangle(Bounds.Left, Bounds.Top + TopRowSize + CenterRowSize, LeftColumnSize, BottomRowSize), null, DA.Opacity);
-                if (CenterColumnSize > 0)
-                    BottomCenter.Draw(DT, new Rectangle(Bounds.Left + LeftColumnSize, Bounds.Top + TopRowSize + CenterRowSize, CenterColumnSize, BottomRowSize), null, DA.Opacity);
-                if (RightColumnSize > 0)
-                    BottomRight.Draw(DT, new Rectangle(Bounds.Left + LeftColumnSize + CenterColumnSize, Bounds.Top + TopRowSize + CenterRowSize, RightColumnSize, BottomRowSize), null, DA.Opacity);
+                if (Regions.BottomLeft.Width > 0)
+                {
+                    BottomLeft.Draw(DT, Translate(Regions.BottomLeft, DA.Offset), null, DA.Opacity);
+                }
+
+                if (Regions.BottomCenter.Width > 0)
+                {
+                    BottomCenter.Draw(DT, Translate(Regions.BottomCenter, DA.Offset), null, DA.Opacity);
+                }
+
+                if (Regions.BottomRight.Width > 0)
+                {
+                    BottomRight.Draw(DT, Translate(Regions.BottomRight, DA.Offset), null, DA.Opacity);
+                }
             }
         }
 

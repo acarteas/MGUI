@@ -65,6 +65,52 @@ namespace MGUI.Tests.UI
             Assert.Equal(new Rectangle(97, 83, 13, 17), actual.BottomRight);
         }
 
+        [Fact]
+        public void DestinationRegionCalculation_UsesEffectiveTargetMargin()
+        {
+            TestElement element = CreateElement(scale => scale.BorderScale = 2.0f);
+            Rectangle destinationBounds = new(10, 20, 200, 100);
+
+            MGNineSliceFillBrush.NineSliceRegions actual = MGNineSliceFillBrush.GetDestinationRegions(element, destinationBounds, new Thickness(8));
+
+            Assert.Equal(new Rectangle(26, 36, 168, 68), actual.MiddleCenter);
+        }
+
+        [Fact]
+        public void DestinationRegionCalculation_UsesAsymmetricEffectiveTargetMargin()
+        {
+            TestElement element = CreateElement(scale => scale.BorderScale = 1.5f);
+            Rectangle destinationBounds = new(10, 20, 100, 80);
+
+            MGNineSliceFillBrush.NineSliceRegions actual = MGNineSliceFillBrush.GetDestinationRegions(element, destinationBounds, new Thickness(4, 8, 12, 16));
+
+            Assert.Equal(new Rectangle(16, 32, 76, 44), actual.MiddleCenter);
+        }
+
+        [Fact]
+        public void Copy_CopiesInteriorBrush()
+        {
+            TestFillBrush interiorBrush = new();
+            MGNineSliceFillBrush brush = new(
+                new Thickness(10),
+                default,
+                default,
+                default,
+                default,
+                default,
+                default,
+                default,
+                default,
+                default,
+                interiorBrush);
+
+            MGNineSliceFillBrush actual = Assert.IsType<MGNineSliceFillBrush>(brush.Copy());
+
+            TestFillBrush copiedInteriorBrush = Assert.IsType<TestFillBrush>(actual.InteriorBrush);
+            Assert.NotSame(interiorBrush, copiedInteriorBrush);
+            Assert.True(interiorBrush.WasCopied);
+        }
+
         private static TestElement CreateElement(Action<MGScaleSettings> configureScale)
         {
             MGScaleSettings scale = new();
@@ -118,6 +164,21 @@ namespace MGUI.Tests.UI
             private TestElement()
                 : base(default(MGWindow), MGElementType.Border)
             {
+            }
+        }
+
+        private sealed class TestFillBrush : IFillBrush
+        {
+            public bool WasCopied { get; private set; }
+
+            public void Draw(ElementDrawArgs DA, MGElement Element, Rectangle Bounds)
+            {
+            }
+
+            public IFillBrush Copy()
+            {
+                WasCopied = true;
+                return new TestFillBrush();
             }
         }
     }

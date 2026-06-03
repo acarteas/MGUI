@@ -6146,6 +6146,23 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="NineSliceFillBrush.InteriorBrush">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:BorderedFillBrush" />
+            <xs:element ref="mgui:CompositedFillBrush" />
+            <xs:element ref="mgui:DiagonalGradientFillBrush" />
+            <xs:element ref="mgui:GradientFillBrush" />
+            <xs:element ref="mgui:HighlightFillBrush" />
+            <xs:element ref="mgui:NineSliceFillBrush" />
+            <xs:element ref="mgui:PaddedFillBrush" />
+            <xs:element ref="mgui:SolidFillBrush" />
+            <xs:element ref="mgui:TextureFillBrush" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="NineSliceFillBrush.SourceMargin">
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
@@ -6168,6 +6185,7 @@
     </xs:choice>
     <xs:attribute name="SourceName" type="xs:string" />
     <xs:attribute name="SourceMargin" type="xs:string" />
+    <xs:attribute name="InteriorBrush" type="xs:string" />
     <xs:attribute name="TargetMargin" type="xs:string" />
     <xs:attribute name="DataContext" type="xs:string" />
     <xs:anyAttribute namespace="##other" processContents="lax" />
