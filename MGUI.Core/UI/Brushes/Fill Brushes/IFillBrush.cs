@@ -24,7 +24,8 @@ namespace MGUI.Core.UI.Brushes.Fill_Brushes
     /// <see cref="MGBorderedFillBrush"/><br/>
     /// <see cref="MGProgressBarGradientBrush"/><br/>
     /// <see cref="MGHighlightFillBrush"/><br/>
-    /// <see cref="MGNineSliceFillBrush"/></summary>
+    /// <see cref="MGNineSliceFillBrush"/><br/>
+    /// <see cref="MGEffectFillBrush"/></summary>
     [TypeConverter(typeof(IFillBrushStringConverter))]
     public interface IFillBrush : ICloneable
     {
