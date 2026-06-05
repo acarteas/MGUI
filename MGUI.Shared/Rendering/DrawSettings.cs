@@ -61,7 +61,8 @@ namespace MGUI.Shared.Rendering
 
     /// <summary>Stores settings used by <see cref="SpriteBatch.Begin(SpriteSortMode, BlendState, SamplerState, DepthStencilState, RasterizerState, Effect, Matrix?)"/></summary>
     public record class DrawSettings(Matrix Transform, RasterizerType RasterizerType = RasterizerType.SolidScissorTest, SpriteSortMode Sort = SpriteSortMode.Deferred,
-        BlendType BlendType = BlendType.AlphaBlend, SamplerType SamplerType = SamplerType.PointClamp, DepthStencilType DepthStencilType = DepthStencilType.None)
+        BlendType BlendType = BlendType.AlphaBlend, SamplerType SamplerType = SamplerType.PointClamp, DepthStencilType DepthStencilType = DepthStencilType.None,
+        Effect Effect = null)
     {
         private Matrix? _InverseTransform;
         public Matrix InverseTransform
@@ -121,6 +122,6 @@ namespace MGUI.Shared.Rendering
         public SamplerState SamplerState => SamplerMap[SamplerType];
         public DepthStencilState DepthStencilState => DepthStencilMap[DepthStencilType];
 
-        public void BeginDraw(SpriteBatch SB) => SB.Begin(Sort, BlendState, SamplerState, DepthStencilState, RasterizerState, null, Transform);
+        public void BeginDraw(SpriteBatch SB) => SB.Begin(Sort, BlendState, SamplerState, DepthStencilState, RasterizerState, Effect, Transform);
     }
 }
