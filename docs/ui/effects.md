@@ -17,6 +17,8 @@ MonoGame effects are backend-specific runtime objects. A DesktopGL game and a Vu
 
 MGUI does not compile shader source, load shader source, ship shader assets, own `Effect` instances, define shader parameter names, or guarantee that one shader bytecode artifact works across DesktopGL and Vulkan. The consuming game must provide an `Effect` compatible with the active backend.
 
+MGUI library projects compile against `MonoGame.Framework.DesktopGL` because the MonoGame version used by this repo does not provide a backend-neutral framework package. That reference is private and compile/build-only in MGUI libraries, so package and project-reference consumers are expected to bring their own concrete MonoGame runtime, such as the runtime already used by the game. The bundled `.xnb` UI assets are still built by MGUI's content projects with MonoGame's DesktopGL content profile.
+
 ## Fill Brush Usage
 
 `MGEffectFillBrush` fills its destination bounds by drawing MGUI's white pixel through the supplied `Effect`. The optional `ConfigureEffect` callback runs immediately before the fill is drawn, so game code can set parameters for the current element and bounds.
