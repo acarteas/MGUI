@@ -16,9 +16,6 @@ using WindingOrder = MonoGame.Extended.Triangulation.WindingOrder;
 
 namespace MGUI.Shared.Rendering
 {
-    /* TODO: Maybe add a 'SetEffect'/'SetEffectTemporary' wrapper around DrawSettings.Effect.
-    Anytime the effect is being changed, must call SetDrawSettings/SetDrawSettingsTemporary just like SetTransform/SetTransformTemporary do. */
-
     public enum DrawContext
     {
         None,
@@ -790,6 +787,16 @@ namespace MGUI.Shared.Rendering
         public IDisposable SetDrawSettingsTemporary(DrawSettings New)
         {
             return new TemporaryChange<DrawSettings>(CurrentSettings, New, SetDrawSettings);
+        }
+
+        public void SetEffect(Effect Effect)
+        {
+            SetDrawSettings(CurrentSettings with { Effect = Effect });
+        }
+
+        public IDisposable SetEffectTemporary(Effect Effect)
+        {
+            return SetDrawSettingsTemporary(CurrentSettings with { Effect = Effect });
         }
 
         public IDisposable SetTransformTemporary(Matrix Transform)
