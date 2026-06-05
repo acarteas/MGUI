@@ -3,10 +3,12 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
     <IsWindowsOS Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true'">true</IsWindowsOS>
+    <BuildSampleDesktopGLContent Condition="'$(BuildSampleDesktopGLContent)'==''">true</BuildSampleDesktopGLContent>
     <RollForward>Major</RollForward>
     <PublishReadyToRun>false</PublishReadyToRun>
     <TieredCompilation>false</TieredCompilation>
     <UseWindowsForms>False</UseWindowsForms>
+    <EnableMGCBItems>false</EnableMGCBItems>
   </PropertyGroup>
   <PropertyGroup Condition="'$(IsWindowsOS)'=='true'">
     <ApplicationManifest>app.manifest</ApplicationManifest>
@@ -62,6 +64,7 @@
     <None Remove="Features\DataBindings.xaml" />
     <None Remove="Features\IBorderBrush.xaml" />
     <None Remove="Features\IFillBrush.xaml" />
+    <None Remove="Features\ShaderEffects.xaml" />
     <None Remove="Features\SharedStyles.xaml" />
     <None Remove="Features\Styles.xaml" />
   </ItemGroup>
@@ -171,10 +174,17 @@
     <EmbeddedResource Include="Features\IFillBrush.xaml">
       <Generator>MSBuild:Compile</Generator>
     </EmbeddedResource>
+    <EmbeddedResource Include="Features\ShaderEffects.xaml" />
     <EmbeddedResource Include="Features\SharedStyles.xaml" />
     <EmbeddedResource Include="Features\Styles.xaml">
       <Generator>MSBuild:Compile</Generator>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup Condition="'$(BuildSampleDesktopGLContent)'=='true'">
+    <MonoGameContentReference Include="Content\Content.mgcb" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(BuildSampleDesktopGLContent)'!='true'">
+    <MonoGameContentReference Remove="Content\Content.mgcb" />
   </ItemGroup>
   <ItemGroup>
     <MonoGameContentReference Include="..\MGUI.Shared\Content\MGUI.Shared.Content.mgcb" Link="Content\MGUI.Shared.Content.mgcb" />

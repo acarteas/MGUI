@@ -3,7 +3,7 @@
 
 /outputDir:bin/$(Platform)
 /intermediateDir:obj/$(Platform)
-/platform:Windows
+/platform:DesktopGL
 /config:
 /profile:Reach
 /compress:False
@@ -12,6 +12,12 @@
 
 
 #---------------------------------- Content ---------------------------------#
+
+#begin Shaders/UiEffects.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/build:Shaders/UiEffects.fx
+
 
 #begin Border Textures/1_BottomRightCorner.png
 /importer:TextureImporter

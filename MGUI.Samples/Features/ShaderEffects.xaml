@@ -1,0 +1,93 @@
+﻿<Window xmlns="clr-namespace:MGUI.Core.UI.XAML;assembly=MGUI.Core"
+        Left="440" Top="60" MinHeight="0" Width="760" Height="640" TitleText="Shader Effects" Padding="10">
+    <Window.Styles>
+        <Style TargetType="TextBlock">
+            <Setter Property="FontSize" Value="10" />
+        </Style>
+        <Style Name="Header1" TargetType="TextBlock">
+            <Setter Property="IsBold" Value="True" />
+            <Setter Property="FontSize" Value="14" />
+        </Style>
+        <Style TargetType="Separator">
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="Height" Value="2" />
+            <Setter Property="Background" Value="White" />
+            <Setter Property="Opacity" Value="0.25" />
+        </Style>
+        <Style TargetType="Expander">
+            <Setter Property="Padding" Value="4" />
+            <Setter Property="Background" Value="White * 0.1" />
+        </Style>
+        <Style TargetType="Button" Name="ShaderButton">
+            <Setter Property="Width" Value="190" />
+            <Setter Property="Height" Value="52" />
+            <Setter Property="Padding" Value="8" />
+            <Setter Property="BorderThickness" Value="2" />
+            <Setter Property="BorderBrush" Value="White * 0.55" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style TargetType="Border" Name="ShaderCard">
+            <Setter Property="Width" Value="230" />
+            <Setter Property="Height" Value="72" />
+            <Setter Property="Padding" Value="10" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="White * 0.35" />
+        </Style>
+    </Window.Styles>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Background="rgb(36,42,44)" Padding="6,3">
+        <StackPanel Orientation="Vertical" Spacing="10">
+            <TextBlock StyleNames="Header1" Text="Shader Effects:" HorizontalAlignment="Center" />
+            <Separator />
+            <TextBlock>
+                This sample uses a DesktopGL MGFX shader asset. MGUI accepts a runtime [c=Turquoise]Effect[/c] and scopes it around normal UI drawing; games targeting Vulkan or another backend should provide backend-compatible shader assets. The MGUI usage pattern is the same.
+            </TextBlock>
+            <TextBlock Text="{MGBinding ShaderStatusText}" Foreground="{MGBinding ShaderStatusColor}" />
+            <Separator />
+
+            <Expander IsExpanded="True" Header="Effect-filled UI elements">
+                <StackPanel Orientation="Vertical" Background="White * 0.08" Padding="6" Margin="0,4,0,0" Spacing="8">
+                    <TextBlock>
+                        These examples assign [c=Turquoise]MGEffectFillBrush[/c] in code-behind because the game owns loading and configuring the MonoGame [c=Turquoise]Effect[/c].
+                    </TextBlock>
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Button Name="HoverButton" StyleNames="ShaderButton" Content="Hover highlight" />
+                        <ToggleButton Name="ActiveToggle" Width="190" Height="52" Padding="8" BorderThickness="2" BorderBrush="White * 0.55"
+                                      HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Content="Toggle active" IsChecked="True" />
+                        <Button Name="PressedButton" StyleNames="ShaderButton" Content="Press darken" />
+                    </StackPanel>
+                    <TextBlock Text="Hover over the first button, toggle the second, and hold the third button down to drive shader parameters from live UI state." />
+                </StackPanel>
+            </Expander>
+
+            <Expander IsExpanded="True" Header="Time and bounds">
+                <StackPanel Orientation="Vertical" Background="White * 0.08" Padding="6" Margin="0,4,0,0" Spacing="8">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Border Name="PulseCard" StyleNames="ShaderCard">
+                            <TextBlock Text="[b]Pulse[/b]\nTimeSeconds drives a notification-style fill." WrapText="True" />
+                        </Border>
+                        <Border Name="FocusCard" StyleNames="ShaderCard">
+                            <TextBlock Text="[b]Selection glow[/b]\nElementSize creates a soft edge glow." WrapText="True" />
+                        </Border>
+                        <Border Name="DisabledCard" StyleNames="ShaderCard">
+                            <TextBlock Text="[b]Muted state[/b]\nA shader can desaturate unavailable UI." WrapText="True" />
+                        </Border>
+                    </StackPanel>
+                    <TextBlock>
+                        The pulse and selection examples update per-frame parameters immediately before each element draw. The shader also receives element bounds so it can compute an outline without changing layout.
+                    </TextBlock>
+                </StackPanel>
+            </Expander>
+
+            <Expander IsExpanded="False" Header="Backend boundary">
+                <StackPanel Orientation="Vertical" Background="White * 0.08" Padding="6" Margin="0,4,0,0" Spacing="4">
+                    <TextBlock Text="- MGUI stores and scopes a runtime MonoGame Effect; it does not compile shader files." />
+                    <TextBlock Text="- This sample project builds Shaders/UiEffects.fx as DesktopGL MGFX content." />
+                    <TextBlock Text="- Vulkan games need separately authored or compiled Vulkan-compatible effect assets." />
+                    <TextBlock Text="- ConfigureEffect is where game code sets time, opacity, bounds, and element-state parameters." />
+                </StackPanel>
+            </Expander>
+        </StackPanel>
+    </ScrollViewer>
+</Window>

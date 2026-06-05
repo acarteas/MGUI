@@ -28,7 +28,7 @@
         <Style TargetType="TextBlock" Name="SampleTextBlockStyle">
             <Setter Property="FontSize" Value="12" />
             <Setter Property="TextAlignment" Value="Center" />
-            <Setter Property="TextWrapping" Value="True" />
+            <Setter Property="WrapText" Value="True" />
             <Setter Property="IsBold" Value="True" />
             <Setter Property="Text" Value="[s=Black]Hello\nWorld[/s]" />
         </Style>
@@ -300,7 +300,7 @@
                                 <Style TargetType="TextBlock" Name="SampleTextBlockStyle2">
                                     <Setter Property="FontSize" Value="10" />
                                     <Setter Property="TextAlignment" Value="Center" />
-                                    <Setter Property="TextWrapping" Value="True" />
+                                    <Setter Property="WrapText" Value="True" />
                                     <Setter Property="IsBold" Value="True" />
                                 </Style>
                             </StackPanel.Styles>

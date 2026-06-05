@@ -155,6 +155,7 @@ namespace MGUI.Samples
         public UIScalingSamples UIScalingSamples { get; }
         public IFillBrushSamples IFillBrushSamples { get; }
         public IBorderBrushSamples IBorderBrushSamples { get; }
+        public ShaderEffectsSamples ShaderEffectsSamples { get; }
         #endregion Features
 
         #region Dialogs
@@ -210,6 +211,7 @@ namespace MGUI.Samples
             UIScalingSamples = new(Content, Desktop);
             IFillBrushSamples = new(Content, Desktop);
             IBorderBrushSamples = new(Content, Desktop, this);
+            ShaderEffectsSamples = new(Content, Desktop);
             #endregion Features
 
             #region Dialogs

@@ -95,6 +95,7 @@
                         <ToggleButton Content="VisualState" Opacity="0.25" />
                         <ToggleButton Content="BorderBrush" IsChecked="{MGBinding Path=IBorderBrushSamples.IsVisible, Mode=TwoWay}" />
                         <ToggleButton Content="FillBrush" IsChecked="{MGBinding Path=IFillBrushSamples.IsVisible, Mode=TwoWay}" />
+                        <ToggleButton Content="Shaders" IsChecked="{MGBinding Path=ShaderEffectsSamples.IsVisible, Mode=TwoWay}" />
                     </UniformGrid>
                 </StackPanel>
             </Expander>
