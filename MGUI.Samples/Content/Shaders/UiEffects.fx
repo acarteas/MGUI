@@ -1,11 +1,5 @@
 float4x4 MatrixTransform;
 
-texture Texture;
-sampler TextureSampler : register(s0) = sampler_state
-{
-    Texture = <Texture>;
-};
-
 float TimeSeconds;
 float Opacity;
 float2 ElementSize;
@@ -48,31 +42,34 @@ float EdgeDistance(float2 uv)
 
 float4 UiPixelShader(PixelShaderInput input) : COLOR0
 {
-    float4 texel = tex2D(TextureSampler, input.TextureCoordinate) * input.Color;
-    float2 uv = saturate(input.TextureCoordinate);
+    float2 uv = saturate((input.Position.xy - ElementPosition) / max(ElementSize, float2(1.0, 1.0)));
     float4 result = lerp(ColorA, ColorB, uv.x);
 
     if (Mode < 0.5)
     {
         float pulse = 0.5 + 0.5 * sin(TimeSeconds * 4.5);
-        result.rgb *= 0.82 + pulse * 0.28;
+        result.rgb *= 0.45 + pulse * 0.95;
     }
     else if (Mode < 1.5)
     {
         float sweep = smoothstep(0.0, 1.0, 1.0 - abs((uv.x - 0.5) * 2.0));
-        result.rgb = lerp(result.rgb, ColorB.rgb + sweep * 0.18, HoverAmount);
+        result.rgb = lerp(ColorA.rgb, saturate(ColorB.rgb + sweep * 0.35), HoverAmount);
     }
     else if (Mode < 2.5)
     {
         float active = max(FocusAmount, PressAmount);
-        result.rgb = lerp(result.rgb * 0.72, ColorB.rgb, active);
-        result.rgb *= 1.0 - PressAmount * 0.18;
+        result.rgb = lerp(ColorA.rgb * 0.55, ColorB.rgb, active);
+        result.rgb *= 1.0 - PressAmount * 0.35;
     }
     else if (Mode < 3.5)
     {
-        float glow = 1.0 - smoothstep(1.0, 7.0, EdgeDistance(uv));
+        float edgeDistance = EdgeDistance(uv);
+        float rim = 1.0 - smoothstep(0.5, 2.5, edgeDistance);
+        float halo = 1.0 - smoothstep(1.5, 12.0, edgeDistance);
         float pulse = 0.65 + 0.35 * sin(TimeSeconds * 3.2);
-        result.rgb = lerp(result.rgb, ColorB.rgb, saturate(glow * (FocusAmount + pulse * 0.35)));
+        float glow = saturate(rim + halo * pulse * 0.75) * FocusAmount;
+        float3 glowColor = saturate(ColorB.rgb * (1.15 + rim * 0.45));
+        result.rgb = lerp(ColorA.rgb * 0.42, glowColor, glow);
     }
     else
     {
@@ -82,7 +79,7 @@ float4 UiPixelShader(PixelShaderInput input) : COLOR0
     }
 
     result.a *= Opacity;
-    return texel * result;
+    return input.Color * result;
 }
 
 technique SpriteDrawing

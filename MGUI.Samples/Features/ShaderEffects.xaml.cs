@@ -37,12 +37,20 @@ namespace MGUI.Samples.Features
 
             Desktop.Renderer.Host.PreviewUpdate += Host_PreviewUpdate;
 
-            Window.GetElementByName<MGButton>("HoverButton").BackgroundBrush = CreateVisualBrush(
+            MGButton HoverButton = Window.GetElementByName<MGButton>("HoverButton");
+            HoverButton.BackgroundBrush = CreateVisualBrush(
                 ShaderEffectMode.Hover, new Color(25, 61, 74), new Color(71, 214, 193));
-            Window.GetElementByName<MGToggleButton>("ActiveToggle").BackgroundBrush = CreateVisualBrush(
+            HoverButton.GetBorder().BackgroundBrush.SetAll(MGSolidFillBrush.Transparent);
+
+            MGToggleButton ActiveToggle = Window.GetElementByName<MGToggleButton>("ActiveToggle");
+            ActiveToggle.BackgroundBrush = CreateVisualBrush(
                 ShaderEffectMode.Active, new Color(44, 48, 78), new Color(255, 169, 64));
-            Window.GetElementByName<MGButton>("PressedButton").BackgroundBrush = CreateVisualBrush(
+            ActiveToggle.GetBorder().BackgroundBrush.SetAll(MGSolidFillBrush.Transparent);
+
+            MGButton PressedButton = Window.GetElementByName<MGButton>("PressedButton");
+            PressedButton.BackgroundBrush = CreateVisualBrush(
                 ShaderEffectMode.Active, new Color(80, 52, 43), new Color(255, 92, 72));
+            PressedButton.GetBorder().BackgroundBrush.SetAll(MGSolidFillBrush.Transparent);
             Window.GetElementByName<MGBorder>("PulseCard").BackgroundBrush = CreateVisualBrush(
                 ShaderEffectMode.Pulse, new Color(39, 67, 52), new Color(83, 222, 139));
             Window.GetElementByName<MGBorder>("FocusCard").BackgroundBrush = CreateVisualBrush(
@@ -87,6 +95,10 @@ namespace MGUI.Samples.Features
         private void ConfigureEffect(Effect Effect, ElementDrawArgs DrawArgs, MGElement Element, Rectangle Bounds,
             ShaderEffectMode Mode, Color ColorA, Color ColorB, float FocusAmount)
         {
+            Viewport Viewport = DrawArgs.DT.GD.Viewport;
+            Matrix Projection = Matrix.CreateOrthographicOffCenter(0, Viewport.Width, Viewport.Height, 0, 0, 1);
+            Effect.Parameters["MatrixTransform"]?.SetValue(DrawArgs.DT.CurrentSettings.Transform * Projection);
+
             float HoverAmount = DrawArgs.VisualState.IsHovered ? 1.0f : 0.0f;
             float PressAmount = DrawArgs.VisualState.IsPressed ? 1.0f : 0.0f;
             float ActiveAmount = FocusAmount;
@@ -98,7 +110,7 @@ namespace MGUI.Samples.Features
             Effect.Parameters["TimeSeconds"]?.SetValue(TimeSeconds);
             Effect.Parameters["Opacity"]?.SetValue(DrawArgs.Opacity);
             Effect.Parameters["ElementSize"]?.SetValue(new Vector2(Math.Max(1, Bounds.Width), Math.Max(1, Bounds.Height)));
-            Effect.Parameters["ElementPosition"]?.SetValue(new Vector2(Bounds.X, Bounds.Y));
+            Effect.Parameters["ElementPosition"]?.SetValue(new Vector2(Bounds.X + DrawArgs.Offset.X, Bounds.Y + DrawArgs.Offset.Y));
             Effect.Parameters["HoverAmount"]?.SetValue(HoverAmount);
             Effect.Parameters["PressAmount"]?.SetValue(PressAmount);
             Effect.Parameters["FocusAmount"]?.SetValue(ActiveAmount);
