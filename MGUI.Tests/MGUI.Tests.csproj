@@ -28,6 +28,18 @@
     <PackageReference Include="FontStashSharp.MonoGame" Version="1.5.4" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\MGUI.EffectTestHost\MGUI.EffectTestHost.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <Target Name="CopyEffectTestHost" AfterTargets="Build">
+    <ItemGroup>
+      <EffectTestHostFiles Include="..\MGUI.EffectTestHost\bin\$(Configuration)\net8.0\MGUI.EffectTestHost*" />
+      <EffectTestHostFiles Include="..\MGUI.EffectTestHost\bin\$(Configuration)\net8.0\Content\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(EffectTestHostFiles)" DestinationFolder="$(OutDir)%(RecursiveDir)" SkipUnchangedFiles="true" />
+  </Target>
+
   <ItemGroup Condition="'$(IsWindowsOS)'=='true'">
     <ProjectReference Include="..\MGUI.Core\MGUI.Core.csproj" />
     <ProjectReference Include="..\MGUI.FontStashSharp\MGUI.FontStashSharp.csproj" />
@@ -53,6 +65,9 @@
     <Content Include="..\MGUI.Samples\Content\Fonts\ttf\NotoSans-Regular.ttf" Link="Fonts\NotoSans-Regular.ttf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="..\MGUI.Samples\Features\ShaderEffects.xaml" Link="Fixtures\ShaderEffects.xaml" />
+    <EmbeddedResource Include="..\MGUI.Samples\Features\ShaderEffects.xaml.cs" Link="Fixtures\ShaderEffects.xaml.cs" />
+    <EmbeddedResource Include="..\MGUI.Samples\Content\Shaders\UiEffects.fx" Link="Fixtures\UiEffects.fx" />
   </ItemGroup>
 
   <Target Name="BuildLinuxProjectDependencies" BeforeTargets="ResolveReferences" Condition="'$(IsWindowsOS)'!='true'">

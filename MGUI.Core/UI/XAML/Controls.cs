@@ -174,6 +174,8 @@ namespace MGUI.Core.UI.XAML
         public TimeSpan? InitialRepeatInterval { get; set; }
         [Category("Behavior")]
         public TimeSpan? RepeatInterval { get; set; }
+        [Category("Appearance")]
+        public XAMLPoint? PressedContentOffset { get; set; }
 
         protected override MGElement CreateElementInstance(MGWindow Window, MGElement Parent) => new MGButton(Window);
 
@@ -193,6 +195,8 @@ namespace MGUI.Core.UI.XAML
                 Button.InitialRepeatInterval = InitialRepeatInterval.Value;
             if (RepeatInterval.HasValue)
                 Button.RepeatInterval = RepeatInterval.Value;
+            if (PressedContentOffset.HasValue)
+                Button.PressedContentOffset = PressedContentOffset.Value.ToPoint();
 
             base.ApplyDerivedSettings(Parent, Element, IncludeContent);
         }
@@ -778,6 +782,14 @@ namespace MGUI.Core.UI.XAML
 
         [Category("Appearance")]
         public XAMLColor? TextureColor { get; set; }
+        [Category("Appearance")]
+        public XAMLColor? HoveredTextureColor { get; set; }
+        [Category("Appearance")]
+        public XAMLColor? PressedTextureColor { get; set; }
+        [Category("Appearance")]
+        public XAMLColor? SelectedTextureColor { get; set; }
+        [Category("Appearance")]
+        public XAMLColor? DisabledTextureColor { get; set; }
         [Category("Layout")]
         public Stretch? Stretch { get; set; }
 
@@ -790,6 +802,14 @@ namespace MGUI.Core.UI.XAML
 
             if (TextureColor.HasValue)
                 Image.TextureColor = TextureColor.Value.ToXNAColor();
+            if (HoveredTextureColor.HasValue)
+                Image.HoveredTextureColor = HoveredTextureColor.Value.ToXNAColor();
+            if (PressedTextureColor.HasValue)
+                Image.PressedTextureColor = PressedTextureColor.Value.ToXNAColor();
+            if (SelectedTextureColor.HasValue)
+                Image.SelectedTextureColor = SelectedTextureColor.Value.ToXNAColor();
+            if (DisabledTextureColor.HasValue)
+                Image.DisabledTextureColor = DisabledTextureColor.Value.ToXNAColor();
             if (Stretch.HasValue)
                 Image.Stretch = Stretch.Value;
         }

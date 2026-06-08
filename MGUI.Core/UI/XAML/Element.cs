@@ -120,6 +120,10 @@ namespace MGUI.Core.UI.XAML
 
         [Category("Appearance")]
         public float? RenderScale { get; set; }
+        [Category("Appearance")]
+        public float? HoveredRenderScale { get; set; }
+        [Category("Appearance")]
+        public float? PressedRenderScale { get; set; }
 
         /// <summary>Used by <see cref="DockPanel"/>'s children</summary>
         [Category("Attached")]
@@ -280,8 +284,10 @@ namespace MGUI.Core.UI.XAML
                 if (Opacity.HasValue)
                     Element.Opacity = Opacity.Value;
 
-                if (RenderScale.HasValue)
-                    Element.RenderScale = new(RenderScale.Value, RenderScale.Value);
+                if (RenderScale.HasValue || HoveredRenderScale.HasValue || PressedRenderScale.HasValue)
+                {
+                    Element.RenderScale = GetRenderScale();
+                }
 
                 Element.Tag = Tag;
 
@@ -354,6 +360,28 @@ namespace MGUI.Core.UI.XAML
                         CopyBindings(Source, Target, TargetPath);
                 }
             }
+        }
+
+        private static float ValidateRenderScale(string PropertyName, float Value)
+        {
+            if (!float.IsFinite(Value) || Value <= 0.0f)
+            {
+                throw new ArgumentOutOfRangeException(PropertyName, Value, $"{PropertyName} must be finite and greater than zero.");
+            }
+
+            return Value;
+        }
+
+        internal ConditionalScaleTransform? GetRenderScale()
+        {
+            if (!RenderScale.HasValue && !HoveredRenderScale.HasValue && !PressedRenderScale.HasValue)
+            {
+                return null;
+            }
+
+            float HoveredScale = ValidateRenderScale(nameof(HoveredRenderScale), HoveredRenderScale ?? RenderScale ?? 1.0f);
+            float PressedScale = ValidateRenderScale(nameof(PressedRenderScale), PressedRenderScale ?? RenderScale ?? 1.0f);
+            return new ConditionalScaleTransform(PressedScale, HoveredScale);
         }
 
         private IEnumerable<(XAMLBindableBase Source, object Target, string TargetPath)> GetBaseBindableObjects(MGElement Element)

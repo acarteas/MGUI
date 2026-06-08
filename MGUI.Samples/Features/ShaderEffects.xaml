@@ -1,93 +1,112 @@
 ﻿<Window xmlns="clr-namespace:MGUI.Core.UI.XAML;assembly=MGUI.Core"
-        Left="440" Top="60" MinHeight="0" Width="760" Height="640" TitleText="Shader Effects" Padding="10">
+        Left="360" Top="50" MinHeight="0" Width="900" Height="680" TitleText="Declarative Shader Buttons" Padding="10">
     <Window.Styles>
-        <Style TargetType="TextBlock">
-            <Setter Property="FontSize" Value="10" />
-        </Style>
-        <Style Name="Header1" TargetType="TextBlock">
-            <Setter Property="IsBold" Value="True" />
-            <Setter Property="FontSize" Value="14" />
-        </Style>
-        <Style TargetType="Separator">
-            <Setter Property="Margin" Value="0" />
-            <Setter Property="Height" Value="2" />
-            <Setter Property="Background" Value="White" />
-            <Setter Property="Opacity" Value="0.25" />
-        </Style>
-        <Style TargetType="Expander">
-            <Setter Property="Padding" Value="4" />
-            <Setter Property="Background" Value="White * 0.1" />
-        </Style>
-        <Style TargetType="Button" Name="ShaderButton">
-            <Setter Property="Width" Value="190" />
-            <Setter Property="Height" Value="52" />
-            <Setter Property="Padding" Value="8" />
-            <Setter Property="BorderThickness" Value="2" />
-            <Setter Property="BorderBrush" Value="White * 0.55" />
-            <Setter Property="HorizontalContentAlignment" Value="Center" />
-            <Setter Property="VerticalContentAlignment" Value="Center" />
-        </Style>
-        <Style TargetType="Border" Name="ShaderCard">
-            <Setter Property="Width" Value="230" />
-            <Setter Property="Height" Value="72" />
-            <Setter Property="Padding" Value="10" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="BorderBrush" Value="White * 0.35" />
+        <Style TargetType="TextBlock"><Setter Property="FontSize" Value="10" /></Style>
+        <Style Name="Header" TargetType="TextBlock"><Setter Property="IsBold" Value="True" /><Setter Property="FontSize" Value="14" /></Style>
+        <Style TargetType="Separator"><Setter Property="Height" Value="2" /><Setter Property="Background" Value="White * 0.25" /></Style>
+        <Style Name="ActionButton" TargetType="Button">
+            <Setter Property="Width" Value="195" /><Setter Property="Height" Value="58" /><Setter Property="Padding" Value="10" />
+            <Setter Property="BorderThickness" Value="1" /><Setter Property="BorderBrush" Value="White * 0.45" />
         </Style>
     </Window.Styles>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto" Background="rgb(36,42,44)" Padding="6,3">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Background="rgb(31,35,39)" Padding="8">
         <StackPanel Orientation="Vertical" Spacing="10">
-            <TextBlock StyleNames="Header1" Text="Shader Effects:" HorizontalAlignment="Center" />
-            <Separator />
-            <TextBlock>
-                This sample uses a DesktopGL MGFX shader asset. MGUI accepts a runtime [c=Turquoise]Effect[/c] and scopes it around normal UI drawing; games targeting Vulkan or another backend should provide backend-compatible shader assets. The MGUI usage pattern is the same.
-            </TextBlock>
+            <TextBlock StyleNames="Header" Text="Declarative shader-backed action buttons" HorizontalAlignment="Center" />
             <TextBlock Text="{MGBinding ShaderStatusText}" Foreground="{MGBinding ShaderStatusColor}" />
+            <TextBlock WrapText="True">The game loads and registers one caller-owned DesktopGL Effect before XAML materialization. Every shader button below resolves that same resource, binds standard values, and supplies its own constant accent and role.</TextBlock>
             <Separator />
 
-            <Expander IsExpanded="True" Header="Effect-filled UI elements">
-                <StackPanel Orientation="Vertical" Background="White * 0.08" Padding="6" Margin="0,4,0,0" Spacing="8">
-                    <TextBlock>
-                        These examples assign [c=Turquoise]MGEffectFillBrush[/c] in code-behind because the game owns loading and configuring the MonoGame [c=Turquoise]Effect[/c].
-                    </TextBlock>
-                    <StackPanel Orientation="Horizontal" Spacing="10">
-                        <Button Name="HoverButton" StyleNames="ShaderButton" Content="Hover highlight" />
-                        <ToggleButton Name="ActiveToggle" Width="190" Height="52" Padding="8" BorderThickness="2" BorderBrush="White * 0.55"
-                                      HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Content="Toggle active" IsChecked="True" />
-                        <Button Name="PressedButton" StyleNames="ShaderButton" Content="Press darken" />
-                    </StackPanel>
-                    <TextBlock Text="Hover over the first button, toggle the second, and hold the third button down to drive shader parameters from live UI state." />
-                </StackPanel>
-            </Expander>
+            <TextBlock StyleNames="Header" Text="Action states" />
+            <UniformGrid Columns="4" RowSpacing="8" ColumnSpacing="8">
+                <Button StyleNames="ActionButton" ToolTip="A normal shader-backed action">
+                    <Button.Border><Border Background="Transparent" BorderBrush="White * 0.45" BorderThickness="1" /></Button.Border>
+                    <Button.Background>
+                        <EffectFillBrush EffectName="SampleUiEffect" UseStandardParameters="True">
+                            <EffectFillBrush.FallbackBrush><SolidFillBrush Color="rgb(48,58,65)" /></EffectFillBrush.FallbackBrush>
+                            <EffectParameter Name="AccentColor" Type="Color" Value="rgb(110,158,180)" />
+                            <EffectParameter Name="ButtonRole" Type="Float" Value="0" />
+                        </EffectFillBrush>
+                    </Button.Background>
+                    <StackPanel Orientation="Horizontal" Spacing="8"><Image SourceName="ShaderActionIcon" Width="24" Height="24" /><TextBlock Text="Normal" VerticalAlignment="Center" /></StackPanel>
+                </Button>
 
-            <Expander IsExpanded="True" Header="Time and bounds">
-                <StackPanel Orientation="Vertical" Background="White * 0.08" Padding="6" Margin="0,4,0,0" Spacing="8">
-                    <StackPanel Orientation="Horizontal" Spacing="10">
-                        <Border Name="PulseCard" StyleNames="ShaderCard">
-                            <TextBlock Text="[b]Pulse[/b]\nTimeSeconds drives a notification-style fill." WrapText="True" />
-                        </Border>
-                        <Border Name="FocusCard" StyleNames="ShaderCard">
-                            <TextBlock Text="[b]Selection glow[/b]\nElementSize creates a soft edge glow." WrapText="True" />
-                        </Border>
-                        <Border Name="DisabledCard" StyleNames="ShaderCard">
-                            <TextBlock Text="[b]Muted state[/b]\nA shader can desaturate unavailable UI." WrapText="True" />
-                        </Border>
-                    </StackPanel>
-                    <TextBlock>
-                        The pulse and selection examples update per-frame parameters immediately before each element draw. The shader also receives element bounds so it can compute an outline without changing layout.
-                    </TextBlock>
-                </StackPanel>
-            </Expander>
+                <Button StyleNames="ActionButton" ToolTip="Hover and hold to inspect standard hover and press parameters">
+                    <Button.Border><Border Background="Transparent" BorderBrush="White * 0.55" BorderThickness="1" /></Button.Border>
+                    <Button.Background>
+                        <EffectFillBrush EffectName="SampleUiEffect" UseStandardParameters="True">
+                            <EffectFillBrush.FallbackBrush><SolidFillBrush Color="rgb(34,72,76)" /></EffectFillBrush.FallbackBrush>
+                            <EffectParameter Name="AccentColor" Type="Color" Value="rgb(71,214,193)" />
+                            <EffectParameter Name="ButtonRole" Type="Float" Value="1" />
+                        </EffectFillBrush>
+                    </Button.Background>
+                    <StackPanel Orientation="Horizontal" Spacing="8"><Image SourceName="ShaderActionIcon" Width="24" Height="24" /><TextBlock Text="Primary" VerticalAlignment="Center" /></StackPanel>
+                </Button>
 
-            <Expander IsExpanded="False" Header="Backend boundary">
-                <StackPanel Orientation="Vertical" Background="White * 0.08" Padding="6" Margin="0,4,0,0" Spacing="4">
-                    <TextBlock Text="- MGUI stores and scopes a runtime MonoGame Effect; it does not compile shader files." />
-                    <TextBlock Text="- This sample project builds Shaders/UiEffects.fx as DesktopGL MGFX content." />
-                    <TextBlock Text="- Vulkan games need separately authored or compiled Vulkan-compatible effect assets." />
-                    <TextBlock Text="- ConfigureEffect is where game code sets time, opacity, bounds, and element-state parameters." />
+                <ToggleButton Width="195" Height="58" Padding="10" BorderThickness="1" BorderBrush="White * 0.45" IsChecked="True" ToolTip="Toggle selection drives SelectedAmount">
+                    <ToggleButton.Border><Border Background="Transparent" BorderBrush="White * 0.45" BorderThickness="1" /></ToggleButton.Border>
+                    <ToggleButton.Background>
+                        <EffectFillBrush EffectName="SampleUiEffect" UseStandardParameters="True">
+                            <EffectFillBrush.FallbackBrush><SolidFillBrush Color="rgb(53,48,75)" /></EffectFillBrush.FallbackBrush>
+                            <EffectParameter Name="AccentColor" Type="Color" Value="rgb(202,144,255)" />
+                            <EffectParameter Name="ButtonRole" Type="Float" Value="0" />
+                        </EffectFillBrush>
+                    </ToggleButton.Background>
+                    <ToggleButton.SelectedBackground>
+                        <EffectFillBrush EffectName="SampleUiEffect" UseStandardParameters="True">
+                            <EffectFillBrush.FallbackBrush><SolidFillBrush Color="rgb(91,63,123)" /></EffectFillBrush.FallbackBrush>
+                            <EffectParameter Name="AccentColor" Type="Color" Value="rgb(202,144,255)" />
+                            <EffectParameter Name="ButtonRole" Type="Float" Value="1" />
+                        </EffectFillBrush>
+                    </ToggleButton.SelectedBackground>
+                    <StackPanel Orientation="Horizontal" Spacing="8"><Image SourceName="ShaderActionIcon" Width="24" Height="24" /><TextBlock Text="Selected" VerticalAlignment="Center" /></StackPanel>
+                </ToggleButton>
+
+                <Button StyleNames="ActionButton" IsEnabled="False" ToolTip="DisabledAmount reduces contrast and saturation">
+                    <Button.Border><Border Background="Transparent" BorderBrush="White * 0.25" BorderThickness="1" /></Button.Border>
+                    <Button.Background><SolidFillBrush Color="rgb(55,58,61)" /></Button.Background>
+                    <Button.DisabledBackground>
+                        <EffectFillBrush EffectName="SampleUiEffect" UseStandardParameters="True">
+                            <EffectFillBrush.FallbackBrush><SolidFillBrush Color="rgb(55,58,61)" /></EffectFillBrush.FallbackBrush>
+                            <EffectParameter Name="AccentColor" Type="Color" Value="rgb(130,137,143)" />
+                            <EffectParameter Name="ButtonRole" Type="Float" Value="0" />
+                        </EffectFillBrush>
+                    </Button.DisabledBackground>
+                    <StackPanel Orientation="Horizontal" Spacing="8"><Image SourceName="ShaderActionIcon" Width="24" Height="24" /><TextBlock Text="Disabled" VerticalAlignment="Center" /></StackPanel>
+                </Button>
+            </UniformGrid>
+
+            <TextBlock WrapText="True">Hover and press the first two controls naturally. The selected toggle and disabled button demonstrate primary-state slots. Icons and labels remain ordinary MGUI content; the effect shades only each rectangular background fill.</TextBlock>
+            <Separator />
+
+            <TextBlock StyleNames="Header" Text="Non-shader conventional comparison" />
+            <Button Width="240" Height="60" Padding="10" Background="rgb(55,62,68)" BackgroundFocusedColor="White * 0.10"
+                    BorderBrush="White * 0.45" BorderThickness="1" HoveredRenderScale="1.04" PressedRenderScale="0.97"
+                    PressedContentOffset="1,1" ToolTip="No shader: image tint, render scale, and pressed content offset are standard MGUI features">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Image SourceName="ShaderActionIcon" Width="24" Height="24" TextureColor="White"
+                           HoveredTextureColor="LightGreen" PressedTextureColor="Goldenrod"
+                           SelectedTextureColor="CornflowerBlue" DisabledTextureColor="Gray" />
+                    <TextBlock Text="Conventional action" VerticalAlignment="Center" />
                 </StackPanel>
-            </Expander>
+            </Button>
+            <TextBlock Text="Existing desktop/theme tooltip delay, offset, foreground, and normal XAML ToolTip styling are sufficient; no shader-specific tooltip API is needed." WrapText="True" />
+
+            <Separator />
+            <TextBlock StyleNames="Header" Text="Focused time example" />
+            <Border Width="300" Height="72" Padding="10" BorderBrush="White * 0.35" BorderThickness="1">
+                <Border.Background>
+                    <EffectFillBrush EffectName="SampleUiEffect" UseStandardParameters="True">
+                        <EffectFillBrush.FallbackBrush><SolidFillBrush Color="rgb(39,67,52)" /></EffectFillBrush.FallbackBrush>
+                        <EffectParameter Name="AccentColor" Type="Color" Value="rgb(83,222,139)" />
+                        <EffectParameter Name="ButtonRole" Type="Float" Value="2" />
+                    </EffectFillBrush>
+                </Border.Background>
+                <TextBlock Text="[b]Attention pulse[/b]\nOnly this example animates with TimeSeconds." WrapText="True" />
+            </Border>
+
+            <Separator />
+            <TextBlock WrapText="True">This sample's compiled MGFX artifact targets DesktopGL. Vulkan, DirectX, mobile, and other consumers must compile and register backend-compatible effects; MGUI does not promise shader-bytecode portability or own effect lifetime.</TextBlock>
         </StackPanel>
     </ScrollViewer>
 </Window>

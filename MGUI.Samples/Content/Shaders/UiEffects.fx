@@ -6,10 +6,10 @@ float2 ElementSize;
 float2 ElementPosition;
 float HoverAmount;
 float PressAmount;
-float FocusAmount;
-float Mode;
-float4 ColorA;
-float4 ColorB;
+float SelectedAmount;
+float DisabledAmount;
+float ButtonRole;
+float4 AccentColor;
 
 struct VertexShaderInput
 {
@@ -43,42 +43,25 @@ float EdgeDistance(float2 uv)
 float4 UiPixelShader(PixelShaderInput input) : COLOR0
 {
     float2 uv = saturate((input.Position.xy - ElementPosition) / max(ElementSize, float2(1.0, 1.0)));
-    float4 result = lerp(ColorA, ColorB, uv.x);
+    float edgeDistance = EdgeDistance(uv);
+    float rim = 1.0 - smoothstep(0.5, 3.0, edgeDistance);
+    float3 baseColor = AccentColor.rgb * lerp(0.34, 0.48, saturate(ButtonRole));
+    float4 result = float4(baseColor, AccentColor.a);
 
-    if (Mode < 0.5)
+    if (ButtonRole > 1.5)
     {
         float pulse = 0.5 + 0.5 * sin(TimeSeconds * 4.5);
-        result.rgb *= 0.45 + pulse * 0.95;
-    }
-    else if (Mode < 1.5)
-    {
-        float sweep = smoothstep(0.0, 1.0, 1.0 - abs((uv.x - 0.5) * 2.0));
-        result.rgb = lerp(ColorA.rgb, saturate(ColorB.rgb + sweep * 0.35), HoverAmount);
-    }
-    else if (Mode < 2.5)
-    {
-        float active = max(FocusAmount, PressAmount);
-        result.rgb = lerp(ColorA.rgb * 0.55, ColorB.rgb, active);
-        result.rgb *= 1.0 - PressAmount * 0.35;
-    }
-    else if (Mode < 3.5)
-    {
-        float edgeDistance = EdgeDistance(uv);
-        float rim = 1.0 - smoothstep(0.5, 2.5, edgeDistance);
-        float halo = 1.0 - smoothstep(1.5, 12.0, edgeDistance);
-        float pulse = 0.65 + 0.35 * sin(TimeSeconds * 3.2);
-        float glow = saturate(rim + halo * pulse * 0.75) * FocusAmount;
-        float3 glowColor = saturate(ColorB.rgb * (1.15 + rim * 0.45));
-        result.rgb = lerp(ColorA.rgb * 0.42, glowColor, glow);
-    }
-    else
-    {
-        float gray = dot(result.rgb, float3(0.299, 0.587, 0.114));
-        result.rgb = lerp(float3(gray, gray, gray), result.rgb, 0.22);
-        result.rgb *= 0.62;
+        result.rgb *= 0.72 + pulse * 0.38;
     }
 
-    result.a *= Opacity;
+    result.rgb = lerp(result.rgb, AccentColor.rgb * 0.78, SelectedAmount);
+    result.rgb += AccentColor.rgb * rim * HoverAmount * 0.38;
+    result.rgb *= 1.0 - PressAmount * 0.32;
+    float gray = dot(result.rgb, float3(0.299, 0.587, 0.114));
+    result.rgb = lerp(result.rgb, float3(gray, gray, gray) * 0.62, DisabledAmount);
+
+    // Opacity is contextual only: input.Color already carries draw opacity, so alpha is not multiplied twice.
+    result.rgb = lerp(result.rgb * 0.92, result.rgb, saturate(Opacity));
     return input.Color * result;
 }
 

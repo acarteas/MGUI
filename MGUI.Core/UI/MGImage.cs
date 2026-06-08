@@ -138,6 +138,78 @@ namespace MGUI.Core.UI
             }
         }
 
+        private Color? _HoveredTextureColor;
+        public Color? HoveredTextureColor
+        {
+            get => _HoveredTextureColor;
+            set
+            {
+                if (_HoveredTextureColor != value)
+                {
+                    _HoveredTextureColor = value;
+                    NPC(nameof(HoveredTextureColor));
+                }
+            }
+        }
+
+        private Color? _PressedTextureColor;
+        public Color? PressedTextureColor
+        {
+            get => _PressedTextureColor;
+            set
+            {
+                if (_PressedTextureColor != value)
+                {
+                    _PressedTextureColor = value;
+                    NPC(nameof(PressedTextureColor));
+                }
+            }
+        }
+
+        private Color? _SelectedTextureColor;
+        public Color? SelectedTextureColor
+        {
+            get => _SelectedTextureColor;
+            set
+            {
+                if (_SelectedTextureColor != value)
+                {
+                    _SelectedTextureColor = value;
+                    NPC(nameof(SelectedTextureColor));
+                }
+            }
+        }
+
+        private Color? _DisabledTextureColor;
+        public Color? DisabledTextureColor
+        {
+            get => _DisabledTextureColor;
+            set
+            {
+                if (_DisabledTextureColor != value)
+                {
+                    _DisabledTextureColor = value;
+                    NPC(nameof(DisabledTextureColor));
+                }
+            }
+        }
+
+        internal Color GetTextureColor(VisualState VisualState)
+        {
+            Color? StateColor = VisualState.Primary switch
+            {
+                PrimaryVisualState.Disabled => DisabledTextureColor,
+                _ when VisualState.Secondary == SecondaryVisualState.Pressed => PressedTextureColor,
+                _ when VisualState.Secondary == SecondaryVisualState.Hovered => HoveredTextureColor,
+                PrimaryVisualState.Selected => SelectedTextureColor,
+                _ => null
+            };
+            return StateColor ?? TextureColor ?? Color.White;
+        }
+
+        internal Color GetDrawColor(VisualState VisualState, float DrawOpacity, float TextureOpacity)
+            => GetTextureColor(VisualState) * DrawOpacity * TextureOpacity;
+
         private int UnstretchedWidth => ActualSource?.RenderSize.Width ?? 0;
         private int UnstretchedHeight => ActualSource?.RenderSize.Height ?? 0;
         protected internal Size EffectiveUnstretchedSize => EffectiveScaleSettings.ScaleSize(ActualSource?.RenderSize ?? Size.Empty, MGScaleCategory.Image);
@@ -358,7 +430,8 @@ namespace MGUI.Core.UI
                 throw new NotImplementedException($"Unrecognized {nameof(Stretch)}: {Stretch}");
             }
 
-            DA.DT.DrawTextureTo(ActualSource.Value.Texture, ActualSource.Value.SourceRect, Bounds.GetTranslated(DA.Offset), (TextureColor ?? Color.White) * DA.Opacity * ActualSource.Value.Opacity);
+            DA.DT.DrawTextureTo(ActualSource.Value.Texture, ActualSource.Value.SourceRect, Bounds.GetTranslated(DA.Offset),
+                GetDrawColor(DA.VisualState, DA.Opacity, ActualSource.Value.Opacity));
         }
     }
 }

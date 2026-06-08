@@ -20,6 +20,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MGUI.FontStashSharp", "MGUI
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MGUI.Tests", "MGUI.Tests\MGUI.Tests.csproj", "{C5605C23-1356-4AFA-A4DB-DFBB34C44990}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MGUI.EffectTestHost", "MGUI.EffectTestHost\MGUI.EffectTestHost.csproj", "{DE414808-232B-4A85-AC83-ED11798937EA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -90,6 +92,18 @@ Global
 		{C5605C23-1356-4AFA-A4DB-DFBB34C44990}.Release|x64.Build.0 = Release|Any CPU
 		{C5605C23-1356-4AFA-A4DB-DFBB34C44990}.Release|x86.ActiveCfg = Release|Any CPU
 		{C5605C23-1356-4AFA-A4DB-DFBB34C44990}.Release|x86.Build.0 = Release|Any CPU
+		{DE414808-232B-4A85-AC83-ED11798937EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DE414808-232B-4A85-AC83-ED11798937EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DE414808-232B-4A85-AC83-ED11798937EA}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{DE414808-232B-4A85-AC83-ED11798937EA}.Debug|x64.Build.0 = Debug|Any CPU
+		{DE414808-232B-4A85-AC83-ED11798937EA}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{DE414808-232B-4A85-AC83-ED11798937EA}.Debug|x86.Build.0 = Debug|Any CPU
+		{DE414808-232B-4A85-AC83-ED11798937EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DE414808-232B-4A85-AC83-ED11798937EA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DE414808-232B-4A85-AC83-ED11798937EA}.Release|x64.ActiveCfg = Release|Any CPU
+		{DE414808-232B-4A85-AC83-ED11798937EA}.Release|x64.Build.0 = Release|Any CPU
+		{DE414808-232B-4A85-AC83-ED11798937EA}.Release|x86.ActiveCfg = Release|Any CPU
+		{DE414808-232B-4A85-AC83-ED11798937EA}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

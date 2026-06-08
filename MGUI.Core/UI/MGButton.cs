@@ -35,6 +35,40 @@ namespace MGUI.Core.UI
         }
         #endregion Border
 
+        private Point _PressedContentOffset;
+        /// <summary>A logical UI offset applied only to this button's content while the enabled button is pressed.</summary>
+        public Point PressedContentOffset
+        {
+            get => _PressedContentOffset;
+            set
+            {
+                if (_PressedContentOffset != value)
+                {
+                    _PressedContentOffset = value;
+                    NPC(nameof(PressedContentOffset));
+                }
+            }
+        }
+
+        internal Point GetContentDrawOffset(ElementDrawArgs DA)
+            => CalculateContentDrawOffset(DA.Offset, DA.VisualState, PressedContentOffset, EffectiveScaleSettings);
+
+        internal static Point CalculateContentDrawOffset(Point DrawOffset, VisualState VisualState, Point PressedContentOffset, MGScaleSettings ScaleSettings)
+        {
+            if (!VisualState.IsDisabled && VisualState.IsPressed)
+            {
+                Point Offset = ScaleSettings.ScalePoint(PressedContentOffset, MGScaleCategory.Spacing);
+                return new Point(DrawOffset.X + Offset.X, DrawOffset.Y + Offset.Y);
+            }
+
+            return DrawOffset;
+        }
+
+        protected override void DrawContents(ElementDrawArgs DA)
+        {
+            Content?.Draw(DA.SetOffset(GetContentDrawOffset(DA)));
+        }
+
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private string _CommandName;
         /// <summary>The name of the command to execute when this <see cref="MGButton"/> is left-clicked, or null if no named command should be executed when left-clicked.<para/>
@@ -167,6 +201,7 @@ namespace MGUI.Core.UI
                 HorizontalContentAlignment = HorizontalAlignment.Center;
                 VerticalContentAlignment = VerticalAlignment.Center;
                 Padding = new(4,2,4,2);
+                PressedContentOffset = Point.Zero;
 
                 MouseHandler.PressedInside += (sender, e) =>
                 { 

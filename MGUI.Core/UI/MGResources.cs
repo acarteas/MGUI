@@ -18,6 +18,7 @@ namespace MGUI.Core.UI
 {
     /// <summary>Stores various resources in Dictionary Key-Value pairs so that they can be accessed by their string keys.<para/>
     /// For example: the name of the command that an <see cref="MGButton"/> executes when clicked, the name of a <see cref="Texture2D"/> that an <see cref="MGImage"/> draws,
+    /// a caller-owned runtime <see cref="Effect"/> used by an effect-backed brush,
     /// or the name of an object in <see cref="StaticResources"/> for databinding purposes.<para/>
     /// This instance is usually accessed via <see cref="MGDesktop.Resources"/> (See also: <see cref="MGElement.GetResources"/>)</summary>
     public class MGResources
@@ -105,6 +106,68 @@ namespace MGUI.Core.UI
         public event EventHandler<(string Name, MGTextureData Data)> OnTextureAdded;
         public event EventHandler<(string Name, MGTextureData Data)> OnTextureRemoved;
         #endregion Textures
+
+        #region Effects
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private readonly Dictionary<string, Effect> _Effects = new();
+
+        /// <summary>
+        /// Runtime effects registered by the consuming application. MGUI does not compile, clone, dispose, or otherwise own these effects.
+        /// Each effect must be compatible with the active MonoGame graphics backend.
+        /// </summary>
+        public IReadOnlyDictionary<string, Effect> Effects => _Effects;
+
+        /// <summary>Adds a caller-owned runtime effect. The name must be unique.</summary>
+        public void AddEffect(string Name, Effect Effect)
+        {
+            if (Effect == null)
+            {
+                throw new ArgumentNullException(nameof(Effect));
+            }
+
+            _Effects.Add(Name, Effect);
+            OnEffectAdded?.Invoke(this, (Name, Effect));
+        }
+
+        /// <summary>Adds a caller-owned runtime effect, replacing an existing registration with the same name.</summary>
+        public void AddOrReplaceEffect(string Name, Effect Effect)
+        {
+            if (Effect == null)
+            {
+                throw new ArgumentNullException(nameof(Effect));
+            }
+
+            RemoveEffect(Name);
+            AddEffect(Name, Effect);
+        }
+
+        /// <summary>Removes an effect registration without disposing the caller-owned effect.</summary>
+        public bool RemoveEffect(string Name)
+        {
+            if (Name != null && _Effects.TryGetValue(Name, out Effect Effect))
+            {
+                _Effects.Remove(Name);
+                OnEffectRemoved?.Invoke(this, (Name, Effect));
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool TryGetEffect(string Name, out Effect Effect)
+        {
+            if (Name != null && _Effects.TryGetValue(Name, out Effect))
+            {
+                return true;
+            }
+
+            Effect = null;
+            return false;
+        }
+
+        public event EventHandler<(string Name, Effect Effect)> OnEffectAdded;
+        public event EventHandler<(string Name, Effect Effect)> OnEffectRemoved;
+        #endregion Effects
 
         #region Commands
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]

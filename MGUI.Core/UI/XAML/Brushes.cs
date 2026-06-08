@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using XNAColor = Microsoft.Xna.Framework.Color;
 using MGUI.Core.UI.Data_Binding;
 using System.Diagnostics;
+using Microsoft.Xna.Framework;
 
 #if UseWPF
 using System.Windows.Markup;
@@ -178,6 +179,214 @@ namespace MGUI.Core.UI.XAML
         public override string ToString() => $"{nameof(TextureFillBrush)}: {SourceName} ({Stretch})";
 
         public override IFillBrush ToFillBrush(MGDesktop Desktop, MGElement Element) => new MGTextureFillBrush(Desktop, SourceName, Stretch, Color.ToXNAColor());
+    }
+
+    public class EffectParameter
+    {
+        public string Name { get; set; }
+        public MGEffectParameterType? Type { get; set; }
+        public string Value { get; set; }
+
+        internal MGEffectParameterValue ToParameterValue()
+        {
+            if (string.IsNullOrWhiteSpace(Name))
+            {
+                throw new InvalidOperationException($"{nameof(EffectParameter)}.{nameof(Name)} cannot be null or whitespace.");
+            }
+
+            if (string.IsNullOrWhiteSpace(Value))
+            {
+                throw new InvalidOperationException($"{nameof(EffectParameter)} '{Name}' must specify a value.");
+            }
+
+            MGEffectParameterType ActualType = Type ?? InferType(Value);
+            try
+            {
+                object ParsedValue = ParseValue(Value, ActualType);
+                ValidateFinite(Name, ActualType, ParsedValue);
+                return new MGEffectParameterValue(Name, ActualType, ParsedValue);
+            }
+            catch (Exception Ex) when (Ex is FormatException or OverflowException or ArgumentException)
+            {
+                throw new FormatException(
+                    $"Effect parameter '{Name}' declared as {ActualType} has invalid value '{Value}'. Expected {GetExpectedFormat(ActualType)}.", Ex);
+            }
+        }
+
+        private static MGEffectParameterType InferType(string Value)
+        {
+            if (Value.StartsWith("rgb", StringComparison.OrdinalIgnoreCase) || Value.StartsWith("#", StringComparison.Ordinal))
+            {
+                return MGEffectParameterType.Color;
+            }
+
+            if (bool.TryParse(Value, out _))
+            {
+                return MGEffectParameterType.Bool;
+            }
+
+            if (int.TryParse(Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out _))
+            {
+                return MGEffectParameterType.Int;
+            }
+
+            if (float.TryParse(Value, NumberStyles.Float, CultureInfo.InvariantCulture, out _))
+            {
+                return MGEffectParameterType.Float;
+            }
+
+            throw new FormatException($"Cannot infer a supported scalar or color effect parameter type from '{Value}'. Vector values require an explicit {nameof(Type)}.");
+        }
+
+        private static object ParseValue(string Value, MGEffectParameterType Type)
+        {
+            try
+            {
+                if (Type == MGEffectParameterType.Color)
+                {
+                    return ColorStringConverter.ParseColor(Value).ToXNAColor().ToVector4();
+                }
+
+                return Type switch
+                {
+                    MGEffectParameterType.Float => float.Parse(Value, CultureInfo.InvariantCulture),
+                    MGEffectParameterType.Int => int.Parse(Value, CultureInfo.InvariantCulture),
+                    MGEffectParameterType.Bool => bool.Parse(Value),
+                    MGEffectParameterType.Color => throw new FormatException($"'{Value}' is not a valid MGUI color."),
+                    MGEffectParameterType.Vector2 => ParseVector2(Value),
+                    MGEffectParameterType.Vector3 => ParseVector3(Value),
+                    MGEffectParameterType.Vector4 => ParseVector4(Value),
+                    _ => throw new FormatException($"'{Value}' is not a valid {Type} value.")
+                };
+            }
+            catch (Exception Ex) when (Ex is FormatException or OverflowException)
+            {
+                throw new FormatException($"Effect parameter value '{Value}' is not valid for type {Type}.", Ex);
+            }
+        }
+
+        private static float[] ParseComponents(string Value, int ExpectedCount)
+        {
+            float[] Components = Value.Split(',').Select(x => float.Parse(x.Trim(), CultureInfo.InvariantCulture)).ToArray();
+            if (Components.Length != ExpectedCount)
+            {
+                throw new FormatException($"Expected {ExpectedCount} comma-separated components.");
+            }
+
+            return Components;
+        }
+
+        private static Vector2 ParseVector2(string Value)
+        {
+            float[] Components = ParseComponents(Value, 2);
+            return new Vector2(Components[0], Components[1]);
+        }
+
+        private static Vector3 ParseVector3(string Value)
+        {
+            float[] Components = ParseComponents(Value, 3);
+            return new Vector3(Components[0], Components[1], Components[2]);
+        }
+
+        private static Vector4 ParseVector4(string Value)
+        {
+            float[] Components = ParseComponents(Value, 4);
+            return new Vector4(Components[0], Components[1], Components[2], Components[3]);
+        }
+
+        private static void ValidateFinite(string Name, MGEffectParameterType Type, object Value)
+        {
+            bool IsFinite = Type switch
+            {
+                MGEffectParameterType.Float => float.IsFinite((float)Value),
+                MGEffectParameterType.Vector2 => IsFiniteVector((Vector2)Value),
+                MGEffectParameterType.Vector3 => IsFiniteVector((Vector3)Value),
+                MGEffectParameterType.Vector4 or MGEffectParameterType.Color => IsFiniteVector((Vector4)Value),
+                _ => true
+            };
+            if (!IsFinite)
+            {
+                throw new FormatException($"Effect parameter '{Name}' must contain only finite numeric values.");
+            }
+        }
+
+        private static bool IsFiniteVector(Vector2 Value) => float.IsFinite(Value.X) && float.IsFinite(Value.Y);
+        private static bool IsFiniteVector(Vector3 Value) => float.IsFinite(Value.X) && float.IsFinite(Value.Y) && float.IsFinite(Value.Z);
+        private static bool IsFiniteVector(Vector4 Value) => float.IsFinite(Value.X) && float.IsFinite(Value.Y) && float.IsFinite(Value.Z) && float.IsFinite(Value.W);
+
+        private static string GetExpectedFormat(MGEffectParameterType Type)
+            => Type switch
+            {
+                MGEffectParameterType.Float => "a finite invariant-culture floating-point scalar such as 1.25",
+                MGEffectParameterType.Int => "an invariant-culture integer such as 2",
+                MGEffectParameterType.Bool => "true or false",
+                MGEffectParameterType.Color => "an MGUI color such as rgb(210,165,72) or #D2A548",
+                MGEffectParameterType.Vector2 => "two finite comma-separated components such as 1,0",
+                MGEffectParameterType.Vector3 => "three finite comma-separated components such as 1,0,0",
+                MGEffectParameterType.Vector4 => "four finite comma-separated components such as 1,0,0,1",
+                _ => "one of Float, Int, Bool, Color, Vector2, Vector3, or Vector4"
+            };
+    }
+
+    [ContentProperty(nameof(Parameters))]
+    public class EffectFillBrush : FillBrush
+    {
+        public string EffectName { get; set; }
+        public bool UseStandardParameters { get; set; } = false;
+        public FillBrush FallbackBrush { get; set; }
+        public List<EffectParameter> Parameters { get; set; } = new();
+
+        public override IFillBrush ToFillBrush(MGDesktop Desktop, MGElement Element)
+        {
+            if (Desktop == null)
+            {
+                throw new ArgumentNullException(nameof(Desktop));
+            }
+
+            if (string.IsNullOrWhiteSpace(EffectName))
+            {
+                throw new ArgumentException($"{nameof(EffectFillBrush)}.{nameof(EffectName)} cannot be null, empty, or whitespace.", nameof(EffectName));
+            }
+
+            if (!Desktop.Resources.TryGetEffect(EffectName, out Microsoft.Xna.Framework.Graphics.Effect Effect))
+            {
+                string Message = $"No Effect was found with the name '{EffectName}' in {nameof(MGResources)}.{nameof(MGResources.Effects)}.";
+                if (FallbackBrush != null)
+                {
+                    return FallbackBrush.ToFillBrush(Desktop, Element);
+                }
+
+                throw new InvalidOperationException($"{Message} Register it with {nameof(MGResources)}.{nameof(MGResources.AddEffect)} " +
+                    $"before XAML brush materialization, or specify {nameof(FallbackBrush)} as a non-shader alternative.");
+            }
+
+            HashSet<string> ParameterNames = new(StringComparer.Ordinal);
+            foreach (EffectParameter Parameter in Parameters)
+            {
+                if (!ParameterNames.Add(Parameter.Name ?? string.Empty))
+                {
+                    throw new InvalidOperationException($"Duplicate effect parameter name '{Parameter.Name}' in {nameof(EffectFillBrush)} '{EffectName}'. Names are case-sensitive and must be unique.");
+                }
+            }
+
+            return new MGEffectFillBrush(Effect)
+            {
+                UseStandardParameters = UseStandardParameters,
+                Parameters = Parameters.Select(x => x.ToParameterValue()).ToArray()
+            };
+        }
+
+        public override string ToString() => $"{nameof(EffectFillBrush)}: {EffectName}";
+
+        protected internal override IEnumerable<(XAMLBindableBase, string)> GetNestedBindableObjects()
+        {
+            foreach (var Item in base.GetNestedBindableObjects())
+            {
+                yield return Item;
+            }
+
+            yield return (FallbackBrush, nameof(FallbackBrush));
+        }
     }
 
     [ContentProperty(nameof(FillBrush))]
