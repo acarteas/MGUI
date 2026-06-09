@@ -1,3 +1,4 @@
+using Microsoft.Xna.Framework;
 using System.Reflection;
 using Portable.Xaml;
 using MGUI.Core.UI.XAML;
@@ -48,6 +49,68 @@ public class ShaderEffectsSampleTests
         Assert.Contains("DisabledAmount", Source);
     }
 
+    [Fact]
+    public void SampleShaderUsesTextureCoordinatesForLocalUv()
+    {
+        string Source = ReadResource("UiEffects.fx");
+
+        Assert.Contains("float2 uv = saturate(input.TextureCoordinate);", Source);
+        Assert.DoesNotContain("saturate((input.Position.xy - ElementPosition) /", Source);
+    }
+
+    [Fact]
+    public void TextureCoordinateInterpolationPreservesEdgeDistanceAcrossAffineTransform()
+    {
+        Vector2 elementPosition = new(37f, 53f);
+        Vector2 elementSize = new(180f, 72f);
+        Vector2 localUv = new(0.23f, 0.71f);
+
+        Vector2 topLeftPosition = elementPosition;
+        Vector2 topRightPosition = elementPosition + new Vector2(elementSize.X, 0f);
+        Vector2 bottomLeftPosition = elementPosition + new Vector2(0f, elementSize.Y);
+        Vector2 bottomRightPosition = elementPosition + elementSize;
+
+        Matrix transform = Matrix.CreateScale(1.5f, 0.65f, 1f)
+            * Matrix.CreateTranslation(240f, -35f, 0f);
+
+        Vector2 transformedTopLeft = Vector2.Transform(topLeftPosition, transform);
+        Vector2 transformedTopRight = Vector2.Transform(topRightPosition, transform);
+        Vector2 transformedBottomLeft = Vector2.Transform(bottomLeftPosition, transform);
+        Vector2 transformedBottomRight = Vector2.Transform(bottomRightPosition, transform);
+
+        Vector2 originalPosition = BilinearInterpolate(
+            topLeftPosition,
+            topRightPosition,
+            bottomLeftPosition,
+            bottomRightPosition,
+            localUv);
+        Vector2 transformedPosition = BilinearInterpolate(
+            transformedTopLeft,
+            transformedTopRight,
+            transformedBottomLeft,
+            transformedBottomRight,
+            localUv);
+        Vector2 interpolatedUv = BilinearInterpolate(
+            new Vector2(0f, 0f),
+            new Vector2(1f, 0f),
+            new Vector2(0f, 1f),
+            new Vector2(1f, 1f),
+            localUv);
+
+        Vector2 legacyMixedSpaceUv = (transformedPosition - elementPosition) / elementSize;
+
+        Assert.NotEqual(originalPosition, transformedPosition);
+        Assert.NotEqual(localUv, legacyMixedSpaceUv);
+        Assert.True(legacyMixedSpaceUv.X > 1f || legacyMixedSpaceUv.X < 0f
+            || legacyMixedSpaceUv.Y > 1f || legacyMixedSpaceUv.Y < 0f);
+        Assert.Equal(localUv.X, interpolatedUv.X, precision: 5);
+        Assert.Equal(localUv.Y, interpolatedUv.Y, precision: 5);
+
+        float originalDistance = EdgeDistance(localUv, elementSize);
+        float transformedDistance = EdgeDistance(interpolatedUv, elementSize);
+        Assert.Equal(originalDistance, transformedDistance, precision: 5);
+    }
+
     private static string ReadResource(string Suffix)
     {
         Assembly Assembly = typeof(ShaderEffectsSampleTests).Assembly;
@@ -55,5 +118,23 @@ public class ShaderEffectsSampleTests
         using Stream Stream = Assert.IsAssignableFrom<Stream>(Assembly.GetManifestResourceStream(Name));
         using StreamReader Reader = new(Stream);
         return Reader.ReadToEnd();
+    }
+
+    private static float EdgeDistance(Vector2 uv, Vector2 elementSize)
+    {
+        Vector2 edge = Vector2.Min(uv, Vector2.One - uv);
+        return MathF.Min(edge.X * elementSize.X, edge.Y * elementSize.Y);
+    }
+
+    private static Vector2 BilinearInterpolate(
+        Vector2 topLeft,
+        Vector2 topRight,
+        Vector2 bottomLeft,
+        Vector2 bottomRight,
+        Vector2 weights)
+    {
+        Vector2 top = Vector2.Lerp(topLeft, topRight, weights.X);
+        Vector2 bottom = Vector2.Lerp(bottomLeft, bottomRight, weights.X);
+        return Vector2.Lerp(top, bottom, weights.Y);
     }
 }

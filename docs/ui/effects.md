@@ -45,8 +45,8 @@ Standard binding is opt-in for both XAML and programmatic brushes with `UseStand
 | Name | Shader type | Value |
 | --- | --- | --- |
 | `MatrixTransform` | `float4x4` | Current transform times a SpriteBatch-compatible orthographic projection, including the configured half-pixel convention |
-| `ElementPosition` | `float2` | Fill top-left after the current draw offset |
-| `ElementSize` | `float2` | Fill width and height, each clamped to at least one |
+| `ElementPosition` | `float2` | Fill top-left in pre-transform destination space after the current draw offset |
+| `ElementSize` | `float2` | Fill width and height in pre-transform destination space, each clamped to at least one |
 | `Opacity` | `float` | Effective draw opacity |
 | `TimeSeconds` | `float` | Total renderer time in seconds |
 | `HoverAmount` | `float` | `1` when hovered, otherwise `0` |
@@ -55,6 +55,10 @@ Standard binding is opt-in for both XAML and programmatic brushes with `UseStand
 | `DisabledAmount` | `float` | `1` when disabled, otherwise `0` |
 
 The draw color already carries effective opacity. A shader should not multiply alpha by both `input.Color.a` and `Opacity`; use one alpha application. `Opacity` remains available for non-alpha decisions.
+
+`TextureCoordinate` is the normalized fill-local coordinate that moves with the geometry through `MatrixTransform`, so it is the preferred source for procedural fill effects that need stable local UVs. If a shader combines `SV_POSITION` with `ElementPosition` or `ElementSize`, it must explicitly convert both values into the same coordinate space first.
+
+`MatrixTransform` may include window scaling, element render scaling, or other affine draw transforms. `ElementPosition` and `ElementSize` remain the untransformed destination rectangle for the fill.
 
 ## Custom Parameters
 

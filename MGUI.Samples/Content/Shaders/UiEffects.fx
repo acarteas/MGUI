@@ -42,7 +42,7 @@ float EdgeDistance(float2 uv)
 
 float4 UiPixelShader(PixelShaderInput input) : COLOR0
 {
-    float2 uv = saturate((input.Position.xy - ElementPosition) / max(ElementSize, float2(1.0, 1.0)));
+    float2 uv = saturate(input.TextureCoordinate);
     float edgeDistance = EdgeDistance(uv);
     float rim = 1.0 - smoothstep(0.5, 3.0, edgeDistance);
     float3 baseColor = AccentColor.rgb * lerp(0.34, 0.48, saturate(ButtonRole));
