@@ -1908,7 +1908,7 @@ namespace MGUI.Core.UI
 				return;
 			}
 
-            Rectangle TargetBounds = LayoutBounds.GetTranslated(DA.Offset).CreateTransformedF(DA.DT.CurrentSettings.Transform).RoundUp();
+            Rectangle TargetBounds = GetDrawTargetBounds(DA);
 
             //  Apply render scale, if any
             IDisposable TempTransform = null;
@@ -1964,7 +1964,10 @@ namespace MGUI.Core.UI
             TempScissorRect?.Dispose();
 
             OnEndDraw?.Invoke(this, DrawEventArgs);
-		}
+			}
+
+        internal Rectangle GetDrawTargetBounds(ElementDrawArgs DA)
+            => LayoutBounds.GetTranslated(DA.Offset).CreateTransformedF(DA.DT.CurrentSettings.Transform).RoundUp();
 
 		protected virtual void DrawContents(ElementDrawArgs DA) { }
 

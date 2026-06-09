@@ -81,6 +81,68 @@ public class EffectFillBrushXamlTests
     }
 
     [Fact]
+    public void ToFillBrush_MissingEffectWithFallbackStillValidatesMalformedParameters()
+    {
+        EffectFillBrush source = CreateFallbackSource(new XamlEffectParameter { Name = "Amount", Type = MGEffectParameterType.Float, Value = "invalid" });
+
+        FormatException exception = Assert.Throws<FormatException>(() => source.ToFillBrush(CreateDesktop(CreateResources()), null));
+
+        Assert.Contains("Amount", exception.Message);
+    }
+
+    [Fact]
+    public void ToFillBrush_MissingEffectWithFallbackStillRejectsDuplicateParameterNames()
+    {
+        EffectFillBrush source = CreateFallbackSource(
+            new XamlEffectParameter { Name = "Role", Value = "1" },
+            new XamlEffectParameter { Name = "Role", Value = "2" });
+
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => source.ToFillBrush(CreateDesktop(CreateResources()), null));
+
+        Assert.Contains("Duplicate", exception.Message);
+        Assert.Contains("Role", exception.Message);
+    }
+
+    [Fact]
+    public void ToFillBrush_MissingEffectWithFallbackStillRejectsBlankParameterNames()
+    {
+        EffectFillBrush source = CreateFallbackSource(new XamlEffectParameter { Name = " ", Value = "1" });
+
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => source.ToFillBrush(CreateDesktop(CreateResources()), null));
+
+        Assert.Contains(nameof(XamlEffectParameter.Name), exception.Message);
+    }
+
+    [Fact]
+    public void ToFillBrush_MissingEffectWithFallbackAcceptsValidParametersWithoutAttachingThem()
+    {
+        EffectFillBrush source = CreateFallbackSource(new XamlEffectParameter { Name = "Role", Value = "1" });
+
+        IFillBrush brush = source.ToFillBrush(CreateDesktop(CreateResources()), null);
+
+        Assert.IsType<MGSolidFillBrush>(brush);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ToFillBrush_ParameterValidationIsIndependentOfEffectAvailability(bool registerEffect)
+    {
+        MGResources resources = CreateResources();
+        if (registerEffect)
+        {
+            resources.AddEffect("Hud", CreateEffect());
+        }
+
+        EffectFillBrush source = CreateFallbackSource(new XamlEffectParameter { Name = "Direction", Type = MGEffectParameterType.Vector2, Value = "NaN,1" });
+
+        FormatException exception = Assert.Throws<FormatException>(() => source.ToFillBrush(CreateDesktop(resources), null));
+
+        Assert.Contains("Direction", exception.Message);
+        Assert.Contains("finite", exception.Message);
+    }
+
+    [Fact]
     public void ToFillBrush_ThrowsActionableErrorWhenEffectAndFallbackAreMissing()
     {
         MGDesktop desktop = CreateDesktop(CreateResources());
@@ -287,6 +349,17 @@ public class EffectFillBrushXamlTests
     }
 
     private static MGResources CreateResources() => new(new MGTheme("TestFont"));
+
+    private static EffectFillBrush CreateFallbackSource(params XamlEffectParameter[] parameters)
+    {
+        EffectFillBrush source = new()
+        {
+            EffectName = "Hud",
+            FallbackBrush = new SolidFillBrush(new XAMLColor(Color.CornflowerBlue))
+        };
+        source.Parameters.AddRange(parameters);
+        return source;
+    }
 
     private static MGDesktop CreateDesktop(MGResources resources)
     {

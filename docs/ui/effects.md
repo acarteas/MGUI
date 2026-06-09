@@ -34,7 +34,7 @@ XAML resolution is a materialization-time snapshot. Existing brushes keep their 
 </Button>
 ```
 
-`EffectName` must be nonblank. If it is absent from `Desktop.Resources.Effects`, a configured `FallbackBrush` is materialized without failing. Without a fallback, materialization throws an actionable error. Nested fallback brushes and bindable fallback values are supported.
+`EffectName` must be nonblank. Custom parameter declarations are validated and converted before effect lookup, so malformed values, blank or duplicate names, unsupported types, and non-finite values fail identically whether the effect is registered or a fallback would be selected. If the effect is absent from `Desktop.Resources.Effects` and the declarations are valid, a configured `FallbackBrush` is materialized without applying the converted effect parameters. Without a fallback, materialization throws an actionable error. Nested fallback brushes and bindable fallback values are supported.
 
 `EffectFillBrush` works in every `IFillBrush` slot, including normal, hovered, pressed, selected, and disabled backgrounds, borders, overlays, and nested border fills.
 
@@ -79,7 +79,7 @@ Parameter lookups, including misses, are cached per brush/effect pair. Assigning
 Shader-backed controls can be compared with conventional image/button states:
 
 - `MGImage` state tint precedence is disabled, pressed, hovered, selected, then normal `TextureColor`; each missing state tint falls directly back to normal or white.
-- `HoveredRenderScale` and `PressedRenderScale` are independent optional overrides. Pressed wins while both states are active. Existing `RenderScale` remains the fallback.
+- `RenderScale`, `HoveredRenderScale`, and `PressedRenderScale` each reject explicitly supplied non-finite or non-positive values. Hover uses `HoveredRenderScale ?? RenderScale ?? 1`; press uses `PressedRenderScale ?? RenderScale ?? 1`, and pressed wins while both states are active.
 - `PressedContentOffset` translates button content only while pressed and enabled. It uses spacing scale, does not affect background/border drawing, and does not change measurement or layout.
 - A tooltip is sufficient when it names or explains the action. Icon-only actions need one; visible labels generally do not unless extra context is useful.
 

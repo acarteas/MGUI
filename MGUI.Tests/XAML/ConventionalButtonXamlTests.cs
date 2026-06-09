@@ -76,13 +76,66 @@ public class ConventionalButtonXamlTests
     [InlineData(-1.0f)]
     [InlineData(float.NaN)]
     [InlineData(float.PositiveInfinity)]
-    public void RenderScale_InvalidValuesFailWithPropertyDiagnostic(float value)
+    [InlineData(float.NegativeInfinity)]
+    public void HoveredRenderScale_InvalidValuesFailWithPropertyDiagnostic(float value)
     {
         Border border = new() { HoveredRenderScale = value };
 
         ArgumentOutOfRangeException exception = Assert.Throws<ArgumentOutOfRangeException>(() => border.GetRenderScale());
 
         Assert.Contains(nameof(Element.HoveredRenderScale), exception.Message);
+    }
+
+    [Theory]
+    [InlineData(0.0f)]
+    [InlineData(-1.0f)]
+    [InlineData(float.NaN)]
+    [InlineData(float.PositiveInfinity)]
+    [InlineData(float.NegativeInfinity)]
+    public void RenderScale_InvalidValuesFailWithPropertyDiagnostic(float value)
+    {
+        Border border = new() { RenderScale = value };
+
+        ArgumentOutOfRangeException exception = Assert.Throws<ArgumentOutOfRangeException>(() => border.GetRenderScale());
+
+        Assert.Contains(nameof(Element.RenderScale), exception.Message);
+    }
+
+    [Fact]
+    public void RenderScale_InvalidShorthandFailsEvenWhenStateOverridesAreValid()
+    {
+        Border border = new() { RenderScale = 0.0f, HoveredRenderScale = 1.1f, PressedRenderScale = 0.9f };
+
+        ArgumentOutOfRangeException exception = Assert.Throws<ArgumentOutOfRangeException>(() => border.GetRenderScale());
+
+        Assert.Contains(nameof(Element.RenderScale), exception.Message);
+    }
+
+    [Theory]
+    [InlineData(0.0f)]
+    [InlineData(-1.0f)]
+    [InlineData(float.NaN)]
+    [InlineData(float.PositiveInfinity)]
+    [InlineData(float.NegativeInfinity)]
+    public void PressedRenderScale_InvalidValuesFailWithPropertyDiagnostic(float value)
+    {
+        Border border = new() { PressedRenderScale = value };
+
+        ArgumentOutOfRangeException exception = Assert.Throws<ArgumentOutOfRangeException>(() => border.GetRenderScale());
+
+        Assert.Contains(nameof(Element.PressedRenderScale), exception.Message);
+    }
+
+    [Fact]
+    public void RenderScale_OneSidedOverridesUseShorthandOrIdentityFallbacks()
+    {
+        ConditionalScaleTransform hoveredOnly = new Border { HoveredRenderScale = 1.2f }.GetRenderScale()!.Value;
+        ConditionalScaleTransform pressedOverride = new Border { RenderScale = 1.1f, PressedRenderScale = 0.9f }.GetRenderScale()!.Value;
+
+        Assert.Equal(1.2f, hoveredOnly.HoveredScale);
+        Assert.Equal(1.0f, hoveredOnly.PressedScale);
+        Assert.Equal(1.1f, pressedOverride.HoveredScale);
+        Assert.Equal(0.9f, pressedOverride.PressedScale);
     }
 
     [Fact]

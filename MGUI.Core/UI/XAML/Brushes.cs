@@ -336,6 +336,24 @@ namespace MGUI.Core.UI.XAML
         public FillBrush FallbackBrush { get; set; }
         public List<EffectParameter> Parameters { get; set; } = new();
 
+        private MGEffectParameterValue[] ConvertParameters()
+        {
+            HashSet<string> ParameterNames = new(StringComparer.Ordinal);
+            MGEffectParameterValue[] ConvertedParameters = new MGEffectParameterValue[Parameters.Count];
+            for (int i = 0; i < Parameters.Count; i++)
+            {
+                MGEffectParameterValue ConvertedParameter = Parameters[i].ToParameterValue();
+                if (!ParameterNames.Add(ConvertedParameter.Name))
+                {
+                    throw new InvalidOperationException($"Duplicate effect parameter name '{ConvertedParameter.Name}' in {nameof(EffectFillBrush)} '{EffectName}'. Names are case-sensitive and must be unique.");
+                }
+
+                ConvertedParameters[i] = ConvertedParameter;
+            }
+
+            return ConvertedParameters;
+        }
+
         public override IFillBrush ToFillBrush(MGDesktop Desktop, MGElement Element)
         {
             if (Desktop == null)
@@ -347,6 +365,8 @@ namespace MGUI.Core.UI.XAML
             {
                 throw new ArgumentException($"{nameof(EffectFillBrush)}.{nameof(EffectName)} cannot be null, empty, or whitespace.", nameof(EffectName));
             }
+
+            MGEffectParameterValue[] ConvertedParameters = ConvertParameters();
 
             if (!Desktop.Resources.TryGetEffect(EffectName, out Microsoft.Xna.Framework.Graphics.Effect Effect))
             {
@@ -360,19 +380,10 @@ namespace MGUI.Core.UI.XAML
                     $"before XAML brush materialization, or specify {nameof(FallbackBrush)} as a non-shader alternative.");
             }
 
-            HashSet<string> ParameterNames = new(StringComparer.Ordinal);
-            foreach (EffectParameter Parameter in Parameters)
-            {
-                if (!ParameterNames.Add(Parameter.Name ?? string.Empty))
-                {
-                    throw new InvalidOperationException($"Duplicate effect parameter name '{Parameter.Name}' in {nameof(EffectFillBrush)} '{EffectName}'. Names are case-sensitive and must be unique.");
-                }
-            }
-
             return new MGEffectFillBrush(Effect)
             {
                 UseStandardParameters = UseStandardParameters,
-                Parameters = Parameters.Select(x => x.ToParameterValue()).ToArray()
+                Parameters = ConvertedParameters
             };
         }
 

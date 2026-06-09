@@ -379,8 +379,23 @@ namespace MGUI.Core.UI.XAML
                 return null;
             }
 
-            float HoveredScale = ValidateRenderScale(nameof(HoveredRenderScale), HoveredRenderScale ?? RenderScale ?? 1.0f);
-            float PressedScale = ValidateRenderScale(nameof(PressedRenderScale), PressedRenderScale ?? RenderScale ?? 1.0f);
+            if (RenderScale.HasValue)
+            {
+                ValidateRenderScale(nameof(RenderScale), RenderScale.Value);
+            }
+
+            if (HoveredRenderScale.HasValue)
+            {
+                ValidateRenderScale(nameof(HoveredRenderScale), HoveredRenderScale.Value);
+            }
+
+            if (PressedRenderScale.HasValue)
+            {
+                ValidateRenderScale(nameof(PressedRenderScale), PressedRenderScale.Value);
+            }
+
+            float HoveredScale = HoveredRenderScale ?? RenderScale ?? 1.0f;
+            float PressedScale = PressedRenderScale ?? RenderScale ?? 1.0f;
             return new ConditionalScaleTransform(PressedScale, HoveredScale);
         }
 
