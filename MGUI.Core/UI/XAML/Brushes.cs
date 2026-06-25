@@ -328,24 +328,34 @@ namespace MGUI.Core.UI.XAML
             };
     }
 
-    [ContentProperty(nameof(Parameters))]
-    public class EffectFillBrush : FillBrush
+    internal static class EffectParameterCollectionConverter
     {
-        public string EffectName { get; set; }
-        public bool UseStandardParameters { get; set; } = false;
-        public FillBrush FallbackBrush { get; set; }
-        public List<EffectParameter> Parameters { get; set; } = new();
-
-        private MGEffectParameterValue[] ConvertParameters()
+        public static MGEffectParameterValue[] Convert(
+            IReadOnlyList<EffectParameter> Parameters,
+            string OwnerDescription)
         {
+            if (Parameters == null)
+            {
+                throw new InvalidOperationException(
+                    $"The effect parameter collection in {OwnerDescription} cannot be null.");
+            }
+
             HashSet<string> ParameterNames = new(StringComparer.Ordinal);
             MGEffectParameterValue[] ConvertedParameters = new MGEffectParameterValue[Parameters.Count];
             for (int i = 0; i < Parameters.Count; i++)
             {
-                MGEffectParameterValue ConvertedParameter = Parameters[i].ToParameterValue();
+                EffectParameter Parameter = Parameters[i];
+                if (Parameter == null)
+                {
+                    throw new InvalidOperationException(
+                        $"Effect parameter declaration at index {i} in {OwnerDescription} cannot be null.");
+                }
+
+                MGEffectParameterValue ConvertedParameter = Parameter.ToParameterValue();
                 if (!ParameterNames.Add(ConvertedParameter.Name))
                 {
-                    throw new InvalidOperationException($"Duplicate effect parameter name '{ConvertedParameter.Name}' in {nameof(EffectFillBrush)} '{EffectName}'. Names are case-sensitive and must be unique.");
+                    throw new InvalidOperationException(
+                        $"Duplicate effect parameter name '{ConvertedParameter.Name}' in {OwnerDescription}. Names are case-sensitive and must be unique.");
                 }
 
                 ConvertedParameters[i] = ConvertedParameter;
@@ -353,6 +363,15 @@ namespace MGUI.Core.UI.XAML
 
             return ConvertedParameters;
         }
+    }
+
+    [ContentProperty(nameof(Parameters))]
+    public class EffectFillBrush : FillBrush
+    {
+        public string EffectName { get; set; }
+        public bool UseStandardParameters { get; set; } = false;
+        public FillBrush FallbackBrush { get; set; }
+        public List<EffectParameter> Parameters { get; set; } = new();
 
         public override IFillBrush ToFillBrush(MGDesktop Desktop, MGElement Element)
         {
@@ -366,7 +385,9 @@ namespace MGUI.Core.UI.XAML
                 throw new ArgumentException($"{nameof(EffectFillBrush)}.{nameof(EffectName)} cannot be null, empty, or whitespace.", nameof(EffectName));
             }
 
-            MGEffectParameterValue[] ConvertedParameters = ConvertParameters();
+            MGEffectParameterValue[] ConvertedParameters = EffectParameterCollectionConverter.Convert(
+                Parameters,
+                $"{nameof(EffectFillBrush)} '{EffectName}'");
 
             if (!Desktop.Resources.TryGetEffect(EffectName, out Microsoft.Xna.Framework.Graphics.Effect Effect))
             {
@@ -527,24 +548,90 @@ namespace MGUI.Core.UI.XAML
         }
     }
 
+    [ContentProperty(nameof(Parameters))]
     public class NineSliceFillBrush : FillBrush
     {
         public string SourceName { get; set; }
         public Thickness? SourceMargin { get; set; }
         public FillBrush InteriorBrush { get; set; }
+        public string EffectName { get; set; }
+        public bool UseStandardParameters { get; set; } = false;
+        public List<EffectParameter> Parameters { get; set; } = new();
 
         /// <summary>The unscaled UI thickness used for destination slices. Rendering scales this through border UI scaling.</summary>
         public Thickness TargetMargin { get; set; }
 
         public override IFillBrush ToFillBrush(MGDesktop Desktop, MGElement Element)
         {
-            if (SourceName == null)
-                throw new ArgumentNullException(nameof(SourceName));
-            if (!Desktop.Resources.TryGetTexture(SourceName, out MGTextureData Source))
-                throw new InvalidOperationException($"No Texture was found with the name '{SourceName}' in {nameof(MGResources)}.{nameof(MGResources.Textures)}.");
+            Microsoft.Xna.Framework.Graphics.Effect Effect = null;
+            MGEffectParameterValue[] ConvertedParameters = Array.Empty<MGEffectParameterValue>();
+            if (EffectName == null)
+            {
+                if (UseStandardParameters)
+                {
+                    throw new InvalidOperationException(
+                        $"{nameof(NineSliceFillBrush)}.{nameof(UseStandardParameters)} requires a nonblank " +
+                        $"{nameof(NineSliceFillBrush)}.{nameof(EffectName)}.");
+                }
 
-            IFillBrush Brush = new MGNineSliceFillBrush(TargetMargin.ToThickness(), Source, SourceMargin?.ToThickness(), InteriorBrush?.ToFillBrush(Desktop, Element));
-            return Brush;
+                if (Parameters?.Count > 0)
+                {
+                    throw new InvalidOperationException(
+                        $"{nameof(NineSliceFillBrush)}.{nameof(Parameters)} cannot contain declarations without a nonblank " +
+                        $"{nameof(NineSliceFillBrush)}.{nameof(EffectName)}.");
+                }
+            }
+            else
+            {
+                if (string.IsNullOrWhiteSpace(EffectName))
+                {
+                    throw new ArgumentException(
+                        $"{nameof(NineSliceFillBrush)}.{nameof(EffectName)} cannot be empty or whitespace.",
+                        nameof(EffectName));
+                }
+
+                ConvertedParameters = EffectParameterCollectionConverter.Convert(
+                    Parameters,
+                    $"{nameof(NineSliceFillBrush)} '{EffectName}'");
+
+                if (!Desktop.Resources.TryGetEffect(EffectName, out Effect))
+                {
+                    throw new InvalidOperationException(
+                        $"No Effect was found with the name '{EffectName}' in {nameof(MGResources)}.{nameof(MGResources.Effects)}. " +
+                        $"Register it with {nameof(MGResources)}.{nameof(MGResources.AddEffect)} before XAML brush materialization.");
+                }
+            }
+
+            if (SourceName == null)
+            {
+                throw new ArgumentNullException(nameof(SourceName));
+            }
+
+            if (!Desktop.Resources.TryGetTexture(SourceName, out MGTextureData Source))
+            {
+                throw new InvalidOperationException($"No Texture was found with the name '{SourceName}' in {nameof(MGResources)}.{nameof(MGResources.Textures)}.");
+            }
+
+            IFillBrush MaterializedInteriorBrush = InteriorBrush?.ToFillBrush(Desktop, Element);
+            if (Effect == null)
+            {
+                return new MGNineSliceFillBrush(
+                    TargetMargin.ToThickness(),
+                    Source,
+                    SourceMargin?.ToThickness(),
+                    MaterializedInteriorBrush);
+            }
+
+            return new MGNineSliceFillBrush(
+                Effect,
+                TargetMargin.ToThickness(),
+                Source,
+                SourceMargin?.ToThickness(),
+                MaterializedInteriorBrush)
+            {
+                UseStandardParameters = UseStandardParameters,
+                Parameters = ConvertedParameters
+            };
         }
 
         protected internal override IEnumerable<(XAMLBindableBase, string)> GetNestedBindableObjects()
