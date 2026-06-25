@@ -22,6 +22,12 @@ public class MGEffectFillBrushRealEffectTests
     [InlineData("nine-slice-configuration")]
     [InlineData("nine-slice-shared-reuse")]
     [InlineData("nine-slice-coordinate-mapping")]
+    [InlineData("nine-slice-texture-sampling")]
+    [InlineData("nine-slice-coordinate-continuity")]
+    [InlineData("nine-slice-standard-custom-callback-render")]
+    [InlineData("nine-slice-shared-effect-render-aba")]
+    [InlineData("nine-slice-interior-effect-restoration")]
+    [InlineData("nine-slice-xaml-compiled-effect-render")]
     public void CompiledEffect_ParameterApplicationContractPasses(string Requirement)
     {
         Assert.True(Results.Value.TryGetValue(Requirement, out bool Passed), $"The live effect host did not report '{Requirement}'.");

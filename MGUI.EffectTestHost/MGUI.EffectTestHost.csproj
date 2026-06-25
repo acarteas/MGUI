@@ -10,6 +10,7 @@
     <ProjectReference Include="..\MGUI.Core\MGUI.Core.csproj" />
     <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" />
     <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.4.1" />
+    <PackageReference Include="Portable.Xaml" Version="0.26.0" />
   </ItemGroup>
   <Target Name="BuildEffectTestContent" BeforeTargets="BeforeBuild">
     <Exec Command="dotnet &quot;$(NuGetPackageRoot)dotnet-mgcb/3.8.4.1/tools/net8.0/any/mgcb.dll&quot; /quiet /@:&quot;$(MSBuildProjectDirectory)/Content/Content.mgcb&quot; /platform:DesktopGL /outputDir:&quot;$(MSBuildProjectDirectory)/Content/bin/DesktopGL/Content&quot; /intermediateDir:&quot;$(MSBuildProjectDirectory)/Content/obj/DesktopGL/$(TargetFramework)/Content&quot; /workingDir:&quot;$(MSBuildProjectDirectory)/Content&quot;" />

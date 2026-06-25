@@ -1,9 +1,16 @@
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using MGUI.Core.UI;
 using MGUI.Core.UI.Brushes.Fill_Brushes;
+using MGUI.Shared.Rendering;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using MonoGame.Extended;
+using MonoGame.Extended.VectorDraw;
+using Portable.Xaml;
+using XamlNineSliceFillBrush = MGUI.Core.UI.XAML.NineSliceFillBrush;
 
 namespace MGUI.EffectTestHost;
 
@@ -56,6 +63,8 @@ public static class Program
             RunCopyIndependence(Source);
             RunReusableBinding(Source);
             RunNineSliceBinding(Source);
+            RunNineSliceRendering(Source);
+            RunXamlNineSliceRendering(Source);
             Exit();
         }
 
@@ -297,6 +306,379 @@ public static class Program
                 Effect.Parameters["ElementTextureCoordinateOffset"].GetValueVector2() == SecondMapping.Offset &&
                 Effect.Parameters["ElementPosition"].GetValueVector2() == ElementPosition &&
                 Effect.Parameters["ElementSize"].GetValueVector2() == ElementSize;
+        }
+
+        private void RunNineSliceRendering(Effect Source)
+        {
+            using Texture2D Texture = CreateNineSliceTexture();
+            using Texture2D WhitePixel = CreateSolidTexture(Color.White);
+            using Effect FrameEffect = Source.Clone();
+            using Effect PreviousEffect = Source.Clone();
+            using Effect InteriorEffect = Source.Clone();
+
+            MGNineSliceFillBrush SamplingBrush = CreateRenderingBrush(FrameEffect, Texture, 100);
+            Color[] SamplingPixels = RenderBrush(SamplingBrush, PreviousEffect, 1.0f, default, out Effect RestoredEffect);
+            Results["nine-slice-texture-sampling"] =
+                ReferenceEquals(PreviousEffect, RestoredEffect) &&
+                NineSliceColors.Select((Color, Index) => NearColor(Color, GetRegionCenter(SamplingPixels, Index))).All(x => x);
+
+            MGNineSliceFillBrush CoordinateBrush = CreateRenderingBrush(FrameEffect, Texture, 101);
+            Color[] CoordinatePixels = RenderBrush(CoordinateBrush, PreviousEffect, 1.0f, default, out _);
+            Results["nine-slice-coordinate-continuity"] = HasContinuousCoordinates(CoordinatePixels);
+
+            bool CallbackObservedConfiguration = false;
+            MGNineSliceFillBrush StateBrush = CreateRenderingBrush(
+                FrameEffect,
+                Texture,
+                102,
+                (ConfiguredEffect, _, _, Bounds) =>
+                {
+                    CallbackObservedConfiguration =
+                        Bounds == RenderBounds &&
+                        Near(ConfiguredEffect.Parameters["Opacity"].GetValueSingle(), 0.5f) &&
+                        Near(ConfiguredEffect.Parameters["HoverAmount"].GetValueSingle(), 0.0f) &&
+                        Near(ConfiguredEffect.Parameters["PressAmount"].GetValueSingle(), 1.0f) &&
+                        Near(ConfiguredEffect.Parameters["SelectedAmount"].GetValueSingle(), 1.0f) &&
+                        Near(ConfiguredEffect.Parameters["DisabledAmount"].GetValueSingle(), 0.0f) &&
+                        ConfiguredEffect.Parameters["CustomInt"].GetValueInt32() == 102;
+                    ConfiguredEffect.Parameters["CustomColor"].SetValue(Color.CornflowerBlue.ToVector4());
+                });
+            StateBrush.Parameters = new[]
+            {
+                new MGEffectParameterValue("CustomInt", MGEffectParameterType.Int, 102),
+                new MGEffectParameterValue("CustomColor", MGEffectParameterType.Color, Color.Red.ToVector4())
+            };
+            VisualState State = new(PrimaryVisualState.Selected, SecondaryVisualState.Pressed);
+            Color[] StatePixels = RenderBrush(StateBrush, PreviousEffect, 0.5f, State, out _);
+            Results["nine-slice-standard-custom-callback-render"] =
+                CallbackObservedConfiguration &&
+                FrameEffect.Parameters["ElementPosition"].GetValueVector2() == RenderBounds.Location.ToVector2() &&
+                FrameEffect.Parameters["ElementSize"].GetValueVector2() == RenderBounds.Size.ToVector2() &&
+                NearColor(new Color(50, 75, 119, 128), GetPixel(StatePixels, 5, 5), 2);
+
+            MGNineSliceFillBrush SharedA = CreateRenderingBrush(FrameEffect, Texture, 102);
+            SharedA.Parameters = new[]
+            {
+                new MGEffectParameterValue("CustomInt", MGEffectParameterType.Int, 102),
+                new MGEffectParameterValue("CustomColor", MGEffectParameterType.Color, Color.Green.ToVector4())
+            };
+            MGNineSliceFillBrush SharedB = CreateRenderingBrush(FrameEffect, Texture, 102);
+            SharedB.Parameters = new[]
+            {
+                new MGEffectParameterValue("CustomInt", MGEffectParameterType.Int, 102),
+                new MGEffectParameterValue("CustomColor", MGEffectParameterType.Color, Color.Orange.ToVector4())
+            };
+            Color A1 = GetPixel(RenderBrush(SharedA, PreviousEffect, 1.0f, default, out _), 5, 5);
+            Color B = GetPixel(RenderBrush(SharedB, PreviousEffect, 1.0f, default, out _), 5, 5);
+            Color A2 = GetPixel(RenderBrush(SharedA, PreviousEffect, 1.0f, default, out _), 5, 5);
+            Results["nine-slice-shared-effect-render-aba"] =
+                NearColor(Color.Green, A1) &&
+                NearColor(Color.Orange, B) &&
+                NearColor(Color.Green, A2);
+
+            TrackingInteriorBrush Interior = new(InteriorEffect, WhitePixel, Color.Magenta);
+            MGNineSliceFillBrush FrameWithInterior = new(
+                FrameEffect,
+                new Thickness(10),
+                new MGTextureData(Texture),
+                new Thickness(1),
+                Interior)
+            {
+                UseStandardParameters = true,
+                Parameters = new[]
+                {
+                    new MGEffectParameterValue("CustomInt", MGEffectParameterType.Int, 100)
+                }
+            };
+            Color[] InteriorPixels = RenderBrush(FrameWithInterior, PreviousEffect, 1.0f, default, out RestoredEffect);
+            bool BorderSlicesPreserved = NineSliceColors
+                .Select((Color, Index) => Index == 4 || NearColor(Color, GetRegionCenter(InteriorPixels, Index)))
+                .All(x => x);
+            Results["nine-slice-interior-effect-restoration"] =
+                BorderSlicesPreserved &&
+                NearColor(Color.Magenta, GetRegionCenter(InteriorPixels, 4)) &&
+                ReferenceEquals(PreviousEffect, Interior.ObservedEffectBefore) &&
+                ReferenceEquals(PreviousEffect, Interior.ObservedEffectAfter) &&
+                ReferenceEquals(PreviousEffect, RestoredEffect);
+        }
+
+        private void RunXamlNineSliceRendering(Effect Source)
+        {
+            using Texture2D Texture = CreateNineSliceTexture();
+            using Effect Effect = Source.Clone();
+            using Effect PreviousEffect = Source.Clone();
+            MGResources Resources = new(new MGTheme("TestFont"));
+            Resources.AddTexture("NineSliceTexture", new MGTextureData(Texture));
+            Resources.AddEffect("NineSliceEffect", Effect);
+            string Xaml = """
+                <NineSliceFillBrush xmlns="clr-namespace:MGUI.Core.UI.XAML;assembly=MGUI.Core"
+                                    SourceName="NineSliceTexture"
+                                    SourceMargin="1"
+                                    TargetMargin="10"
+                                    EffectName="NineSliceEffect"
+                                    UseStandardParameters="True">
+                    <EffectParameter Name="CustomInt" Type="Int" Value="100" />
+                </NineSliceFillBrush>
+                """;
+            XamlNineSliceFillBrush Parsed = (XamlNineSliceFillBrush)XamlServices.Parse(Xaml);
+            MGNineSliceFillBrush Brush = (MGNineSliceFillBrush)Parsed.ToFillBrush(CreateDesktop(Resources), null);
+
+            Color[] Pixels = RenderBrush(Brush, PreviousEffect, 1.0f, default, out Effect RestoredEffect);
+
+            Results["nine-slice-xaml-compiled-effect-render"] =
+                ReferenceEquals(Effect, Brush.Effect) &&
+                ReferenceEquals(PreviousEffect, RestoredEffect) &&
+                NineSliceColors.Select((Color, Index) => NearColor(Color, GetRegionCenter(Pixels, Index))).All(x => x);
+        }
+
+        private Color[] RenderBrush(
+            MGNineSliceFillBrush Brush,
+            Effect PreviousEffect,
+            float Opacity,
+            VisualState State,
+            out Effect RestoredEffect)
+        {
+            using RenderTarget2D Target = new(
+                GraphicsDevice,
+                RenderSize,
+                RenderSize,
+                false,
+                SurfaceFormat.Color,
+                DepthFormat.None);
+            MainRenderer Renderer = CreateRenderer();
+            GraphicsDevice.SetRenderTarget(Target);
+            GraphicsDevice.Clear(Color.Transparent);
+            GraphicsDevice.ScissorRectangle = new Rectangle(0, 0, RenderSize, RenderSize);
+
+            using (DrawTransaction Transaction = new(
+                Renderer,
+                DrawSettings.Default with
+                {
+                    RasterizerType = RasterizerType.Solid,
+                    BlendType = BlendType.Opaque,
+                    SamplerType = SamplerType.PointClamp,
+                    Effect = PreviousEffect
+                },
+                true))
+            {
+                ElementDrawArgs Args = new(
+                    new DrawBaseArgs(TimeSpan.FromSeconds(7), Transaction, Opacity),
+                    State,
+                    Point.Zero);
+                Brush.Draw(Args, CreateElement(), RenderBounds);
+                RestoredEffect = Transaction.CurrentSettings.Effect;
+            }
+
+            Color[] Pixels = new Color[RenderSize * RenderSize];
+            Target.GetData(Pixels);
+            GraphicsDevice.SetRenderTarget(null);
+            Renderer.SpriteBatch.Dispose();
+            Renderer.PrimitiveBatch.Dispose();
+            return Pixels;
+        }
+
+        private MainRenderer CreateRenderer()
+        {
+            MainRenderer Renderer = (MainRenderer)RuntimeHelpers.GetUninitializedObject(typeof(MainRenderer));
+            SetField(Renderer, "<Host>k__BackingField", new TestRenderHost(GraphicsDevice));
+            SetField(Renderer, "<SpriteBatch>k__BackingField", new SpriteBatch(GraphicsDevice));
+            SetField(Renderer, "<PrimitiveBatch>k__BackingField", new PrimitiveBatch(GraphicsDevice, 64));
+            return Renderer;
+        }
+
+        private Texture2D CreateNineSliceTexture()
+        {
+            Texture2D Texture = new(GraphicsDevice, 3, 3);
+            Texture.SetData(NineSliceColors);
+            return Texture;
+        }
+
+        private Texture2D CreateSolidTexture(Color Color)
+        {
+            Texture2D Texture = new(GraphicsDevice, 1, 1);
+            Texture.SetData(new[] { Color });
+            return Texture;
+        }
+
+        private static MGNineSliceFillBrush CreateRenderingBrush(
+            Effect Effect,
+            Texture2D Texture,
+            int Mode,
+            Action<Effect, ElementDrawArgs, MGElement, Rectangle>? ConfigureEffect = null)
+            => new(
+                Effect,
+                new Thickness(10),
+                new MGTextureData(Texture),
+                new Thickness(1),
+                null,
+                ConfigureEffect)
+            {
+                UseStandardParameters = true,
+                Parameters = new[]
+                {
+                    new MGEffectParameterValue("CustomInt", MGEffectParameterType.Int, Mode)
+                }
+            };
+
+        private static bool HasContinuousCoordinates(Color[] Pixels)
+        {
+            Color TopLeft = GetPixel(Pixels, 0, 0);
+            Color BottomRight = GetPixel(Pixels, RenderSize - 1, RenderSize - 1);
+            if (TopLeft.R > 8 || TopLeft.G > 8 || BottomRight.R < 245 || BottomRight.G < 245)
+            {
+                return false;
+            }
+
+            for (int Coordinate = 0; Coordinate < RenderSize; Coordinate++)
+            {
+                Color Horizontal = GetPixel(Pixels, Coordinate, 15);
+                Color Vertical = GetPixel(Pixels, 15, Coordinate);
+                int Expected = (int)Math.Round((Coordinate + 0.5f) / RenderSize * 255.0f);
+                if (Math.Abs(Horizontal.R - Expected) > 3 ||
+                    Math.Abs(Vertical.G - Expected) > 3 ||
+                    Math.Abs(Horizontal.G - Vertical.R) > 3)
+                {
+                    return false;
+                }
+            }
+
+            return Math.Abs(GetPixel(Pixels, 9, 15).R - GetPixel(Pixels, 10, 15).R) <= 10 &&
+                Math.Abs(GetPixel(Pixels, 19, 15).R - GetPixel(Pixels, 20, 15).R) <= 10 &&
+                Math.Abs(GetPixel(Pixels, 15, 9).G - GetPixel(Pixels, 15, 10).G) <= 10 &&
+                Math.Abs(GetPixel(Pixels, 15, 19).G - GetPixel(Pixels, 15, 20).G) <= 10;
+        }
+
+        private static Color GetRegionCenter(Color[] Pixels, int RegionIndex)
+            => GetPixel(Pixels, RegionIndex % 3 * 10 + 5, RegionIndex / 3 * 10 + 5);
+
+        private static Color GetPixel(Color[] Pixels, int X, int Y) => Pixels[Y * RenderSize + X];
+
+        private static bool NearColor(Color Expected, Color Actual, int Tolerance = 1)
+            => Math.Abs(Expected.R - Actual.R) <= Tolerance &&
+               Math.Abs(Expected.G - Actual.G) <= Tolerance &&
+               Math.Abs(Expected.B - Actual.B) <= Tolerance &&
+               Math.Abs(Expected.A - Actual.A) <= Tolerance;
+
+        private static MGElement CreateElement()
+        {
+            TestElement Element = (TestElement)RuntimeHelpers.GetUninitializedObject(typeof(TestElement));
+            SetField(Element, "_UIScaleMode", UIScaleMode.Disabled);
+            return Element;
+        }
+
+        private static MGDesktop CreateDesktop(MGResources Resources)
+        {
+            MGDesktop Desktop = (MGDesktop)RuntimeHelpers.GetUninitializedObject(typeof(MGDesktop));
+            SetField(Desktop, "<Resources>k__BackingField", Resources);
+            return Desktop;
+        }
+
+        private static void SetField(object Instance, string Name, object? Value)
+        {
+            Type? Type = Instance.GetType();
+            while (Type != null)
+            {
+                FieldInfo? Field = Type.GetField(Name, BindingFlags.Instance | BindingFlags.NonPublic);
+                if (Field != null)
+                {
+                    Field.SetValue(Instance, Value);
+                    return;
+                }
+
+                Type = Type.BaseType;
+            }
+
+            throw new MissingFieldException(Instance.GetType().FullName, Name);
+        }
+
+        private const int RenderSize = 30;
+        private static readonly Rectangle RenderBounds = new(0, 0, RenderSize, RenderSize);
+        private static readonly Color[] NineSliceColors =
+        {
+            Color.Red,
+            Color.Green,
+            Color.Blue,
+            Color.Yellow,
+            Color.Cyan,
+            Color.Magenta,
+            Color.Orange,
+            Color.Purple,
+            Color.White
+        };
+
+        private sealed class TestElement : MGElement
+        {
+            private TestElement()
+                : base(default(MGWindow), MGElementType.Border)
+            {
+            }
+        }
+
+        private sealed class TrackingInteriorBrush : IFillBrush
+        {
+            private readonly Effect Effect;
+            private readonly Texture2D Texture;
+            private readonly Color Color;
+
+            public Effect? ObservedEffectBefore { get; private set; }
+            public Effect? ObservedEffectAfter { get; private set; }
+
+            public TrackingInteriorBrush(Effect Effect, Texture2D Texture, Color Color)
+            {
+                this.Effect = Effect;
+                this.Texture = Texture;
+                this.Color = Color;
+            }
+
+            public void Draw(ElementDrawArgs DA, MGElement Element, Rectangle Bounds)
+            {
+                ObservedEffectBefore = DA.DT.CurrentSettings.Effect;
+                Effect.Parameters["MatrixTransform"].SetValue(Matrix.CreateOrthographicOffCenter(
+                    0,
+                    DA.DT.GD.Viewport.Width,
+                    DA.DT.GD.Viewport.Height,
+                    0,
+                    0,
+                    -1));
+                Effect.Parameters["CustomInt"].SetValue(103);
+                Effect.Parameters["CustomColor"].SetValue(Color.ToVector4());
+
+                using (DA.DT.SetEffectTemporary(Effect))
+                {
+                    DA.DT.DrawTextureTo(Texture, null, Bounds, Microsoft.Xna.Framework.Color.White * DA.Opacity);
+                }
+
+                ObservedEffectAfter = DA.DT.CurrentSettings.Effect;
+            }
+
+            public IFillBrush Copy() => new TrackingInteriorBrush(Effect, Texture, Color);
+        }
+
+        private sealed class TestRenderHost : IRenderHost
+        {
+            public GraphicsDevice GraphicsDevice { get; }
+
+            public event EventHandler<TimeSpan>? PreviewUpdate
+            {
+                add { }
+                remove { }
+            }
+
+            public event EventHandler<EventArgs>? EndUpdate
+            {
+                add { }
+                remove { }
+            }
+
+            public TestRenderHost(GraphicsDevice GraphicsDevice)
+            {
+                this.GraphicsDevice = GraphicsDevice;
+            }
+
+            public Rectangle GetBounds() => new(0, 0, RenderSize, RenderSize);
+            public MouseState GetMouseState() => default;
+            public KeyboardState GetKeyboardState() => default;
+            public object? GetService(Type ServiceType) => null;
         }
 
         private static MGEffectFillBrush CreateRoleBrush(Effect Effect, int Role, Color Accent)
