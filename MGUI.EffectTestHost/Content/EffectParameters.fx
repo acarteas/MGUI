@@ -1,6 +1,8 @@
 float4x4 MatrixTransform;
 float2 ElementPosition;
 float2 ElementSize;
+float2 ElementTextureCoordinateScale;
+float2 ElementTextureCoordinateOffset;
 float Opacity;
 float TimeSeconds;
 float HoverAmount;
@@ -32,6 +34,7 @@ float4 SpritePixelShader(PixelShaderInput input) : COLOR0
 {
     float keep = CustomFloat + CustomInt + (CustomBool ? 1.0 : 0.0) + CustomVector2.x + CustomVector3.x +
         CustomVector4.x + CustomColor.x + IncompatibleScalar + ElementPosition.x + ElementSize.x + Opacity +
+        ElementTextureCoordinateScale.x + ElementTextureCoordinateOffset.x +
         TimeSeconds + HoverAmount + PressAmount + SelectedAmount + DisabledAmount;
     return input.Color + keep * 0.0000001;
 }

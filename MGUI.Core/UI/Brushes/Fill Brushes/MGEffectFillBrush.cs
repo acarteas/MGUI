@@ -31,6 +31,10 @@ namespace MGUI.Core.UI.Brushes.Fill_Brushes
         float SelectedAmount,
         float DisabledAmount);
 
+    internal readonly record struct MGElementTextureCoordinateMapping(
+        Vector2 Scale,
+        Vector2 Offset);
+
     /// <summary>
     /// An <see cref="IFillBrush"/> that fills its bounds by drawing a white pixel through a caller-supplied MonoGame <see cref="Effect"/>.
     /// The consuming game owns shader compilation, backend compatibility, parameter naming, and the lifetime of <see cref="Effect"/>.

@@ -72,6 +72,17 @@ namespace MGUI.Core.UI.Brushes.Fill_Brushes
             };
         }
 
+        public void ApplyElementTextureCoordinateMapping(MGElementTextureCoordinateMapping Mapping)
+        {
+            if (Effect == null || !UseStandardParameters)
+            {
+                return;
+            }
+
+            SetParameter("ElementTextureCoordinateScale", nameof(Vector2), x => x.SetValue(Mapping.Scale));
+            SetParameter("ElementTextureCoordinateOffset", nameof(Vector2), x => x.SetValue(Mapping.Offset));
+        }
+
         public static MGStandardEffectParameterValues CalculateStandardParameters(
             TimeSpan Time,
             Matrix Transform,

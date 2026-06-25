@@ -193,20 +193,95 @@ namespace MGUI.Tests.UI
         }
 
         [Fact]
+        public void TextureRegionParticipation_ExcludesEmptySourceRegions()
+        {
+            MGTextureData empty = new(CreateTexture(), Rectangle.Empty);
+            MGNineSliceFillBrush brush = new(
+                new Thickness(1),
+                new MGTextureData(CreateTexture(), new Rectangle(0, 0, 1, 1)),
+                new MGTextureData(CreateTexture(), new Rectangle(1, 0, 0, 1)),
+                new MGTextureData(CreateTexture(), new Rectangle(2, 0, 1, 1)),
+                empty, empty, empty,
+                empty, empty, empty);
+
+            IReadOnlyList<(MGTextureData Texture, Rectangle Destination)> actual =
+                brush.GetTextureBackedRegions(CreateUnitRegions());
+
+            Assert.Equal(2, actual.Count);
+            Assert.DoesNotContain(actual, x => x.Texture.SourceRect == new Rectangle(1, 0, 0, 1));
+        }
+
+        [Fact]
+        public void TextureCoordinateMapping_MapsCroppedSourceUvToWholeDestinationCoordinates()
+        {
+            Rectangle source = new(50, 10, 20, 15);
+            Point textureSize = new(200, 100);
+            Rectangle sliceDestination = new(10, 20, 30, 25);
+            Rectangle completeDestination = new(10, 20, 200, 100);
+
+            MGElementTextureCoordinateMapping mapping =
+                MGNineSliceFillBrush.CalculateElementTextureCoordinateMapping(
+                    source, textureSize, sliceDestination, completeDestination);
+
+            AssertVectorNear(new Vector2(0, 0), TransformTextureCoordinate(mapping, new Vector2(0.25f, 0.1f)));
+            AssertVectorNear(new Vector2(0.15f, 0.25f), TransformTextureCoordinate(mapping, new Vector2(0.35f, 0.25f)));
+        }
+
+        [Fact]
+        public void TextureCoordinateMappings_AreContinuousAcrossAsymmetricScaledSlices()
+        {
+            Rectangle sourceBounds = new(17, 9, 180, 90);
+            Rectangle destinationBounds = new(11, 23, 300, 160);
+            MGNineSliceFillBrush.NineSliceRegions sources =
+                MGNineSliceFillBrush.GetRegions(sourceBounds, new Thickness(13, 17, 29, 19));
+            MGNineSliceFillBrush.NineSliceRegions destinations =
+                MGNineSliceFillBrush.GetRegions(destinationBounds, new Thickness(26, 34, 58, 38));
+            Rectangle[] sourceSlices = GetRegions(sources);
+            Rectangle[] destinationSlices = GetRegions(destinations);
+
+            for (int i = 0; i < sourceSlices.Length; i++)
+            {
+                Rectangle source = sourceSlices[i];
+                Rectangle destination = destinationSlices[i];
+                MGElementTextureCoordinateMapping mapping =
+                    MGNineSliceFillBrush.CalculateElementTextureCoordinateMapping(
+                        source, new Point(256, 128), destination, destinationBounds);
+                Vector2 sourceStart = new((float)source.Left / 256, (float)source.Top / 128);
+                Vector2 sourceEnd = new((float)source.Right / 256, (float)source.Bottom / 128);
+                Vector2 expectedStart = new(
+                    (float)(destination.Left - destinationBounds.Left) / destinationBounds.Width,
+                    (float)(destination.Top - destinationBounds.Top) / destinationBounds.Height);
+                Vector2 expectedEnd = new(
+                    (float)(destination.Right - destinationBounds.Left) / destinationBounds.Width,
+                    (float)(destination.Bottom - destinationBounds.Top) / destinationBounds.Height);
+
+                AssertVectorNear(expectedStart, TransformTextureCoordinate(mapping, sourceStart));
+                AssertVectorNear(expectedEnd, TransformTextureCoordinate(mapping, sourceEnd));
+            }
+        }
+
+        [Fact]
         public void EffectScope_ActivatesEffectAndRestoresPreviousEffect()
         {
             Effect previousEffect = CreateEffect();
             Effect frameEffect = CreateEffect();
             DrawTransaction transaction = CreateTransaction(DrawSettings.Default with { Effect = previousEffect });
             Effect? observedEffect = null;
+            SpriteSortMode? observedSort = null;
 
             MGNineSliceFillBrush.DrawWithEffectTemporary(
                 transaction,
                 frameEffect,
-                () => observedEffect = transaction.CurrentSettings.Effect);
+                () =>
+                {
+                    observedEffect = transaction.CurrentSettings.Effect;
+                    observedSort = transaction.CurrentSettings.Sort;
+                });
 
             Assert.Same(frameEffect, observedEffect);
+            Assert.Equal(SpriteSortMode.Immediate, observedSort);
             Assert.Same(previousEffect, transaction.CurrentSettings.Effect);
+            Assert.Equal(SpriteSortMode.Deferred, transaction.CurrentSettings.Sort);
         }
 
         [Fact]
@@ -285,6 +360,31 @@ namespace MGUI.Tests.UI
                 new Rectangle(1, 2, 1, 1),
                 new Rectangle(2, 2, 1, 1));
 
+        private static Rectangle[] GetRegions(MGNineSliceFillBrush.NineSliceRegions Regions)
+            => new[]
+            {
+                Regions.TopLeft,
+                Regions.TopCenter,
+                Regions.TopRight,
+                Regions.MiddleLeft,
+                Regions.MiddleCenter,
+                Regions.MiddleRight,
+                Regions.BottomLeft,
+                Regions.BottomCenter,
+                Regions.BottomRight
+            };
+
+        private static Vector2 TransformTextureCoordinate(
+            MGElementTextureCoordinateMapping Mapping,
+            Vector2 TextureCoordinate)
+            => TextureCoordinate * Mapping.Scale + Mapping.Offset;
+
+        private static void AssertVectorNear(Vector2 Expected, Vector2 Actual)
+        {
+            Assert.InRange(Math.Abs(Expected.X - Actual.X), 0, 0.00001f);
+            Assert.InRange(Math.Abs(Expected.Y - Actual.Y), 0, 0.00001f);
+        }
+
         private static DrawTransaction CreateTransaction(DrawSettings settings)
         {
             DrawTransaction transaction = (DrawTransaction)RuntimeHelpers.GetUninitializedObject(typeof(DrawTransaction));
@@ -294,6 +394,9 @@ namespace MGUI.Tests.UI
 
         private static Effect CreateEffect()
             => (Effect)RuntimeHelpers.GetUninitializedObject(typeof(Effect));
+
+        private static Texture2D CreateTexture()
+            => (Texture2D)RuntimeHelpers.GetUninitializedObject(typeof(Texture2D));
 
         private static TestElement CreateElement(Action<MGScaleSettings> configureScale)
         {

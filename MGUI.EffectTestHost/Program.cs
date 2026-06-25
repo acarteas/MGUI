@@ -277,6 +277,26 @@ public static class Program
                 OtherApplied &&
                 Effect.Parameters["CustomInt"].GetValueInt32() == 21 &&
                 CallbackCount == 2;
+
+            Vector2 ElementPosition = Effect.Parameters["ElementPosition"].GetValueVector2();
+            Vector2 ElementSize = Effect.Parameters["ElementSize"].GetValueVector2();
+            MGElementTextureCoordinateMapping FirstMapping = new(
+                new Vector2(1.5f, 2.5f),
+                new Vector2(-0.25f, 0.125f));
+            MGElementTextureCoordinateMapping SecondMapping = new(
+                new Vector2(3.5f, 4.5f),
+                new Vector2(-0.75f, 0.625f));
+            Brush.ApplyElementTextureCoordinateMapping(FirstMapping);
+            bool FirstMappingApplied =
+                Effect.Parameters["ElementTextureCoordinateScale"].GetValueVector2() == FirstMapping.Scale &&
+                Effect.Parameters["ElementTextureCoordinateOffset"].GetValueVector2() == FirstMapping.Offset;
+            Brush.ApplyElementTextureCoordinateMapping(SecondMapping);
+            Results["nine-slice-coordinate-mapping"] =
+                FirstMappingApplied &&
+                Effect.Parameters["ElementTextureCoordinateScale"].GetValueVector2() == SecondMapping.Scale &&
+                Effect.Parameters["ElementTextureCoordinateOffset"].GetValueVector2() == SecondMapping.Offset &&
+                Effect.Parameters["ElementPosition"].GetValueVector2() == ElementPosition &&
+                Effect.Parameters["ElementSize"].GetValueVector2() == ElementSize;
         }
 
         private static MGEffectFillBrush CreateRoleBrush(Effect Effect, int Role, Color Accent)

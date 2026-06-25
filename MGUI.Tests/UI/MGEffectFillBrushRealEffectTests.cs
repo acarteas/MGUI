@@ -21,6 +21,7 @@ public class MGEffectFillBrushRealEffectTests
     [InlineData("reusable-binding")]
     [InlineData("nine-slice-configuration")]
     [InlineData("nine-slice-shared-reuse")]
+    [InlineData("nine-slice-coordinate-mapping")]
     public void CompiledEffect_ParameterApplicationContractPasses(string Requirement)
     {
         Assert.True(Results.Value.TryGetValue(Requirement, out bool Passed), $"The live effect host did not report '{Requirement}'.");
