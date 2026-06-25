@@ -14,7 +14,7 @@
         <StackPanel Orientation="Vertical" Spacing="10">
             <TextBlock StyleNames="Header" Text="Declarative shader-backed action buttons" HorizontalAlignment="Center" />
             <TextBlock Text="{MGBinding ShaderStatusText}" Foreground="{MGBinding ShaderStatusColor}" />
-            <TextBlock WrapText="True">The game loads and registers one caller-owned DesktopGL Effect before XAML materialization. Every shader button below resolves that same resource, binds standard values, and supplies its own constant accent and role.</TextBlock>
+            <TextBlock WrapText="True">The game loads and registers one caller-owned DesktopGL Effect before XAML materialization. Every brush below resolves that same resource, binds standard values, and supplies the complete custom state vector. Parameters unused by a brush mode are explicitly neutral so draw order cannot leak shared Effect state.</TextBlock>
             <Separator />
 
             <TextBlock StyleNames="Header" Text="Action states" />
@@ -26,6 +26,8 @@
                             <EffectFillBrush.FallbackBrush><SolidFillBrush Color="rgb(48,58,65)" /></EffectFillBrush.FallbackBrush>
                             <EffectParameter Name="AccentColor" Type="Color" Value="rgb(110,158,180)" />
                             <EffectParameter Name="ButtonRole" Type="Float" Value="0" />
+                            <EffectParameter Name="TreatmentDirection" Type="Vector2" Value="0,0" />
+                            <EffectParameter Name="TreatmentStrength" Type="Float" Value="0" />
                         </EffectFillBrush>
                     </Button.Background>
                     <StackPanel Orientation="Horizontal" Spacing="8"><Image SourceName="ShaderActionIcon" Width="24" Height="24" /><TextBlock Text="Normal" VerticalAlignment="Center" /></StackPanel>
@@ -38,6 +40,8 @@
                             <EffectFillBrush.FallbackBrush><SolidFillBrush Color="rgb(34,72,76)" /></EffectFillBrush.FallbackBrush>
                             <EffectParameter Name="AccentColor" Type="Color" Value="rgb(71,214,193)" />
                             <EffectParameter Name="ButtonRole" Type="Float" Value="1" />
+                            <EffectParameter Name="TreatmentDirection" Type="Vector2" Value="0,0" />
+                            <EffectParameter Name="TreatmentStrength" Type="Float" Value="0" />
                         </EffectFillBrush>
                     </Button.Background>
                     <StackPanel Orientation="Horizontal" Spacing="8"><Image SourceName="ShaderActionIcon" Width="24" Height="24" /><TextBlock Text="Primary" VerticalAlignment="Center" /></StackPanel>
@@ -50,6 +54,8 @@
                             <EffectFillBrush.FallbackBrush><SolidFillBrush Color="rgb(53,48,75)" /></EffectFillBrush.FallbackBrush>
                             <EffectParameter Name="AccentColor" Type="Color" Value="rgb(202,144,255)" />
                             <EffectParameter Name="ButtonRole" Type="Float" Value="0" />
+                            <EffectParameter Name="TreatmentDirection" Type="Vector2" Value="0,0" />
+                            <EffectParameter Name="TreatmentStrength" Type="Float" Value="0" />
                         </EffectFillBrush>
                     </ToggleButton.Background>
                     <ToggleButton.SelectedBackground>
@@ -57,6 +63,8 @@
                             <EffectFillBrush.FallbackBrush><SolidFillBrush Color="rgb(91,63,123)" /></EffectFillBrush.FallbackBrush>
                             <EffectParameter Name="AccentColor" Type="Color" Value="rgb(202,144,255)" />
                             <EffectParameter Name="ButtonRole" Type="Float" Value="1" />
+                            <EffectParameter Name="TreatmentDirection" Type="Vector2" Value="0,0" />
+                            <EffectParameter Name="TreatmentStrength" Type="Float" Value="0" />
                         </EffectFillBrush>
                     </ToggleButton.SelectedBackground>
                     <StackPanel Orientation="Horizontal" Spacing="8"><Image SourceName="ShaderActionIcon" Width="24" Height="24" /><TextBlock Text="Selected" VerticalAlignment="Center" /></StackPanel>
@@ -70,6 +78,8 @@
                             <EffectFillBrush.FallbackBrush><SolidFillBrush Color="rgb(55,58,61)" /></EffectFillBrush.FallbackBrush>
                             <EffectParameter Name="AccentColor" Type="Color" Value="rgb(130,137,143)" />
                             <EffectParameter Name="ButtonRole" Type="Float" Value="0" />
+                            <EffectParameter Name="TreatmentDirection" Type="Vector2" Value="0,0" />
+                            <EffectParameter Name="TreatmentStrength" Type="Float" Value="0" />
                         </EffectFillBrush>
                     </Button.DisabledBackground>
                     <StackPanel Orientation="Horizontal" Spacing="8"><Image SourceName="ShaderActionIcon" Width="24" Height="24" /><TextBlock Text="Disabled" VerticalAlignment="Center" /></StackPanel>
@@ -77,6 +87,49 @@
             </UniformGrid>
 
             <TextBlock WrapText="True">Hover and press the first two controls naturally. The selected toggle and disabled button demonstrate primary-state slots. Icons and labels remain ordinary MGUI content; the effect shades only each rectangular background fill.</TextBlock>
+            <Separator />
+
+            <TextBlock StyleNames="Header" Text="Effect-backed ornamental nine-slices" />
+            <TextBlock WrapText="True">Both frames sample the SpriteBatch-bound source texture and use one whole-element directional treatment across all texture-backed slices. The left center remains texture-backed and receives the effect. The right center is replaced by an InteriorBrush, so it retains its own solid fill and is not shaded by the frame effect.</TextBlock>
+            <UniformGrid Columns="2" ColumnSpacing="12">
+                <StackPanel Orientation="Vertical" Spacing="4">
+                    <TextBlock Text="Texture-backed center" HorizontalAlignment="Center" />
+                    <Border Height="150" Padding="30" BorderThickness="0">
+                        <Border.Background>
+                            <NineSliceFillBrush SourceName="ShaderOrnamentalFrame" SourceMargin="52" TargetMargin="24"
+                                                EffectName="SampleUiEffect" UseStandardParameters="True">
+                                <EffectParameter Name="AccentColor" Type="Color" Value="White" />
+                                <EffectParameter Name="ButtonRole" Type="Float" Value="0" />
+                                <EffectParameter Name="TreatmentDirection" Type="Vector2" Value="1,0.65" />
+                                <EffectParameter Name="TreatmentStrength" Type="Float" Value="0.75" />
+                            </NineSliceFillBrush>
+                        </Border.Background>
+                        <TextBlock Text="The woven center is sampled and shaded." WrapText="True"
+                                   TextAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                </StackPanel>
+
+                <StackPanel Orientation="Vertical" Spacing="4">
+                    <TextBlock Text="Separate InteriorBrush" HorizontalAlignment="Center" />
+                    <Border Height="150" Padding="30" BorderThickness="0">
+                        <Border.Background>
+                            <NineSliceFillBrush SourceName="ShaderOrnamentalFrame" SourceMargin="52" TargetMargin="24"
+                                                EffectName="SampleUiEffect" UseStandardParameters="True">
+                                <NineSliceFillBrush.InteriorBrush>
+                                    <SolidFillBrush Color="rgb(34,43,52)" />
+                                </NineSliceFillBrush.InteriorBrush>
+                                <EffectParameter Name="AccentColor" Type="Color" Value="White" />
+                                <EffectParameter Name="ButtonRole" Type="Float" Value="0" />
+                                <EffectParameter Name="TreatmentDirection" Type="Vector2" Value="1,0.65" />
+                                <EffectParameter Name="TreatmentStrength" Type="Float" Value="0.75" />
+                            </NineSliceFillBrush>
+                        </Border.Background>
+                        <TextBlock Text="Only the eight texture-backed frame slices are shaded." WrapText="True"
+                                   TextAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                </StackPanel>
+            </UniformGrid>
+            <TextBlock WrapText="True">The effect is fill-only: it does not shade the InteriorBrush, these labels, child content, or any element subtree.</TextBlock>
             <Separator />
 
             <TextBlock StyleNames="Header" Text="Non-shader conventional comparison" />
@@ -100,6 +153,8 @@
                         <EffectFillBrush.FallbackBrush><SolidFillBrush Color="rgb(39,67,52)" /></EffectFillBrush.FallbackBrush>
                         <EffectParameter Name="AccentColor" Type="Color" Value="rgb(83,222,139)" />
                         <EffectParameter Name="ButtonRole" Type="Float" Value="2" />
+                        <EffectParameter Name="TreatmentDirection" Type="Vector2" Value="0,0" />
+                        <EffectParameter Name="TreatmentStrength" Type="Float" Value="0" />
                     </EffectFillBrush>
                 </Border.Background>
                 <TextBlock Text="[b]Attention pulse[/b]\nOnly this example animates with TimeSeconds." WrapText="True" />

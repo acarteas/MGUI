@@ -10,6 +10,12 @@ float SelectedAmount;
 float DisabledAmount;
 float ButtonRole;
 float4 AccentColor;
+float2 ElementTextureCoordinateScale;
+float2 ElementTextureCoordinateOffset;
+float2 TreatmentDirection;
+float TreatmentStrength;
+
+sampler2D SpriteTextureSampler : register(s0);
 
 struct VertexShaderInput
 {
@@ -42,11 +48,22 @@ float EdgeDistance(float2 uv)
 
 float4 UiPixelShader(PixelShaderInput input) : COLOR0
 {
-    float2 uv = saturate(input.TextureCoordinate);
+    float2 textureCoordinate = input.TextureCoordinate;
+    float2 uv = saturate(textureCoordinate);
     float edgeDistance = EdgeDistance(uv);
     float rim = 1.0 - smoothstep(0.5, 3.0, edgeDistance);
     float3 baseColor = AccentColor.rgb * lerp(0.34, 0.48, saturate(ButtonRole));
     float4 result = float4(baseColor, AccentColor.a);
+    float4 sampledColor = tex2D(SpriteTextureSampler, textureCoordinate);
+
+    float2 wholeElementCoordinate =
+        textureCoordinate * ElementTextureCoordinateScale + ElementTextureCoordinateOffset;
+    float directionLength = max(length(TreatmentDirection), 0.0001);
+    float directionalAmount = dot(
+        wholeElementCoordinate - float2(0.5, 0.5),
+        TreatmentDirection / directionLength);
+    float directionalTreatment = 1.0 + directionalAmount * TreatmentStrength;
+    sampledColor.rgb *= directionalTreatment;
 
     if (ButtonRole > 1.5)
     {
@@ -62,7 +79,7 @@ float4 UiPixelShader(PixelShaderInput input) : COLOR0
 
     // Opacity is contextual only: input.Color already carries draw opacity, so alpha is not multiplied twice.
     result.rgb = lerp(result.rgb * 0.92, result.rgb, saturate(Opacity));
-    return input.Color * result;
+    return input.Color * result * sampledColor;
 }
 
 technique SpriteDrawing
