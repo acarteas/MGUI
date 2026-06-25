@@ -3,6 +3,7 @@ using MGUI.Core.UI;
 using MGUI.Core.UI.Brushes.Fill_Brushes;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MonoGame.Extended;
 
 namespace MGUI.EffectTestHost;
 
@@ -54,6 +55,7 @@ public static class Program
             RunReplacement(Source);
             RunCopyIndependence(Source);
             RunReusableBinding(Source);
+            RunNineSliceBinding(Source);
             Exit();
         }
 
@@ -226,6 +228,55 @@ public static class Program
             Results["reusable-binding"] =
                 CallbackObservedConstants &&
                 Near(Effect.Parameters["Opacity"].GetValueSingle(), 0.95f);
+        }
+
+        private void RunNineSliceBinding(Effect Source)
+        {
+            using Effect Effect = Source.Clone();
+            Rectangle Bounds = new(12, 23, 34, 45);
+            int CallbackCount = 0;
+            MGNineSliceFillBrush Brush = new(
+                Effect,
+                new Thickness(1),
+                default, default, default,
+                default, default, default,
+                default, default, default,
+                null,
+                (ConfiguredEffect, _, _, ConfiguredBounds) =>
+                {
+                    CallbackCount++;
+                    if (ConfiguredBounds == Bounds &&
+                        Near(ConfiguredEffect.Parameters["Opacity"].GetValueSingle(), 0.65f) &&
+                        ConfiguredEffect.Parameters["CustomInt"].GetValueInt32() == 21)
+                    {
+                        ConfiguredEffect.Parameters["Opacity"].SetValue(0.9f);
+                    }
+                })
+            {
+                UseStandardParameters = true,
+                Parameters = new[]
+                {
+                    new MGEffectParameterValue("Opacity", MGEffectParameterType.Float, 0.65f),
+                    new MGEffectParameterValue("CustomInt", MGEffectParameterType.Int, 21)
+                }
+            };
+
+            Brush.ApplyEffectConfiguration(CreateValues(default, 0.25f, 5), default, null, Bounds);
+            Results["nine-slice-configuration"] =
+                CallbackCount == 1 &&
+                Near(Effect.Parameters["Opacity"].GetValueSingle(), 0.9f) &&
+                Effect.Parameters["CustomInt"].GetValueInt32() == 21;
+
+            MGNineSliceFillBrush Other = (MGNineSliceFillBrush)Brush.Copy();
+            Other.Parameters = new[] { new MGEffectParameterValue("CustomInt", MGEffectParameterType.Int, 22) };
+            Other.ConfigureEffect = null;
+            Other.ApplyEffectConfiguration(CreateValues(default, 0.4f, 6), default, null, Bounds);
+            bool OtherApplied = Effect.Parameters["CustomInt"].GetValueInt32() == 22;
+            Brush.ApplyEffectConfiguration(CreateValues(default, 0.25f, 5), default, null, Bounds);
+            Results["nine-slice-shared-reuse"] =
+                OtherApplied &&
+                Effect.Parameters["CustomInt"].GetValueInt32() == 21 &&
+                CallbackCount == 2;
         }
 
         private static MGEffectFillBrush CreateRoleBrush(Effect Effect, int Role, Color Accent)

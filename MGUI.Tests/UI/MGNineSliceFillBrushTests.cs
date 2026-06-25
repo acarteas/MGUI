@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using MGUI.Core.UI;
 using MGUI.Core.UI.Brushes.Fill_Brushes;
 using MGUI.Shared.Helpers;
+using MGUI.Shared.Rendering;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended;
 using Xunit;
 
@@ -110,6 +113,187 @@ namespace MGUI.Tests.UI
             Assert.NotSame(interiorBrush, copiedInteriorBrush);
             Assert.True(interiorBrush.WasCopied);
         }
+
+        [Fact]
+        public void EffectConstructor_StoresRuntimeConfiguration()
+        {
+            Effect effect = CreateEffect();
+            Action<Effect, ElementDrawArgs, MGElement, Rectangle> configureEffect = (_, _, _, _) => { };
+
+            MGNineSliceFillBrush brush = CreateBrush(effect, null, configureEffect);
+
+            Assert.Same(effect, brush.Effect);
+            Assert.Same(configureEffect, brush.ConfigureEffect);
+            Assert.False(brush.UseStandardParameters);
+            Assert.Empty(brush.Parameters);
+            Assert.True(brush.HasEffectBinding);
+        }
+
+        [Fact]
+        public void LegacySourceConstructor_DoesNotCreateEffectBinding()
+        {
+            Texture2D texture = (Texture2D)RuntimeHelpers.GetUninitializedObject(typeof(Texture2D));
+            MGTextureData source = new(texture, new Rectangle(0, 0, 3, 3));
+
+            MGNineSliceFillBrush brush = new(new Thickness(1), source, new Thickness(1));
+
+            Assert.False(brush.HasEffectBinding);
+            Assert.False(Assert.IsType<MGNineSliceFillBrush>(brush.Copy()).HasEffectBinding);
+        }
+
+        [Fact]
+        public void LegacyExplicitSliceConstructor_DoesNotCreateEffectBinding()
+        {
+            MGNineSliceFillBrush brush = CreateBrush();
+
+            Assert.False(brush.HasEffectBinding);
+            Assert.False(Assert.IsType<MGNineSliceFillBrush>(brush.Copy()).HasEffectBinding);
+        }
+
+        [Fact]
+        public void EffectFreeBrush_IncludesAllNineNonEmptyTextureRegions()
+        {
+            MGNineSliceFillBrush brush = CreateBrush();
+
+            IReadOnlyList<(MGTextureData Texture, Rectangle Destination)> regions =
+                brush.GetTextureBackedRegions(CreateUnitRegions());
+
+            Assert.Equal(9, regions.Count);
+            Assert.Same(brush.MiddleCenter.Texture, regions[4].Texture.Texture);
+        }
+
+        [Fact]
+        public void ExplicitInteriorBrush_ExcludesCenterFromTextureEffectParticipation()
+        {
+            MGNineSliceFillBrush brush = CreateBrush(null, new TestFillBrush());
+
+            IReadOnlyList<(MGTextureData Texture, Rectangle Destination)> regions =
+                brush.GetTextureBackedRegions(CreateUnitRegions());
+
+            Assert.Equal(8, regions.Count);
+            Assert.DoesNotContain(regions, x => ReferenceEquals(x.Texture.Texture, brush.MiddleCenter.Texture));
+        }
+
+        [Fact]
+        public void TextureRegionParticipation_ExcludesEmptyRegions()
+        {
+            MGNineSliceFillBrush brush = CreateBrush();
+            MGNineSliceFillBrush.NineSliceRegions regions = CreateUnitRegions() with
+            {
+                TopCenter = new Rectangle(1, 0, 0, 1),
+                MiddleLeft = new Rectangle(0, 1, 1, -1)
+            };
+
+            IReadOnlyList<(MGTextureData Texture, Rectangle Destination)> actual =
+                brush.GetTextureBackedRegions(regions);
+
+            Assert.Equal(7, actual.Count);
+            Assert.DoesNotContain(actual, x => ReferenceEquals(x.Texture.Texture, brush.TopCenter.Texture));
+            Assert.DoesNotContain(actual, x => ReferenceEquals(x.Texture.Texture, brush.MiddleLeft.Texture));
+        }
+
+        [Fact]
+        public void EffectScope_ActivatesEffectAndRestoresPreviousEffect()
+        {
+            Effect previousEffect = CreateEffect();
+            Effect frameEffect = CreateEffect();
+            DrawTransaction transaction = CreateTransaction(DrawSettings.Default with { Effect = previousEffect });
+            Effect? observedEffect = null;
+
+            MGNineSliceFillBrush.DrawWithEffectTemporary(
+                transaction,
+                frameEffect,
+                () => observedEffect = transaction.CurrentSettings.Effect);
+
+            Assert.Same(frameEffect, observedEffect);
+            Assert.Same(previousEffect, transaction.CurrentSettings.Effect);
+        }
+
+        [Fact]
+        public void EffectScope_RestoresPreviousEffectAfterException()
+        {
+            Effect previousEffect = CreateEffect();
+            Effect frameEffect = CreateEffect();
+            DrawTransaction transaction = CreateTransaction(DrawSettings.Default with { Effect = previousEffect });
+
+            Assert.Throws<InvalidOperationException>(() =>
+                MGNineSliceFillBrush.DrawWithEffectTemporary(
+                    transaction,
+                    frameEffect,
+                    () => throw new InvalidOperationException("Test failure.")));
+
+            Assert.Same(previousEffect, transaction.CurrentSettings.Effect);
+        }
+
+        [Fact]
+        public void Copy_PreservesEffectConfigurationAndCopiesMutableStateIndependently()
+        {
+            Effect effect = CreateEffect();
+            TestFillBrush interiorBrush = new();
+            Action<Effect, ElementDrawArgs, MGElement, Rectangle> configureEffect = (_, _, _, _) => { };
+            MGNineSliceFillBrush brush = CreateBrush(effect, interiorBrush, configureEffect);
+            brush.UseStandardParameters = true;
+            brush.Parameters = new[] { new MGEffectParameterValue("Role", MGEffectParameterType.Int, 3) };
+
+            MGNineSliceFillBrush copy = Assert.IsType<MGNineSliceFillBrush>(brush.Copy());
+            brush.Parameters = new[] { new MGEffectParameterValue("Role", MGEffectParameterType.Int, 4) };
+
+            Assert.Same(effect, copy.Effect);
+            Assert.Same(configureEffect, copy.ConfigureEffect);
+            Assert.True(copy.UseStandardParameters);
+            Assert.Equal(3, copy.Parameters[0].Value);
+            Assert.NotSame(brush.Parameters, copy.Parameters);
+            Assert.IsType<TestFillBrush>(copy.InteriorBrush);
+            Assert.NotSame(interiorBrush, copy.InteriorBrush);
+        }
+
+        private static MGNineSliceFillBrush CreateBrush(
+            Effect? effect = null,
+            IFillBrush? interiorBrush = null,
+            Action<Effect, ElementDrawArgs, MGElement, Rectangle>? configureEffect = null)
+        {
+            MGTextureData[] textures = Enumerable.Range(0, 9)
+                .Select(_ => new MGTextureData((Texture2D)RuntimeHelpers.GetUninitializedObject(typeof(Texture2D))))
+                .ToArray();
+
+            return effect == null
+                ? new MGNineSliceFillBrush(
+                    new Thickness(1),
+                    textures[0], textures[1], textures[2],
+                    textures[3], textures[4], textures[5],
+                    textures[6], textures[7], textures[8],
+                    interiorBrush)
+                : new MGNineSliceFillBrush(
+                    effect,
+                    new Thickness(1),
+                    textures[0], textures[1], textures[2],
+                    textures[3], textures[4], textures[5],
+                    textures[6], textures[7], textures[8],
+                    interiorBrush,
+                    configureEffect);
+        }
+
+        private static MGNineSliceFillBrush.NineSliceRegions CreateUnitRegions()
+            => new(
+                new Rectangle(0, 0, 1, 1),
+                new Rectangle(1, 0, 1, 1),
+                new Rectangle(2, 0, 1, 1),
+                new Rectangle(0, 1, 1, 1),
+                new Rectangle(1, 1, 1, 1),
+                new Rectangle(2, 1, 1, 1),
+                new Rectangle(0, 2, 1, 1),
+                new Rectangle(1, 2, 1, 1),
+                new Rectangle(2, 2, 1, 1));
+
+        private static DrawTransaction CreateTransaction(DrawSettings settings)
+        {
+            DrawTransaction transaction = (DrawTransaction)RuntimeHelpers.GetUninitializedObject(typeof(DrawTransaction));
+            SetField(transaction, "<CurrentSettings>k__BackingField", settings);
+            return transaction;
+        }
+
+        private static Effect CreateEffect()
+            => (Effect)RuntimeHelpers.GetUninitializedObject(typeof(Effect));
 
         private static TestElement CreateElement(Action<MGScaleSettings> configureScale)
         {

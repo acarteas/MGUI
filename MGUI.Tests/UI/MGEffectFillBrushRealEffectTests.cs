@@ -19,6 +19,8 @@ public class MGEffectFillBrushRealEffectTests
     [InlineData("cache-invalidation")]
     [InlineData("copy-independent")]
     [InlineData("reusable-binding")]
+    [InlineData("nine-slice-configuration")]
+    [InlineData("nine-slice-shared-reuse")]
     public void CompiledEffect_ParameterApplicationContractPasses(string Requirement)
     {
         Assert.True(Results.Value.TryGetValue(Requirement, out bool Passed), $"The live effect host did not report '{Requirement}'.");

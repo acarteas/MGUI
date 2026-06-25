@@ -13,9 +13,42 @@ using System.Threading.Tasks;
 namespace MGUI.Core.UI.Brushes.Fill_Brushes
 {
     /// <summary>An <see cref="IFillBrush"/> that draws a nine-sliced (also called a nine-patch) texture to the destination bounds using a customizable margin to control how each patch scales to the bounds.<para/>
-    /// See also: <see href="https://en.wikipedia.org/wiki/9-slice_scaling"/></summary>
+    /// See also: <see href="https://en.wikipedia.org/wiki/9-slice_scaling"/><para/>
+    /// Assigning this struct copies its shared runtime effect configuration reference. Use <see cref="Copy"/> for an independently configurable binding and copied interior brush.</summary>
     public readonly struct MGNineSliceFillBrush : IFillBrush
     {
+        private readonly MGEffectBinding Binding;
+
+        /// <summary>The caller-owned effect applied to texture-backed slices. This brush does not dispose or clone the effect.</summary>
+        public Effect Effect
+        {
+            get => Binding?.Effect;
+            set => GetBinding().Effect = value;
+        }
+
+        /// <summary>Optional callback invoked after standard and constant parameters are applied.</summary>
+        public Action<Effect, ElementDrawArgs, MGElement, Rectangle> ConfigureEffect
+        {
+            get => Binding?.ConfigureEffect;
+            set => GetBinding().ConfigureEffect = value;
+        }
+
+        /// <summary>Whether MGUI's conventional draw, bounds, time, and visual-state parameters are set when present.</summary>
+        public bool UseStandardParameters
+        {
+            get => Binding?.UseStandardParameters ?? false;
+            set => GetBinding().UseStandardParameters = value;
+        }
+
+        /// <summary>Application-specific constant parameters applied before <see cref="ConfigureEffect"/>.</summary>
+        public IReadOnlyList<MGEffectParameterValue> Parameters
+        {
+            get => Binding?.Parameters ?? Array.Empty<MGEffectParameterValue>();
+            set => GetBinding().Parameters = value;
+        }
+
+        internal bool HasEffectBinding => Binding != null;
+
         /// <summary>The unscaled UI thickness used for destination slices. Rendering scales this through <see cref="MGScaleCategory.Border"/> on the owning element.</summary>
         public readonly Thickness TargetMargin;
 
@@ -37,7 +70,32 @@ namespace MGUI.Core.UI.Brushes.Fill_Brushes
         /// If <see langword="null"/>, each region of the source texture is assumed to be equally-sized (and thus its dimensions should be an exact multiple of 3)</param>
         /// <param name="InteriorBrush">Optional. If specified, replaces the center source region and is drawn to the interior destination bounds.</param>
         public MGNineSliceFillBrush(Thickness TargetMargin, MGTextureData Source, Thickness? SourceMargin = null, IFillBrush InteriorBrush = null)
+            : this(null, TargetMargin, Source, SourceMargin, InteriorBrush)
         {
+        }
+
+        /// <param name="Effect">The caller-owned effect applied to texture-backed slices.</param>
+        /// <param name="ConfigureEffect">Optional callback invoked after standard and constant parameters are applied.</param>
+        /// <inheritdoc cref="MGNineSliceFillBrush(Thickness, MGTextureData, Thickness?, IFillBrush)"/>
+        public MGNineSliceFillBrush(
+            Effect Effect,
+            Thickness TargetMargin,
+            MGTextureData Source,
+            Thickness? SourceMargin = null,
+            IFillBrush InteriorBrush = null,
+            Action<Effect, ElementDrawArgs, MGElement, Rectangle> ConfigureEffect = null)
+            : this(new MGEffectBinding(Effect, ConfigureEffect), TargetMargin, Source, SourceMargin, InteriorBrush)
+        {
+        }
+
+        private MGNineSliceFillBrush(
+            MGEffectBinding Binding,
+            Thickness TargetMargin,
+            MGTextureData Source,
+            Thickness? SourceMargin,
+            IFillBrush InteriorBrush)
+        {
+            this.Binding = Binding;
             this.TargetMargin = TargetMargin;
             this.InteriorBrush = InteriorBrush;
 
@@ -89,7 +147,42 @@ namespace MGUI.Core.UI.Brushes.Fill_Brushes
             MGTextureData MiddleLeft, MGTextureData MiddleCenter, MGTextureData MiddleRight,
             MGTextureData BottomLeft, MGTextureData BottomCenter, MGTextureData BottomRight,
             IFillBrush InteriorBrush = null)
+            : this(null, TargetMargin,
+                TopLeft, TopCenter, TopRight,
+                MiddleLeft, MiddleCenter, MiddleRight,
+                BottomLeft, BottomCenter, BottomRight,
+                InteriorBrush)
         {
+        }
+
+        /// <param name="Effect">The caller-owned effect applied to texture-backed slices.</param>
+        /// <param name="ConfigureEffect">Optional callback invoked after standard and constant parameters are applied.</param>
+        /// <inheritdoc cref="MGNineSliceFillBrush(Thickness, MGTextureData, MGTextureData, MGTextureData, MGTextureData, MGTextureData, MGTextureData, MGTextureData, MGTextureData, MGTextureData, IFillBrush)"/>
+        public MGNineSliceFillBrush(
+            Effect Effect,
+            Thickness TargetMargin,
+            MGTextureData TopLeft, MGTextureData TopCenter, MGTextureData TopRight,
+            MGTextureData MiddleLeft, MGTextureData MiddleCenter, MGTextureData MiddleRight,
+            MGTextureData BottomLeft, MGTextureData BottomCenter, MGTextureData BottomRight,
+            IFillBrush InteriorBrush = null,
+            Action<Effect, ElementDrawArgs, MGElement, Rectangle> ConfigureEffect = null)
+            : this(new MGEffectBinding(Effect, ConfigureEffect), TargetMargin,
+                TopLeft, TopCenter, TopRight,
+                MiddleLeft, MiddleCenter, MiddleRight,
+                BottomLeft, BottomCenter, BottomRight,
+                InteriorBrush)
+        {
+        }
+
+        private MGNineSliceFillBrush(
+            MGEffectBinding Binding,
+            Thickness TargetMargin,
+            MGTextureData TopLeft, MGTextureData TopCenter, MGTextureData TopRight,
+            MGTextureData MiddleLeft, MGTextureData MiddleCenter, MGTextureData MiddleRight,
+            MGTextureData BottomLeft, MGTextureData BottomCenter, MGTextureData BottomRight,
+            IFillBrush InteriorBrush)
+        {
+            this.Binding = Binding;
             this.TargetMargin = TargetMargin;
             this.InteriorBrush = InteriorBrush;
 
@@ -104,7 +197,16 @@ namespace MGUI.Core.UI.Brushes.Fill_Brushes
             this.BottomRight = BottomRight;
         }
 
-        public IFillBrush Copy() => new MGNineSliceFillBrush(TargetMargin, TopLeft, TopCenter, TopRight, MiddleLeft, MiddleCenter, MiddleRight, BottomLeft, BottomCenter, BottomRight, InteriorBrush?.Copy());
+        private MGEffectBinding GetBinding()
+            => Binding ?? throw new InvalidOperationException($"A default-initialized {nameof(MGNineSliceFillBrush)} cannot be configured.");
+
+        public IFillBrush Copy() => new MGNineSliceFillBrush(
+            Binding?.Copy(),
+            TargetMargin,
+            TopLeft, TopCenter, TopRight,
+            MiddleLeft, MiddleCenter, MiddleRight,
+            BottomLeft, BottomCenter, BottomRight,
+            InteriorBrush?.Copy());
 
         internal static Thickness GetEffectiveTargetMargin(MGElement Element, Thickness TargetMargin)
             => Element.EffectiveScaleSettings.ScaleThickness(TargetMargin, MGScaleCategory.Border);
@@ -136,83 +238,127 @@ namespace MGUI.Core.UI.Brushes.Fill_Brushes
 
         public void Draw(ElementDrawArgs DA, MGElement Element, Rectangle Bounds)
         {
-            static Rectangle Translate(Rectangle rectangle, Point offset) => rectangle.GetTranslated(offset);
-
             DrawTransaction DT = DA.DT;
             NineSliceRegions Regions = GetDestinationRegions(Element, Bounds, TargetMargin);
 
-            if (Regions.TopLeft.Height > 0)
+            if (Effect == null)
             {
-                if (Regions.TopLeft.Width > 0)
-                {
-                    TopLeft.Draw(DT, Translate(Regions.TopLeft, DA.Offset), null, DA.Opacity);
-                }
+                DrawTextureBackedRegions(DT, Regions, DA.Offset, DA.Opacity);
+            }
+            else
+            {
+                MGStandardEffectParameterValues? StandardValues = UseStandardParameters
+                    ? MGEffectBinding.CalculateStandardParameters(
+                        DA.TS,
+                        DT.CurrentSettings.Transform,
+                        DT.GD.Viewport,
+                        DT.GD.UseHalfPixelOffset,
+                        DA.VisualState,
+                        DA.Offset,
+                        DA.Opacity,
+                        Bounds)
+                    : null;
+                Binding.Apply(StandardValues, DA, Element, Bounds);
 
-                if (Regions.TopCenter.Width > 0)
-                {
-                    TopCenter.Draw(DT, Translate(Regions.TopCenter, DA.Offset), null, DA.Opacity);
-                }
-
-                if (Regions.TopRight.Width > 0)
-                {
-                    TopRight.Draw(DT, Translate(Regions.TopRight, DA.Offset), null, DA.Opacity);
-                }
+                MGNineSliceFillBrush Brush = this;
+                DrawWithEffectTemporary(DT, Effect, () => Brush.DrawTextureBackedRegions(DT, Regions, DA.Offset, DA.Opacity));
             }
 
-            if (Regions.MiddleLeft.Height > 0)
+            if (InteriorBrush != null && IsNonEmpty(Regions.MiddleCenter))
             {
-                if (Regions.MiddleLeft.Width > 0)
-                {
-                    MiddleLeft.Draw(DT, Translate(Regions.MiddleLeft, DA.Offset), null, DA.Opacity);
-                }
+                InteriorBrush.Draw(DA, Element, Regions.MiddleCenter);
+            }
+        }
 
-                if (Regions.MiddleCenter.Width > 0)
-                {
-#if NEVER   // trying to tile the texture but LinearWrap isn't working unless I draw the entire texture, using the destination's width/height as the SourceRect
-            // But the problem is I only want to tile the center region of the input texture, not the entire thing...
-                    using (DT.SetDrawSettingsTemporary(DT.CurrentSettings with { SamplerType = SamplerType.LinearWrap }))
-                    {
-                        Rectangle Destination = new Rectangle(Bounds.Left + LeftColumnSize, Bounds.Top + TopRowSize, CenterColumnSize, CenterRowSize);
+        private void DrawTextureBackedRegions(DrawTransaction DT, NineSliceRegions Regions, Point Offset, float Opacity)
+        {
+            TextureRegionDrawer Drawer = new(DT, Offset, Opacity);
+            VisitTextureBackedRegions(Regions, ref Drawer);
+        }
 
-                        Rectangle ActualSourceRect = MiddleCenter.SourceRect.Value;
-                        Rectangle? SourceRect = new Rectangle(ActualSourceRect.X, ActualSourceRect.Y, Destination.Width, Destination.Height); // MiddleCenter.SourceRect;
-                        DT.DrawTextureTo(MiddleCenter.Texture, SourceRect, Destination, Color.White * MiddleCenter.Opacity * DA.Opacity);
-                    }
-#else
-                    if (InteriorBrush != null)
-                    {
-                        InteriorBrush.Draw(DA, Element, Regions.MiddleCenter);
-                    }
-                    else
-                    {
-                        MiddleCenter.Draw(DT, Translate(Regions.MiddleCenter, DA.Offset), null, DA.Opacity);
-                    }
-#endif
-                }
+        internal IReadOnlyList<(MGTextureData Texture, Rectangle Destination)> GetTextureBackedRegions(NineSliceRegions Regions)
+        {
+            TextureRegionCollector Collector = new();
+            VisitTextureBackedRegions(Regions, ref Collector);
+            return Collector.Regions;
+        }
 
-                if (Regions.MiddleRight.Width > 0)
-                {
-                    MiddleRight.Draw(DT, Translate(Regions.MiddleRight, DA.Offset), null, DA.Opacity);
-                }
+        private void VisitTextureBackedRegions<TVisitor>(NineSliceRegions Regions, ref TVisitor Visitor)
+            where TVisitor : struct, ITextureRegionVisitor
+        {
+            VisitIfNonEmpty(TopLeft, Regions.TopLeft, ref Visitor);
+            VisitIfNonEmpty(TopCenter, Regions.TopCenter, ref Visitor);
+            VisitIfNonEmpty(TopRight, Regions.TopRight, ref Visitor);
+            VisitIfNonEmpty(MiddleLeft, Regions.MiddleLeft, ref Visitor);
+            if (InteriorBrush == null)
+            {
+                VisitIfNonEmpty(MiddleCenter, Regions.MiddleCenter, ref Visitor);
+            }
+            VisitIfNonEmpty(MiddleRight, Regions.MiddleRight, ref Visitor);
+            VisitIfNonEmpty(BottomLeft, Regions.BottomLeft, ref Visitor);
+            VisitIfNonEmpty(BottomCenter, Regions.BottomCenter, ref Visitor);
+            VisitIfNonEmpty(BottomRight, Regions.BottomRight, ref Visitor);
+        }
+
+        private static void VisitIfNonEmpty<TVisitor>(MGTextureData Texture, Rectangle Region, ref TVisitor Visitor)
+            where TVisitor : struct, ITextureRegionVisitor
+        {
+            if (IsNonEmpty(Region))
+            {
+                Visitor.Visit(Texture, Region);
+            }
+        }
+
+        internal void ApplyEffectConfiguration(
+            MGStandardEffectParameterValues? StandardValues,
+            ElementDrawArgs DA,
+            MGElement Element,
+            Rectangle Bounds)
+            => Binding?.Apply(StandardValues, DA, Element, Bounds);
+
+        internal static void DrawWithEffectTemporary(DrawTransaction DT, Effect Effect, Action Draw)
+        {
+            using (DT.SetEffectTemporary(Effect))
+            {
+                Draw();
+            }
+        }
+
+        private static bool IsNonEmpty(Rectangle Region) => Region.Width > 0 && Region.Height > 0;
+
+        private interface ITextureRegionVisitor
+        {
+            void Visit(MGTextureData Texture, Rectangle Destination);
+        }
+
+        private readonly struct TextureRegionDrawer : ITextureRegionVisitor
+        {
+            private readonly DrawTransaction DT;
+            private readonly Point Offset;
+            private readonly float Opacity;
+
+            public TextureRegionDrawer(DrawTransaction DT, Point Offset, float Opacity)
+            {
+                this.DT = DT;
+                this.Offset = Offset;
+                this.Opacity = Opacity;
             }
 
-            if (Regions.BottomLeft.Height > 0)
+            public void Visit(MGTextureData Texture, Rectangle Destination)
+                => Texture.Draw(DT, Destination.GetTranslated(Offset), null, Opacity);
+        }
+
+        private struct TextureRegionCollector : ITextureRegionVisitor
+        {
+            public readonly List<(MGTextureData Texture, Rectangle Destination)> Regions;
+
+            public TextureRegionCollector()
             {
-                if (Regions.BottomLeft.Width > 0)
-                {
-                    BottomLeft.Draw(DT, Translate(Regions.BottomLeft, DA.Offset), null, DA.Opacity);
-                }
-
-                if (Regions.BottomCenter.Width > 0)
-                {
-                    BottomCenter.Draw(DT, Translate(Regions.BottomCenter, DA.Offset), null, DA.Opacity);
-                }
-
-                if (Regions.BottomRight.Width > 0)
-                {
-                    BottomRight.Draw(DT, Translate(Regions.BottomRight, DA.Offset), null, DA.Opacity);
-                }
+                Regions = new();
             }
+
+            public void Visit(MGTextureData Texture, Rectangle Destination)
+                => Regions.Add((Texture, Destination));
         }
 
         internal readonly record struct NineSliceRegions(
