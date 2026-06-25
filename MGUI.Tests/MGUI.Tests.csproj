@@ -35,9 +35,10 @@
   <Target Name="CopyEffectTestHost" AfterTargets="Build">
     <ItemGroup>
       <EffectTestHostFiles Include="..\MGUI.EffectTestHost\bin\$(Configuration)\net8.0\MGUI.EffectTestHost*" />
-      <EffectTestHostFiles Include="..\MGUI.EffectTestHost\bin\$(Configuration)\net8.0\Content\**\*" />
+      <EffectTestHostContentFiles Include="..\MGUI.EffectTestHost\bin\$(Configuration)\net8.0\Content\**\*" />
     </ItemGroup>
-    <Copy SourceFiles="@(EffectTestHostFiles)" DestinationFolder="$(OutDir)%(RecursiveDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(EffectTestHostFiles)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(EffectTestHostContentFiles)" DestinationFolder="$(OutDir)Content\%(RecursiveDir)" SkipUnchangedFiles="true" />
   </Target>
 
   <ItemGroup Condition="'$(IsWindowsOS)'=='true'">

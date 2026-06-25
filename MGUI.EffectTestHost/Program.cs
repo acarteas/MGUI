@@ -53,6 +53,7 @@ public static class Program
             RunSharedEffect(Source);
             RunReplacement(Source);
             RunCopyIndependence(Source);
+            RunReusableBinding(Source);
             Exit();
         }
 
@@ -196,6 +197,35 @@ public static class Program
 
             Results["copy-independent"] = First.Parameters["CustomInt"].GetValueInt32() == 5 &&
                 Replacement.Parameters["CustomInt"].GetValueInt32() == 4 && !ReferenceEquals(Original.Parameters, Copy.Parameters);
+        }
+
+        private void RunReusableBinding(Effect Source)
+        {
+            using Effect Effect = Source.Clone();
+            Rectangle Bounds = new(10, 20, 30, 40);
+            bool CallbackObservedConstants = false;
+            MGEffectBinding Binding = new(Effect, (ConfiguredEffect, _, _, ConfiguredBounds) =>
+            {
+                CallbackObservedConstants =
+                    ConfiguredBounds == Bounds &&
+                    Near(ConfiguredEffect.Parameters["Opacity"].GetValueSingle(), 0.65f) &&
+                    ConfiguredEffect.Parameters["CustomInt"].GetValueInt32() == 12;
+                ConfiguredEffect.Parameters["Opacity"].SetValue(0.95f);
+            })
+            {
+                UseStandardParameters = true,
+                Parameters = new[]
+                {
+                    new MGEffectParameterValue("Opacity", MGEffectParameterType.Float, 0.65f),
+                    new MGEffectParameterValue("CustomInt", MGEffectParameterType.Int, 12)
+                }
+            };
+
+            Binding.Apply(CreateValues(default, 0.25f, 4), default, null, Bounds);
+
+            Results["reusable-binding"] =
+                CallbackObservedConstants &&
+                Near(Effect.Parameters["Opacity"].GetValueSingle(), 0.95f);
         }
 
         private static MGEffectFillBrush CreateRoleBrush(Effect Effect, int Role, Color Accent)

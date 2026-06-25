@@ -10,6 +10,7 @@ public class MGEffectFillBrushRealEffectTests
     [Theory]
     [InlineData("standard-values")]
     [InlineData("callback-last")]
+    [InlineData("standard-custom-callback-order")]
     [InlineData("opt-in-default-off")]
     [InlineData("custom-types")]
     [InlineData("missing-parameter")]
@@ -17,6 +18,7 @@ public class MGEffectFillBrushRealEffectTests
     [InlineData("shared-aba")]
     [InlineData("cache-invalidation")]
     [InlineData("copy-independent")]
+    [InlineData("reusable-binding")]
     public void CompiledEffect_ParameterApplicationContractPasses(string Requirement)
     {
         Assert.True(Results.Value.TryGetValue(Requirement, out bool Passed), $"The live effect host did not report '{Requirement}'.");
