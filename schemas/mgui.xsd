@@ -480,6 +480,21 @@
       </xs:simpleType>
     </xs:union>
   </xs:simpleType>
+  <xs:simpleType name="SamplerTypeEnum">
+    <xs:union memberTypes="mgui:MguiBindingMarkupExtension">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="Default" />
+          <xs:enumeration value="AnisotropicClamp" />
+          <xs:enumeration value="AnisotropicWrap" />
+          <xs:enumeration value="LinearClamp" />
+          <xs:enumeration value="LinearWrap" />
+          <xs:enumeration value="PointClamp" />
+          <xs:enumeration value="PointWrap" />
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:union>
+  </xs:simpleType>
   <xs:complexType name="BorderBand">
     <xs:choice minOccurs="0" maxOccurs="unbounded">
       <xs:element ref="mgui:BandedBorderBrush" />
@@ -5783,6 +5798,7 @@
     <xs:attribute name="SelectedTextureColor" type="xs:string" />
     <xs:attribute name="DisabledTextureColor" type="xs:string" />
     <xs:attribute name="Stretch" type="mgui:StretchEnum" />
+    <xs:attribute name="SamplerType" type="mgui:SamplerTypeEnum" />
     <xs:attribute name="Name" type="xs:string" />
     <xs:attribute name="NameScopeMode" type="mgui:NameScopeModeEnum" />
     <xs:attribute name="NameScopeLabel" type="xs:string" />
