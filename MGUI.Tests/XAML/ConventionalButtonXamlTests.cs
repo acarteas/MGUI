@@ -1,6 +1,7 @@
 using System.Reflection;
 using MGUI.Core.UI;
 using MGUI.Core.UI.XAML;
+using MGUI.Shared.Rendering;
 using Microsoft.Xna.Framework;
 using Portable.Xaml;
 
@@ -27,6 +28,19 @@ public class ConventionalButtonXamlTests
         Assert.Equal(Color.Red, image.PressedTextureColor!.Value.ToXNAColor());
         Assert.Equal(Color.Blue, image.SelectedTextureColor!.Value.ToXNAColor());
         Assert.Equal(Color.Gray, image.DisabledTextureColor!.Value.ToXNAColor());
+    }
+
+    [Fact]
+    public void Image_ParsesSamplerType()
+    {
+        string xaml = """
+            <Image xmlns="clr-namespace:MGUI.Core.UI.XAML;assembly=MGUI.Core"
+                   SamplerType="LinearClamp" />
+            """;
+
+        Image image = Assert.IsType<Image>(XamlServices.Parse(xaml));
+
+        Assert.Equal(SamplerType.LinearClamp, image.SamplerType);
     }
 
     [Fact]

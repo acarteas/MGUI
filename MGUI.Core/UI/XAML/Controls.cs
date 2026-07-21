@@ -13,6 +13,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using MGUI.Core.UI.Data_Binding;
+using MGUI.Shared.Rendering;
 
 #if UseWPF
 using System.Windows.Markup;
@@ -792,6 +793,8 @@ namespace MGUI.Core.UI.XAML
         public XAMLColor? DisabledTextureColor { get; set; }
         [Category("Layout")]
         public Stretch? Stretch { get; set; }
+        [Category("Appearance")]
+        public SamplerType? SamplerType { get; set; }
 
         protected override MGElement CreateElementInstance(MGWindow Window, MGElement Parent)
             => Source.HasValue ? new MGImage(Window, Source.Value) : new MGImage(Window, SourceName);
@@ -812,6 +815,8 @@ namespace MGUI.Core.UI.XAML
                 Image.DisabledTextureColor = DisabledTextureColor.Value.ToXNAColor();
             if (Stretch.HasValue)
                 Image.Stretch = Stretch.Value;
+            if (SamplerType.HasValue)
+                Image.SamplerType = SamplerType.Value;
         }
 
         protected internal override IEnumerable<Element> GetChildren() => Enumerable.Empty<Element>();

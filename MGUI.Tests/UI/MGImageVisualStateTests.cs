@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using MGUI.Core.UI;
+using MGUI.Shared.Rendering;
 using Microsoft.Xna.Framework;
 
 namespace MGUI.Tests.UI;
@@ -74,6 +75,18 @@ public class MGImageVisualStateTests
             nameof(MGImage.HoveredTextureColor), nameof(MGImage.PressedTextureColor),
             nameof(MGImage.SelectedTextureColor), nameof(MGImage.DisabledTextureColor)
         }, changed);
+    }
+
+    [Fact]
+    public void SamplerTypeChangesNotifyWithoutLayoutChange()
+    {
+        MGImage image = CreateImage();
+        List<string> changed = new();
+        ((INotifyPropertyChanged)image).PropertyChanged += (_, e) => changed.Add(e.PropertyName!);
+
+        image.SamplerType = SamplerType.LinearClamp;
+
+        Assert.Equal(new[] { nameof(MGImage.SamplerType) }, changed);
     }
 
     private static MGImage CreateImage() => (MGImage)RuntimeHelpers.GetUninitializedObject(typeof(MGImage));

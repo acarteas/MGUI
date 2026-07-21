@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended;
 using MGUI.Shared.Helpers;
+using MGUI.Shared.Rendering;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -234,6 +235,25 @@ namespace MGUI.Core.UI
             }
         }
 
+        /// <summary>
+        /// Overrides the sampler used while this image is drawn. When <see langword="null"/>,
+        /// the image inherits the sampler from the current <see cref="DrawTransaction"/>.
+        /// </summary>
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private SamplerType? _SamplerType;
+        public SamplerType? SamplerType
+        {
+            get => _SamplerType;
+            set
+            {
+                if (_SamplerType != value)
+                {
+                    _SamplerType = value;
+                    NPC(nameof(SamplerType));
+                }
+            }
+        }
+
         //  I'm too lazy to try implementing this. Nobody will care, right?
         /*[DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private StretchDirection _StretchDirection;
@@ -430,8 +450,27 @@ namespace MGUI.Core.UI
                 throw new NotImplementedException($"Unrecognized {nameof(Stretch)}: {Stretch}");
             }
 
-            DA.DT.DrawTextureTo(ActualSource.Value.Texture, ActualSource.Value.SourceRect, Bounds.GetTranslated(DA.Offset),
-                GetDrawColor(DA.VisualState, DA.Opacity, ActualSource.Value.Opacity));
+            if (SamplerType.HasValue)
+            {
+                using (DA.DT.SetDrawSettingsTemporary(DA.DT.CurrentSettings with { SamplerType = SamplerType.Value }))
+                {
+                    DA.DT.DrawTextureTo(
+                        ActualSource.Value.Texture,
+                        ActualSource.Value.SourceRect,
+                        Bounds.GetTranslated(DA.Offset),
+                        GetDrawColor(DA.VisualState, DA.Opacity, ActualSource.Value.Opacity)
+                    );
+                }
+            }
+            else
+            {
+                DA.DT.DrawTextureTo(
+                    ActualSource.Value.Texture,
+                    ActualSource.Value.SourceRect,
+                    Bounds.GetTranslated(DA.Offset),
+                    GetDrawColor(DA.VisualState, DA.Opacity, ActualSource.Value.Opacity)
+                );
+            }
         }
     }
 }
