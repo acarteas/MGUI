@@ -5365,6 +5365,7 @@
   </xs:complexType>
   <xs:complexType name="Image">
     <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element ref="mgui:EffectParameter" />
       <xs:element name="Image.Background">
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
@@ -5595,6 +5596,15 @@
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="Image.Parameters">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="unbounded">
+            <xs:element ref="mgui:EffectParameter" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="Image.PressedTextureColor">
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="1">
@@ -5799,6 +5809,8 @@
     <xs:attribute name="DisabledTextureColor" type="xs:string" />
     <xs:attribute name="Stretch" type="mgui:StretchEnum" />
     <xs:attribute name="SamplerType" type="mgui:SamplerTypeEnum" />
+    <xs:attribute name="EffectName" type="xs:string" />
+    <xs:attribute name="UseStandardParameters" type="mgui:MguiBoolean" />
     <xs:attribute name="Name" type="xs:string" />
     <xs:attribute name="NameScopeMode" type="mgui:NameScopeModeEnum" />
     <xs:attribute name="NameScopeLabel" type="xs:string" />
