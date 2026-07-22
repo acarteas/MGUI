@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MGUI.Core.UI.Brushes.Border_Brushes;
+using MGUI.Core.UI.Brushes.Fill_Brushes;
 using MGUI.Core.UI.Containers;
 using MGUI.Core.UI.Containers.Grids;
 using System;
@@ -771,6 +772,7 @@ namespace MGUI.Core.UI.XAML
         }
     }
 
+    [ContentProperty(nameof(Parameters))]
     [TypeConverter(typeof(ImageStringConverter))]
     public class Image : Element
     {
@@ -795,6 +797,12 @@ namespace MGUI.Core.UI.XAML
         public Stretch? Stretch { get; set; }
         [Category("Appearance")]
         public SamplerType? SamplerType { get; set; }
+        [Category("Appearance")]
+        public string EffectName { get; set; }
+        [Category("Appearance")]
+        public bool UseStandardParameters { get; set; } = false;
+        [Category("Appearance")]
+        public List<EffectParameter> Parameters { get; set; } = new();
 
         protected override MGElement CreateElementInstance(MGWindow Window, MGElement Parent)
             => Source.HasValue ? new MGImage(Window, Source.Value) : new MGImage(Window, SourceName);
@@ -817,6 +825,38 @@ namespace MGUI.Core.UI.XAML
                 Image.Stretch = Stretch.Value;
             if (SamplerType.HasValue)
                 Image.SamplerType = SamplerType.Value;
+
+            MGEffectParameterValue[] ConvertedParameters = EffectParameterCollectionConverter.Convert(
+                Parameters,
+                $"{nameof(Image)} '{EffectName ?? Image.SourceName}'");
+            if (EffectName == null)
+            {
+                if (UseStandardParameters || ConvertedParameters.Length > 0)
+                {
+                    throw new InvalidOperationException(
+                        $"{nameof(Image)} effect parameters require {nameof(EffectName)} to be specified.");
+                }
+
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(EffectName))
+            {
+                throw new ArgumentException(
+                    $"{nameof(Image)}.{nameof(EffectName)} cannot be null, empty, or whitespace.",
+                    nameof(EffectName));
+            }
+
+            if (!Element.GetDesktop().Resources.TryGetEffect(EffectName, out Effect Effect))
+            {
+                throw new InvalidOperationException(
+                    $"No Effect was found with the name '{EffectName}' in {nameof(MGResources)}.{nameof(MGResources.Effects)}. " +
+                    $"Register it with {nameof(MGResources)}.{nameof(MGResources.AddEffect)} before XAML image materialization.");
+            }
+
+            Image.Effect = Effect;
+            Image.UseStandardParameters = UseStandardParameters;
+            Image.Parameters = ConvertedParameters;
         }
 
         protected internal override IEnumerable<Element> GetChildren() => Enumerable.Empty<Element>();

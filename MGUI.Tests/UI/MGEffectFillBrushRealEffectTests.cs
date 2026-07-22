@@ -28,6 +28,9 @@ public class MGEffectFillBrushRealEffectTests
     [InlineData("nine-slice-shared-effect-render-aba")]
     [InlineData("nine-slice-interior-effect-restoration")]
     [InlineData("nine-slice-xaml-compiled-effect-render")]
+    [InlineData("image-standard-custom-tint-restoration")]
+    [InlineData("image-effect-preserves-point-sampler")]
+    [InlineData("image-no-effect-is-local")]
     public void CompiledEffect_ParameterApplicationContractPasses(string Requirement)
     {
         Assert.True(Results.Value.TryGetValue(Requirement, out bool Passed), $"The live effect host did not report '{Requirement}'.");

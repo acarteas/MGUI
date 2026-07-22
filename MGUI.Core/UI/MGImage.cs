@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended;
+using MGUI.Core.UI.Brushes.Fill_Brushes;
 using MGUI.Shared.Helpers;
 using MGUI.Shared.Rendering;
 using System;
@@ -254,6 +255,72 @@ namespace MGUI.Core.UI
             }
         }
 
+        private readonly MGEffectBinding Binding = new(null);
+
+        /// <summary>
+        /// The caller-owned MonoGame effect applied while this image draws. When null, the image draws without
+        /// an effect, independent of effects temporarily active for surrounding elements.
+        /// MGUI does not clone or dispose this effect.
+        /// </summary>
+        public Effect Effect
+        {
+            get => Binding.Effect;
+            set
+            {
+                if (Binding.Effect != value)
+                {
+                    Binding.Effect = value;
+                    NPC(nameof(Effect));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Optional callback invoked immediately before this image draws with a non-null <see cref="Effect"/>.
+        /// The callback runs after standard and constant parameters have been applied.
+        /// </summary>
+        public Action<Effect, ElementDrawArgs, MGElement, Rectangle> ConfigureEffect
+        {
+            get => Binding.ConfigureEffect;
+            set
+            {
+                if (Binding.ConfigureEffect != value)
+                {
+                    Binding.ConfigureEffect = value;
+                    NPC(nameof(ConfigureEffect));
+                }
+            }
+        }
+
+        /// <summary>Whether MGUI's conventional draw, bounds, time, and visual-state parameters are set when present.</summary>
+        public bool UseStandardParameters
+        {
+            get => Binding.UseStandardParameters;
+            set
+            {
+                if (Binding.UseStandardParameters != value)
+                {
+                    Binding.UseStandardParameters = value;
+                    NPC(nameof(UseStandardParameters));
+                }
+            }
+        }
+
+        /// <summary>Application-specific constant parameters applied before <see cref="ConfigureEffect"/>.</summary>
+        public IReadOnlyList<MGEffectParameterValue> Parameters
+        {
+            get => Binding.Parameters;
+            set
+            {
+                MGEffectParameterValue[] NewParameters = value?.ToArray() ?? Array.Empty<MGEffectParameterValue>();
+                if (!Binding.Parameters.SequenceEqual(NewParameters))
+                {
+                    Binding.Parameters = NewParameters;
+                    NPC(nameof(Parameters));
+                }
+            }
+        }
+
         //  I'm too lazy to try implementing this. Nobody will care, right?
         /*[DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private StretchDirection _StretchDirection;
@@ -450,19 +517,28 @@ namespace MGUI.Core.UI
                 throw new NotImplementedException($"Unrecognized {nameof(Stretch)}: {Stretch}");
             }
 
-            if (SamplerType.HasValue)
+            if (Effect != null)
             {
-                using (DA.DT.SetDrawSettingsTemporary(DA.DT.CurrentSettings with { SamplerType = SamplerType.Value }))
-                {
-                    DA.DT.DrawTextureTo(
-                        ActualSource.Value.Texture,
-                        ActualSource.Value.SourceRect,
-                        Bounds.GetTranslated(DA.Offset),
-                        GetDrawColor(DA.VisualState, DA.Opacity, ActualSource.Value.Opacity)
-                    );
-                }
+                MGStandardEffectParameterValues? StandardValues = UseStandardParameters
+                    ? MGEffectBinding.CalculateStandardParameters(
+                        DA.TS,
+                        DA.DT.CurrentSettings.Transform,
+                        DA.DT.GD.Viewport,
+                        DA.DT.GD.UseHalfPixelOffset,
+                        DA.VisualState,
+                        DA.Offset,
+                        DA.Opacity,
+                        Bounds)
+                    : null;
+                Binding.Apply(StandardValues, DA, this, Bounds);
             }
-            else
+
+            DrawSettings Settings = DA.DT.CurrentSettings with
+            {
+                Effect = Effect,
+                SamplerType = SamplerType ?? DA.DT.CurrentSettings.SamplerType
+            };
+            using (DA.DT.SetDrawSettingsTemporary(Settings))
             {
                 DA.DT.DrawTextureTo(
                     ActualSource.Value.Texture,

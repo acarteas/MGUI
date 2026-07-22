@@ -65,6 +65,7 @@ public static class Program
             RunNineSliceBinding(Source);
             RunNineSliceRendering(Source);
             RunXamlNineSliceRendering(Source);
+            RunImageRendering(Source);
             Exit();
         }
 
@@ -431,6 +432,112 @@ public static class Program
                 NineSliceColors.Select((Color, Index) => NearColor(Color, GetRegionCenter(Pixels, Index))).All(x => x);
         }
 
+        private void RunImageRendering(Effect Source)
+        {
+            using Texture2D WhiteTexture = CreateSolidTexture(Color.White);
+            using Texture2D TwoColorTexture = new(GraphicsDevice, 2, 1);
+            TwoColorTexture.SetData(new[] { Color.Red, Color.Blue });
+            using Texture2D NoEffectTexture = CreateSolidTexture(Color.Magenta);
+            using Effect ImageEffect = Source.Clone();
+            using Effect PreviousEffect = Source.Clone();
+
+            bool CallbackObservedConfiguration = false;
+            MGImage StateImage = CreateImage(ImageEffect, new MGTextureData(WhiteTexture));
+            StateImage.TextureColor = Color.CornflowerBlue;
+            StateImage.UseStandardParameters = true;
+            StateImage.Parameters = new[]
+            {
+                new MGEffectParameterValue("CustomInt", MGEffectParameterType.Int, 100)
+            };
+            StateImage.ConfigureEffect = (ConfiguredEffect, _, _, Bounds) =>
+            {
+                CallbackObservedConfiguration =
+                    Bounds == RenderBounds &&
+                    Near(ConfiguredEffect.Parameters["Opacity"].GetValueSingle(), 0.5f) &&
+                    Near(ConfiguredEffect.Parameters["HoverAmount"].GetValueSingle(), 0.0f) &&
+                    Near(ConfiguredEffect.Parameters["PressAmount"].GetValueSingle(), 1.0f) &&
+                    Near(ConfiguredEffect.Parameters["SelectedAmount"].GetValueSingle(), 1.0f) &&
+                    Near(ConfiguredEffect.Parameters["DisabledAmount"].GetValueSingle(), 0.0f) &&
+                    ConfiguredEffect.Parameters["CustomInt"].GetValueInt32() == 100;
+            };
+            Color[] StatePixels = RenderImage(
+                StateImage,
+                PreviousEffect,
+                0.5f,
+                new VisualState(PrimaryVisualState.Selected, SecondaryVisualState.Pressed),
+                out Effect RestoredEffect);
+            Results["image-standard-custom-tint-restoration"] =
+                CallbackObservedConfiguration &&
+                ImageEffect.Parameters["ElementPosition"].GetValueVector2() == RenderBounds.Location.ToVector2() &&
+                ImageEffect.Parameters["ElementSize"].GetValueVector2() == RenderBounds.Size.ToVector2() &&
+                NearColor(new Color(50, 75, 119, 128), GetPixel(StatePixels, 5, 5), 2) &&
+                ReferenceEquals(PreviousEffect, RestoredEffect);
+
+            MGImage SamplingImage = CreateImage(ImageEffect, new MGTextureData(TwoColorTexture));
+            SamplingImage.SamplerType = SamplerType.PointClamp;
+            SamplingImage.UseStandardParameters = true;
+            SamplingImage.Parameters = new[]
+            {
+                new MGEffectParameterValue("CustomInt", MGEffectParameterType.Int, 100)
+            };
+            Color[] SamplingPixels = RenderImage(SamplingImage, PreviousEffect, 1.0f, default, out _);
+            Results["image-effect-preserves-point-sampler"] =
+                NearColor(Color.Red, GetPixel(SamplingPixels, 7, 15), 2) &&
+                NearColor(Color.Blue, GetPixel(SamplingPixels, 22, 15), 2);
+
+            MGImage NoEffectImage = CreateImage(null, new MGTextureData(NoEffectTexture));
+            Color[] NoEffectPixels = RenderImage(NoEffectImage, PreviousEffect, 1.0f, default, out RestoredEffect);
+            Results["image-no-effect-is-local"] =
+                NearColor(Color.Magenta, GetPixel(NoEffectPixels, 5, 5)) &&
+                ReferenceEquals(PreviousEffect, RestoredEffect);
+        }
+
+        private Color[] RenderImage(
+            MGImage Image,
+            Effect PreviousEffect,
+            float Opacity,
+            VisualState State,
+            out Effect RestoredEffect)
+        {
+            using RenderTarget2D Target = new(
+                GraphicsDevice,
+                RenderSize,
+                RenderSize,
+                false,
+                SurfaceFormat.Color,
+                DepthFormat.None);
+            MainRenderer Renderer = CreateRenderer();
+            GraphicsDevice.SetRenderTarget(Target);
+            GraphicsDevice.Clear(Color.Transparent);
+            GraphicsDevice.ScissorRectangle = new Rectangle(0, 0, RenderSize, RenderSize);
+
+            using (DrawTransaction Transaction = new(
+                Renderer,
+                DrawSettings.Default with
+                {
+                    RasterizerType = RasterizerType.Solid,
+                    BlendType = BlendType.Opaque,
+                    SamplerType = SamplerType.LinearClamp,
+                    Effect = PreviousEffect
+                },
+                true))
+            {
+                ElementDrawArgs Args = new(
+                    new DrawBaseArgs(TimeSpan.FromSeconds(7), Transaction, Opacity),
+                    State,
+                    Point.Zero);
+                Image.DrawSelf(Args, RenderBounds);
+                RestoredEffect = Transaction.CurrentSettings.Effect;
+            }
+
+            Color[] Pixels = new Color[RenderSize * RenderSize];
+            Target.GetData(Pixels);
+            GraphicsDevice.SetRenderTarget(null);
+            Renderer.SpriteBatch.Dispose();
+            Renderer.PrimitiveBatch.Dispose();
+            return Pixels;
+        }
+
         private Color[] RenderBrush(
             MGNineSliceFillBrush Brush,
             Effect PreviousEffect,
@@ -564,6 +671,16 @@ public static class Program
             TestElement Element = (TestElement)RuntimeHelpers.GetUninitializedObject(typeof(TestElement));
             SetField(Element, "_UIScaleMode", UIScaleMode.Disabled);
             return Element;
+        }
+
+        private static MGImage CreateImage(Effect? Effect, MGTextureData Source)
+        {
+            MGImage Image = (MGImage)RuntimeHelpers.GetUninitializedObject(typeof(MGImage));
+            SetField(Image, "Binding", new MGEffectBinding(Effect));
+            SetField(Image, "_ActualSource", Source);
+            SetField(Image, "_Stretch", Stretch.Fill);
+            SetField(Image, "_UIScaleMode", UIScaleMode.Disabled);
+            return Image;
         }
 
         private static MGDesktop CreateDesktop(MGResources Resources)

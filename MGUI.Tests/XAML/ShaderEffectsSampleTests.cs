@@ -5,6 +5,7 @@ using Portable.Xaml;
 using MGUI.Core.UI.Brushes.Fill_Brushes;
 using MGUI.Core.UI.XAML;
 using XamlEffectParameter = MGUI.Core.UI.XAML.EffectParameter;
+using XamlImage = MGUI.Core.UI.XAML.Image;
 
 namespace MGUI.Tests.XAML;
 
@@ -64,6 +65,21 @@ public class ShaderEffectsSampleTests
             AssertCompleteParameterSet(Brush.Parameters);
             AssertParameter(Brush.Parameters, "ButtonRole", MGEffectParameterType.Float, "0");
         }
+    }
+
+    [Fact]
+    public void SampleIncludesAnImageLocalSourceTextureEffect()
+    {
+        Window Root = Assert.IsType<Window>(XamlServices.Parse(ReadResource("ShaderEffects.xaml")));
+        XamlImage Image = Assert.Single(GetImages(Root), x => x.EffectName == "SampleUiEffect");
+
+        Assert.Equal("ShaderActionIcon", Image.SourceName);
+        Assert.True(Image.UseStandardParameters);
+        XAMLColor textureColor = Image.TextureColor
+            ?? throw new InvalidOperationException("The shader-backed image must specify a texture tint.");
+        Assert.Equal(Color.White, textureColor.ToXNAColor());
+        AssertCompleteParameterSet(Image.Parameters);
+        AssertParameter(Image.Parameters, "ButtonRole", MGEffectParameterType.Float, "2");
     }
 
     [Fact]
@@ -213,6 +229,50 @@ public class ShaderEffectsSampleTests
                     && GetEffectName(Brush) == "SampleUiEffect")
                 {
                     Result.Add(Brush);
+                }
+            }
+        }
+
+        return Result;
+    }
+
+    private static IReadOnlyList<XamlImage> GetImages(Window Root)
+    {
+        HashSet<Element> VisitedElements = new(ReferenceEqualityComparer.Instance);
+        List<XamlImage> Result = new();
+        Stack<Element> PendingElements = new();
+        PendingElements.Push(Root);
+
+        while (PendingElements.TryPop(out Element? Element))
+        {
+            if (!VisitedElements.Add(Element))
+            {
+                continue;
+            }
+
+            if (Element is XamlImage Image)
+            {
+                Result.Add(Image);
+            }
+
+            foreach (PropertyInfo Property in Element.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public))
+            {
+                if (Property.GetIndexParameters().Length != 0)
+                {
+                    continue;
+                }
+
+                object? Value = Property.GetValue(Element);
+                if (Value is Element Child)
+                {
+                    PendingElements.Push(Child);
+                }
+                else if (Value is IEnumerable Children)
+                {
+                    foreach (Element NestedChild in Children.OfType<Element>())
+                    {
+                        PendingElements.Push(NestedChild);
+                    }
                 }
             }
         }

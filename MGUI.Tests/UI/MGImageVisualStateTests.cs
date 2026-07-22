@@ -1,8 +1,11 @@
 using System.ComponentModel;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using MGUI.Core.UI;
+using MGUI.Core.UI.Brushes.Fill_Brushes;
 using MGUI.Shared.Rendering;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace MGUI.Tests.UI;
 
@@ -89,5 +92,36 @@ public class MGImageVisualStateTests
         Assert.Equal(new[] { nameof(MGImage.SamplerType) }, changed);
     }
 
-    private static MGImage CreateImage() => (MGImage)RuntimeHelpers.GetUninitializedObject(typeof(MGImage));
+    [Fact]
+    public void EffectSettingsNotifyWithoutLayoutChangeAndSnapshotParameters()
+    {
+        MGImage image = CreateImage();
+        Effect effect = (Effect)RuntimeHelpers.GetUninitializedObject(typeof(Effect));
+        List<string> changed = new();
+        ((INotifyPropertyChanged)image).PropertyChanged += (_, e) => changed.Add(e.PropertyName!);
+        MGEffectParameterValue[] parameters = { new("Strength", MGEffectParameterType.Float, 0.5f) };
+
+        image.Effect = effect;
+        image.UseStandardParameters = true;
+        image.Parameters = parameters;
+        parameters[0] = new MGEffectParameterValue("Strength", MGEffectParameterType.Float, 1.0f);
+
+        Assert.Equal(new[]
+        {
+            nameof(MGImage.Effect),
+            nameof(MGImage.UseStandardParameters),
+            nameof(MGImage.Parameters)
+        }, changed);
+        Assert.Same(effect, image.Effect);
+        Assert.Equal(0.5f, image.Parameters[0].Value);
+    }
+
+    private static MGImage CreateImage()
+    {
+        MGImage image = (MGImage)RuntimeHelpers.GetUninitializedObject(typeof(MGImage));
+        FieldInfo bindingField = typeof(MGImage).GetField("Binding", BindingFlags.Instance | BindingFlags.NonPublic)
+            ?? throw new InvalidOperationException("Could not find the image effect binding.");
+        bindingField.SetValue(image, new MGEffectBinding(null));
+        return image;
+    }
 }

@@ -1,8 +1,8 @@
 # Shader Effects
 
-MGUI can use a caller-owned MonoGame `Effect` to draw a rectangular fill or the texture-backed regions of a nine-slice fill. The application is responsible for compiling an artifact for each graphics backend, loading it, registering it, and disposing it. MGUI does not compile, clone, hot-reload, convert, or dispose effects.
+MGUI can use a caller-owned MonoGame `Effect` to draw an `MGImage`, a rectangular fill, or the texture-backed regions of a nine-slice fill. The application is responsible for compiling an artifact for each graphics backend, loading it, registering it, and disposing it. MGUI does not compile, clone, hot-reload, convert, or dispose effects.
 
-`MGEffectFillBrush` shades its generated rectangular fill. `MGNineSliceFillBrush` shades only its texture-backed regions. Neither brush captures or post-processes an element subtree.
+`MGImage` shades only its own source-texture draw. `MGEffectFillBrush` shades its generated rectangular fill. `MGNineSliceFillBrush` shades only its texture-backed regions. None captures or post-processes an element subtree.
 
 ## Registration And Lifetime
 
@@ -37,6 +37,32 @@ XAML resolution is a materialization-time snapshot. A materialized brush stores 
 `EffectName` must be nonblank. Custom parameter declarations are validated and converted before effect lookup, so malformed values, blank or duplicate names, unsupported types, and non-finite values fail identically whether the effect is registered or a fallback would be selected. If the effect is absent from `Desktop.Resources.Effects` and the declarations are valid, a configured `FallbackBrush` is materialized without applying the converted effect parameters. Without a fallback, materialization throws an actionable error. Nested fallback brushes and bindable fallback values are supported.
 
 `EffectFillBrush` works in every `IFillBrush` slot, including normal, hovered, pressed, selected, and disabled backgrounds, borders, overlays, and nested border fills.
+
+## XAML Images
+
+An image resolves an optional effect during XAML materialization, using the same registered resource and parameter conventions as effect brushes:
+
+```xml
+<Image SourceName="ActionIcon"
+       Width="24" Height="24"
+       TextureColor="White"
+       EffectName="HudIconEffect"
+       UseStandardParameters="True">
+    <EffectParameter Name="GlowColor" Type="Color" Value="rgb(110,158,180)" />
+    <EffectParameter Name="GlowStrength" Type="Float" Value="0.75" />
+</Image>
+```
+
+The runtime counterpart is `MGImage.Effect`, with the same `UseStandardParameters`, `Parameters`, and optional `ConfigureEffect` callback exposed by `MGEffectFillBrush`. The image scopes its configured effect only around its source-texture draw, retains its `SamplerType` override, and restores the previous draw settings afterward. An image with no `EffectName` uses no image effect; effect settings without a name, blank names, and unresolved names fail materialization with actionable diagnostics. Unlike `EffectFillBrush`, images do not have a fallback brush: omit the effect configuration for ordinary image rendering.
+
+Image effects are local. A parent or sibling effect does not implicitly shade an image, and an image effect does not propagate to its parent, label, or other child content. To keep `TextureColor`, visual-state tinting, source opacity, and draw opacity compatible, the shader must multiply the source sample and SpriteBatch input color:
+
+```hlsl
+float4 sampledColor = tex2D(SpriteTextureSampler, input.TextureCoordinate);
+return sampledColor * input.Color * effectColor;
+```
+
+`input.Color` already includes the image's effective texture tint and opacity. As with effect fills, do not multiply alpha by both `input.Color.a` and the standard `Opacity` parameter.
 
 ## Effect-Backed Nine-Slices
 
@@ -87,7 +113,7 @@ Unlike `EffectFillBrush`, `NineSliceFillBrush` has no fallback brush for a missi
 
 ## Standard Parameters
 
-Standard binding is opt-in for both XAML and programmatic brushes with `UseStandardParameters="True"`. Missing shader parameters are skipped.
+Standard binding is opt-in for XAML and programmatic images and brushes with `UseStandardParameters="True"`. Missing shader parameters are skipped.
 
 | Name | Shader type | Value |
 | --- | --- | --- |
@@ -170,7 +196,7 @@ Shader-backed controls can be compared with conventional image/button states:
 - `PressedContentOffset` translates button content only while pressed and enabled. It uses spacing scale, does not affect background/border drawing, and does not change measurement or layout.
 - A tooltip is sufficient when it names or explains the action. Icon-only actions need one; visible labels generally do not unless extra context is useful.
 
-The sample at `MGUI.Samples/Features/ShaderEffects.xaml` demonstrates shader normal, primary, selected, and disabled actions; a nonshader comparison; and effect-backed ornamental nine-slices with both a texture-backed center and a separate `InteriorBrush`, predominantly in XAML.
+The sample at `MGUI.Samples/Features/ShaderEffects.xaml` demonstrates shader normal, primary, selected, and disabled actions; an image-local source-texture emissive icon treatment; a nonshader comparison; and effect-backed ornamental nine-slices with both a texture-backed center and a separate `InteriorBrush`, predominantly in XAML.
 
 ## Backend Compatibility
 
@@ -185,4 +211,4 @@ An effect that fails to compile or load cannot use the runtime XAML fallback bec
 - Custom XAML values are constants. Dynamic values require standard parameters or `ConfigureEffect`.
 - Shared effects are mutable and sequential; they are not safe for concurrent drawing from multiple threads.
 - A nine-slice effect shades only texture-backed regions. An explicit `InteriorBrush` runs according to its own brush behavior, and the frame effect does not implicitly wrap it.
-- Effects do not shade child content, labels, overlays drawn by other brushes, or an element subtree. Subtree effects require a separate render-target or post-processing design outside these fill brushes.
+- Effects do not shade parent content, sibling content, labels, overlays drawn by other brushes, or an element subtree. Subtree effects require a separate render-target or post-processing design outside these image and fill paths.
