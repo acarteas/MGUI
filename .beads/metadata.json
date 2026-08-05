@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "mgui",
+  "project_id": "27aae69e-0a8b-4938-be40-2a7893ad2e21"
+}
