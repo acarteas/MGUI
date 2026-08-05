@@ -193,11 +193,50 @@ namespace MGUI.Core.UI.XAML
         public override IFillBrush ToFillBrush(MGDesktop Desktop, MGElement Element) => new MGTextureFillBrush(Desktop, SourceName, Stretch, Color.ToXNAColor());
     }
 
-    public class EffectParameter
+    public class EffectParameter : XAMLBindableBase
     {
         public string Name { get; set; }
         public MGEffectParameterType? Type { get; set; }
-        public string Value { get; set; }
+        private string _Value;
+        public string Value
+        {
+            get => _Value;
+            set
+            {
+                _Value = value;
+                ResolvedColor = null;
+            }
+        }
+
+        internal XAMLColor? ResolvedColor { get; private set; }
+
+        internal void ResolveStaticResource(string objectPath, ResourceScopeCollection resourceScopes)
+        {
+            if (!StaticResourceExpression.TryParse(Value, out StaticResourceExpression expression))
+            {
+                return;
+            }
+
+            if (!Type.HasValue)
+            {
+                throw new InvalidOperationException(
+                    $"Effect parameter '{Name}' at '{objectPath}' references static resource '{expression.Key}', which requires explicit Type=\"Color\". Expected Color, but actual type is unspecified.");
+            }
+
+            if (Type != MGEffectParameterType.Color)
+            {
+                throw new InvalidOperationException(
+                    $"Effect parameter '{Name}' at '{objectPath}' cannot use static resource '{expression.Key}': expected Color, but actual type is {Type.Value}.");
+            }
+
+            if (!resourceScopes.TryGetColor(expression.Key, out XAMLColor color))
+            {
+                throw new InvalidOperationException(
+                    $"Effect parameter '{Name}' at '{objectPath}' could not resolve static resource '{expression.Key}': expected Color, but the resource was not found.");
+            }
+
+            ResolvedColor = color;
+        }
 
         internal MGEffectParameterValue ToParameterValue()
         {
@@ -214,7 +253,9 @@ namespace MGUI.Core.UI.XAML
             MGEffectParameterType ActualType = Type ?? InferType(Value);
             try
             {
-                object ParsedValue = ParseValue(Value, ActualType);
+                object ParsedValue = ResolvedColor.HasValue && ActualType == MGEffectParameterType.Color
+                    ? ResolvedColor.Value.ToXNAColor().ToVector4()
+                    : ParseValue(Value, ActualType);
                 ValidateFinite(Name, ActualType, ParsedValue);
                 return new MGEffectParameterValue(Name, ActualType, ParsedValue);
             }
@@ -430,6 +471,13 @@ namespace MGUI.Core.UI.XAML
             }
 
             yield return (FallbackBrush, nameof(FallbackBrush));
+            if (Parameters != null)
+            {
+                foreach (EffectParameter parameter in Parameters)
+                {
+                    yield return (parameter, nameof(Parameters));
+                }
+            }
         }
     }
 
@@ -651,6 +699,13 @@ namespace MGUI.Core.UI.XAML
             foreach (var Item in base.GetNestedBindableObjects())
                 yield return Item;
             yield return (InteriorBrush, nameof(InteriorBrush));
+            if (Parameters != null)
+            {
+                foreach (EffectParameter parameter in Parameters)
+                {
+                    yield return (parameter, nameof(Parameters));
+                }
+            }
         }
     }
     #endregion Fill Brush

@@ -212,12 +212,43 @@ namespace MGUI.Core.UI.XAML
                 XAMLString = ValidateXAMLString(XAMLString);
             }
 
+            XAMLString = NormalizeColorResourceEntries(XAMLString);
+
             if (ReplaceLinebreakLiterals)
             {
                 XAMLString = XAMLString.Replace(@"\n", "&#x0a;");
             }
 
             return XAMLString;
+        }
+
+        private static string NormalizeColorResourceEntries(string xamlString)
+        {
+            XDocument document = XDocument.Parse(xamlString);
+            XName colorName = XName.Get("Color", XMLLocalNameSpaceUri);
+            XName colorResourceName = XName.Get(nameof(ColorResource), XMLLocalNameSpaceUri);
+            XName resourceDictionaryName = XName.Get(nameof(ResourceDictionary), XMLLocalNameSpaceUri);
+            bool normalized = false;
+
+            foreach (XElement element in document.Descendants())
+            {
+                if (element.Name == colorName && element.Parent?.Name == resourceDictionaryName)
+                {
+                    element.Name = colorResourceName;
+                    normalized = true;
+                }
+            }
+
+            if (!normalized)
+            {
+                return xamlString;
+            }
+
+            using StringWriter stringWriter = new();
+            using XmlWriter xmlWriter = XmlWriter.Create(stringWriter, new XmlWriterSettings() { OmitXmlDeclaration = true, Indent = true });
+            document.WriteTo(xmlWriter);
+            xmlWriter.Flush();
+            return stringWriter.ToString();
         }
 
         private static string RemoveDefaultPresentationNamespace(string xamlString)

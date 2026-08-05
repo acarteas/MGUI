@@ -860,6 +860,22 @@ namespace MGUI.Core.UI.XAML
         }
 
         protected internal override IEnumerable<Element> GetChildren() => Enumerable.Empty<Element>();
+
+        protected internal override IEnumerable<(XAMLBindableBase, string)> GetNestedBindableObjects()
+        {
+            foreach (var item in base.GetNestedBindableObjects())
+            {
+                yield return item;
+            }
+
+            if (Parameters != null)
+            {
+                foreach (EffectParameter parameter in Parameters)
+                {
+                    yield return (parameter, nameof(Parameters));
+                }
+            }
+        }
     }
 
     public class ImageStringConverter : TypeConverter

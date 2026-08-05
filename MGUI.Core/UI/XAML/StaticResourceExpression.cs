@@ -53,6 +53,13 @@ namespace MGUI.Core.UI.XAML
                 throw new InvalidOperationException($"{nameof(StaticResource)} requires a non-empty resource key.");
             }
 
+            if (serviceProvider?.GetService(typeof(IProvideValueTarget)) is IProvideValueTarget target
+                && target.TargetProperty is System.Reflection.PropertyInfo property
+                && property.PropertyType == typeof(string))
+            {
+                return $"{{StaticResource {Key}}}";
+            }
+
             return XAMLColor.FromStaticResource(Key);
         }
     }

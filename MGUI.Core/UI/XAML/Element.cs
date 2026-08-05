@@ -601,7 +601,7 @@ namespace MGUI.Core.UI.XAML
                             {
                                 foreach (object Value in KVP.Value)
                                 {
-                                    PropertyInfo.SetValue(this, ResolveAndConvertValue(Value, PropertyInfo.PropertyType, $"{ThisType.Name}.{PropertyName}", ResourceScopes));
+                                    AssignStyleSetterValue(PropertyInfo, Value, $"{ThisType.Name}.{PropertyName}", ResourceScopes);
                                 }
 
                                 ModifiedPropertyNames.Add(PropertyName);
@@ -639,7 +639,7 @@ namespace MGUI.Core.UI.XAML
                             string PropertyName = Setter.Property;
                             if (PropertiesByName.TryGetValue(PropertyName, out PropertyInfo PropertyInfo))
                             {
-                                PropertyInfo.SetValue(this, ResolveAndConvertValue(Setter.Value, PropertyInfo.PropertyType, $"{ThisType.Name}.{PropertyName}", ResourceScopes));
+                                AssignStyleSetterValue(PropertyInfo, Setter.Value, $"{ThisType.Name}.{PropertyName}", ResourceScopes);
 
                                 ModifiedPropertyNames.Add(PropertyName);
                             }
@@ -663,11 +663,31 @@ namespace MGUI.Core.UI.XAML
             ResourceScopes.PopScope(Resources?.ColorResources);
         }
 
+        private void AssignStyleSetterValue(PropertyInfo property, object value, string targetProperty, ResourceScopeCollection resourceScopes)
+        {
+            property.SetValue(this, ResolveAndConvertValue(value, property.PropertyType, targetProperty, resourceScopes));
+            ResolveStaticResources(property.GetValue(this), targetProperty, resourceScopes);
+        }
+
+        private static void ResolveStaticResources(object value, string objectPath, ResourceScopeCollection resourceScopes)
+        {
+            if (value is XAMLBindableBase bindable && value is not Element)
+            {
+                ResolveStaticResources(bindable, objectPath, resourceScopes, new HashSet<XAMLBindableBase>());
+            }
+        }
+
         private static void ResolveStaticResources(XAMLBindableBase bindable, string objectPath, ResourceScopeCollection resourceScopes,
             HashSet<XAMLBindableBase> visitedObjects)
         {
             if (!visitedObjects.Add(bindable))
             {
+                return;
+            }
+
+            if (bindable is EffectParameter effectParameter)
+            {
+                effectParameter.ResolveStaticResource(objectPath, resourceScopes);
                 return;
             }
 
