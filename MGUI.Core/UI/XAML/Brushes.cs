@@ -24,6 +24,8 @@ namespace MGUI.Core.UI.XAML
     [TypeConverter(typeof(ColorStringConverter))]
     public struct XAMLColor
     {
+        internal string StaticResourceKey { get; private set; }
+
         public byte R { get; set; }
         public byte G { get; set; }
         public byte B { get; set; }
@@ -34,11 +36,14 @@ namespace MGUI.Core.UI.XAML
         public XAMLColor(byte R, byte G, byte B) : this(R, G, B, byte.MaxValue) { }
         public XAMLColor(byte R, byte G, byte B, byte A)
         {
+            StaticResourceKey = null;
             this.R = R;
             this.G = G;
             this.B = B;
             this.A = A;
         }
+
+        internal static XAMLColor FromStaticResource(string key) => new() { StaticResourceKey = key };
 
         public static XAMLColor operator *(XAMLColor value, float scale) =>
             new((byte)(value.R * scale), (byte)(value.G * scale), (byte)(value.B * scale), (byte)(value.A * scale));
@@ -57,7 +62,14 @@ namespace MGUI.Core.UI.XAML
         public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
             => value is string stringValue ? ParseColor(stringValue) : base.ConvertFrom(context, culture, value);
         public static XAMLColor ParseColor(string Value)
-            => new(XNAColorStringConverter.ParseColor(Value));
+        {
+            if (StaticResourceExpression.TryParse(Value, out StaticResourceExpression expression))
+            {
+                return XAMLColor.FromStaticResource(expression.Key);
+            }
+
+            return new(XNAColorStringConverter.ParseColor(Value));
+        }
     }
     #endregion Color
 

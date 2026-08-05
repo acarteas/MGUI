@@ -309,6 +309,10 @@ namespace MGUI.Core.UI
         private readonly Dictionary<string, Style> _Styles = new();
         public IReadOnlyDictionary<string, Style> Styles => _Styles;
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private readonly Dictionary<string, XAMLColor> _Colors = new();
+        public IReadOnlyDictionary<string, XAMLColor> Colors => _Colors;
+
         public void AddStyle(string Name, Style Style)
         {
             if (Style == null)
@@ -355,6 +359,63 @@ namespace MGUI.Core.UI
                 throw new ArgumentNullException(nameof(dictionary));
             }
 
+            Dictionary<string, Style> incomingStyles = ValidateStyles(dictionary);
+
+            StyleResolver.ValidateNamedStyles(_Styles, incomingStyles);
+
+            foreach (KeyValuePair<string, Style> kvp in incomingStyles)
+            {
+                _Styles.Add(kvp.Key, kvp.Value);
+                OnStyleAdded?.Invoke(this, (kvp.Key, kvp.Value));
+            }
+        }
+
+        /// <summary>Atomically validates and registers all shared styles and keyed colors in <paramref name="dictionary"/>.</summary>
+        public void AddResources(ResourceDictionary dictionary)
+        {
+            if (dictionary == null)
+            {
+                throw new ArgumentNullException(nameof(dictionary));
+            }
+
+            Dictionary<string, Style> incomingStyles = ValidateStyles(dictionary);
+            Dictionary<string, XAMLColor> incomingColors = ValidateColors(dictionary);
+
+            StyleResolver.ValidateNamedStyles(_Styles, incomingStyles);
+            foreach (string key in incomingColors.Keys)
+            {
+                if (_Colors.ContainsKey(key))
+                {
+                    throw new InvalidOperationException($"A color with key '{key}' is already registered.");
+                }
+            }
+
+            foreach (KeyValuePair<string, Style> kvp in incomingStyles)
+            {
+                _Styles.Add(kvp.Key, kvp.Value);
+                OnStyleAdded?.Invoke(this, (kvp.Key, kvp.Value));
+            }
+
+            foreach (KeyValuePair<string, XAMLColor> kvp in incomingColors)
+            {
+                _Colors.Add(kvp.Key, kvp.Value);
+                OnColorAdded?.Invoke(this, (kvp.Key, kvp.Value));
+            }
+        }
+
+        public bool TryGetColor(string key, out XAMLColor color)
+        {
+            if (key != null && _Colors.TryGetValue(key, out color))
+            {
+                return true;
+            }
+
+            color = default;
+            return false;
+        }
+
+        private static Dictionary<string, Style> ValidateStyles(ResourceDictionary dictionary)
+        {
             Dictionary<string, Style> incomingStyles = new();
             foreach (Style Style in dictionary.Styles)
             {
@@ -374,13 +435,26 @@ namespace MGUI.Core.UI
                 }
             }
 
-            StyleResolver.ValidateNamedStyles(_Styles, incomingStyles);
+            return incomingStyles;
+        }
 
-            foreach (KeyValuePair<string, Style> kvp in incomingStyles)
+        private static Dictionary<string, XAMLColor> ValidateColors(ResourceDictionary dictionary)
+        {
+            Dictionary<string, XAMLColor> incomingColors = new();
+            foreach (ColorResource color in dictionary.ColorResources)
             {
-                _Styles.Add(kvp.Key, kvp.Value);
-                OnStyleAdded?.Invoke(this, (kvp.Key, kvp.Value));
+                if (color == null || string.IsNullOrWhiteSpace(color.Key))
+                {
+                    throw new InvalidOperationException($"{nameof(ResourceDictionary)} colors must define a non-empty {nameof(ColorResource.Key)}.");
+                }
+
+                if (!incomingColors.TryAdd(color.Key, color.Value))
+                {
+                    throw new InvalidOperationException($"A color with key '{color.Key}' appears more than once in the same {nameof(ResourceDictionary)}.");
+                }
             }
+
+            return incomingColors;
         }
 
         public bool RemoveStyle(string Name)
@@ -397,6 +471,7 @@ namespace MGUI.Core.UI
 
         public event EventHandler<(string Name, Style Style)> OnStyleAdded;
         public event EventHandler<(string Name, Style Style)> OnStyleRemoved;
+        public event EventHandler<(string Key, XAMLColor Color)> OnColorAdded;
         #endregion Styles
 
         #region StaticResources

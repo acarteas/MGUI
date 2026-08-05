@@ -107,6 +107,7 @@ namespace MGUI.Core.UI.XAML
             { "Style", nameof(Style) },
             { "Setter", nameof(Setter) },
             { "ResourceDictionary", nameof(ResourceDictionary) },
+            { "Color", nameof(ColorResource) },
 
             //  Abbreviated names
             { "CP", nameof(ContentPresenter) },
@@ -180,6 +181,14 @@ namespace MGUI.Core.UI.XAML
                     {
                         Element.Name = XName.Get(ElementName.ReplaceFirstOccurrence(KVP.Key, KVP.Value), XMLLocalNameSpaceUri);
                         break;
+                    }
+                }
+
+                foreach (XAttribute Attribute in Element.Attributes().Where(x => !x.IsNamespaceDeclaration))
+                {
+                    if (Attribute.Value.StartsWith("{StaticResource ", StringComparison.Ordinal))
+                    {
+                        Attribute.Value = $"{{{XMLLocalNameSpacePrefix}:StaticResource {Attribute.Value[16..]}";
                     }
                 }
             }
@@ -278,7 +287,7 @@ namespace MGUI.Core.UI.XAML
             return Parsed.ToElement(Desktop);
         }
 
-        /// <summary>Parses a top-level <see cref="ResourceDictionary"/> XAML payload containing shared named styles.</summary>
+        /// <summary>Parses a top-level <see cref="ResourceDictionary"/> XAML payload containing shared named styles and keyed colors.</summary>
         public static ResourceDictionary LoadStyleDictionary(string xaml, bool sanitizeXamlString = false, bool replaceLinebreakLiterals = true)
         {
             xaml = PrepareXAMLString(xaml, sanitizeXamlString, replaceLinebreakLiterals);
@@ -290,7 +299,21 @@ namespace MGUI.Core.UI.XAML
             ResourceDictionary parsed = (ResourceDictionary)XamlServices.Parse(xaml);
             if (parsed.Styles.Any(x => x == null || string.IsNullOrWhiteSpace(x.Name)))
             {
-                throw new InvalidOperationException($"{nameof(ResourceDictionary)} only supports named styles in this version.");
+                throw new InvalidOperationException($"{nameof(ResourceDictionary)} only supports named styles and keyed colors.");
+            }
+
+            HashSet<string> colorKeys = new();
+            foreach (ColorResource color in parsed.ColorResources)
+            {
+                if (color == null || string.IsNullOrWhiteSpace(color.Key))
+                {
+                    throw new InvalidOperationException($"{nameof(ResourceDictionary)} colors must define a non-empty {nameof(ColorResource.Key)}.");
+                }
+
+                if (!colorKeys.Add(color.Key))
+                {
+                    throw new InvalidOperationException($"A color with key '{color.Key}' appears more than once in the same {nameof(ResourceDictionary)}.");
+                }
             }
 
             return parsed;

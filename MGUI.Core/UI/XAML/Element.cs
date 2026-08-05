@@ -541,13 +541,26 @@ namespace MGUI.Core.UI.XAML
 
         protected internal abstract IEnumerable<Element> GetChildren();
 
+        protected internal override IEnumerable<(XAMLBindableBase Item, string Path)> GetNestedBindableObjects()
+        {
+            foreach (PropertyInfo property in GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
+            {
+                if (property.GetValue(this) is XAMLBindableBase item)
+                {
+                    yield return (item, property.Name);
+                }
+            }
+        }
+
         protected internal void ProcessStyles(MGResources Resources)
         {
             NamedStyleScopeCollection StylesByName = new(Resources.Styles);
-            ProcessStyles(StylesByName, new Dictionary<MGElementType, Dictionary<string, List<object>>>());
+            ResourceScopeCollection ResourceScopes = new(Resources);
+            ProcessStyles(StylesByName, ResourceScopes, new Dictionary<MGElementType, Dictionary<string, List<object>>>());
         }
 
-        private void ProcessStyles(NamedStyleScopeCollection StylesByName, Dictionary<MGElementType, Dictionary<string, List<object>>> StylesByType)
+        private void ProcessStyles(NamedStyleScopeCollection StylesByName, ResourceScopeCollection ResourceScopes,
+            Dictionary<MGElementType, Dictionary<string, List<object>>> StylesByType)
         {
             Dictionary<string, List<object>> ValuesByProperty;
             List<Style> AddedResourceNamedStyles = new();
@@ -557,6 +570,9 @@ namespace MGUI.Core.UI.XAML
 
             AppendStyleScope(this.Resources?.Styles, $"{GetType().Name}.{nameof(Resources)}", StylesByName, StylesByType, AddedResourceNamedStyles, AddedResourceImplicitSetters);
             AppendStyleScope(Styles, $"{GetType().Name}.{nameof(Styles)}", StylesByName, StylesByType, AddedLegacyNamedStyles, AddedLegacyImplicitSetters);
+            ResourceScopes.PushScope(Resources?.ColorResources, $"{GetType().Name}.{nameof(Resources)}");
+
+            ResolveStaticResources(this, GetType().Name, ResourceScopes, new HashSet<XAMLBindableBase>());
 
             //  Apply the appropriate style setters to this instance
             if (IsStyleable)
@@ -583,13 +599,9 @@ namespace MGUI.Core.UI.XAML
                             if (ModifiedPropertyNames.Contains(PropertyName) 
                                 || PropertyInfo.GetValue(this) == default) // Don't allow a style to override a value that was already explicitly set (needs more robust logic since some controls initialize properties to non-null values)
                             {
-                                TypeConverter Converter = TypeDescriptor.GetConverter(PropertyInfo.PropertyType);
                                 foreach (object Value in KVP.Value)
                                 {
-                                    if (Value is string StringValue)
-                                        PropertyInfo.SetValue(this, Converter.ConvertFrom(null, CultureInfo.InvariantCulture, StringValue));
-                                    else
-                                        PropertyInfo.SetValue(this, Value);
+                                    PropertyInfo.SetValue(this, ResolveAndConvertValue(Value, PropertyInfo.PropertyType, $"{ThisType.Name}.{PropertyName}", ResourceScopes));
                                 }
 
                                 ModifiedPropertyNames.Add(PropertyName);
@@ -627,11 +639,7 @@ namespace MGUI.Core.UI.XAML
                             string PropertyName = Setter.Property;
                             if (PropertiesByName.TryGetValue(PropertyName, out PropertyInfo PropertyInfo))
                             {
-                                TypeConverter Converter = TypeDescriptor.GetConverter(PropertyInfo.PropertyType);
-                                if (Setter.Value is string StringValue)
-                                    PropertyInfo.SetValue(this, Converter.ConvertFrom(null, CultureInfo.InvariantCulture, StringValue));
-                                else
-                                    PropertyInfo.SetValue(this, Setter.Value);
+                                PropertyInfo.SetValue(this, ResolveAndConvertValue(Setter.Value, PropertyInfo.PropertyType, $"{ThisType.Name}.{PropertyName}", ResourceScopes));
 
                                 ModifiedPropertyNames.Add(PropertyName);
                             }
@@ -643,7 +651,7 @@ namespace MGUI.Core.UI.XAML
             //  Recursively process all children
             foreach (Element Child in GetChildren())
             {
-                Child.ProcessStyles(StylesByName, StylesByType);
+                Child.ProcessStyles(StylesByName, ResourceScopes, StylesByType);
             }
 
             //  Remove current style setters from indexed data
@@ -652,7 +660,79 @@ namespace MGUI.Core.UI.XAML
 
             RemoveImplicitStyleSetters(AddedResourceImplicitSetters, StylesByType);
             StylesByName.PopScope(AddedResourceNamedStyles);
+            ResourceScopes.PopScope(Resources?.ColorResources);
         }
+
+        private static void ResolveStaticResources(XAMLBindableBase bindable, string objectPath, ResourceScopeCollection resourceScopes,
+            HashSet<XAMLBindableBase> visitedObjects)
+        {
+            if (!visitedObjects.Add(bindable))
+            {
+                return;
+            }
+
+            foreach (PropertyInfo property in bindable.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
+            {
+                if (property.PropertyType != typeof(XAMLColor) && property.PropertyType != typeof(XAMLColor?))
+                {
+                    continue;
+                }
+
+                object value = property.GetValue(bindable);
+                if (value is XAMLColor color && color.StaticResourceKey != null)
+                {
+                    property.SetValue(bindable, ResolveAndConvertValue(color, property.PropertyType, $"{objectPath}.{property.Name}", resourceScopes));
+                }
+            }
+
+            foreach ((XAMLBindableBase item, string path) in bindable.GetNestedBindableObjects())
+            {
+                if (item != null && item is not Element)
+                {
+                    ResolveStaticResources(item, $"{objectPath}.{path}", resourceScopes, visitedObjects);
+                }
+            }
+        }
+
+        private static object ResolveAndConvertValue(object value, Type targetType, string targetProperty, ResourceScopeCollection resourceScopes)
+        {
+            StaticResourceExpression? expression = value switch
+            {
+                string stringValue when StaticResourceExpression.TryParse(stringValue, out StaticResourceExpression parsed) => parsed,
+                XAMLColor color when color.StaticResourceKey != null => new(color.StaticResourceKey),
+                _ => null
+            };
+
+            if (expression.HasValue)
+            {
+                if (!resourceScopes.TryGetColor(expression.Value.Key, out XAMLColor color))
+                {
+                    throw new InvalidOperationException($"Static resource '{expression.Value.Key}' was not found for target property '{targetProperty}', which expects '{GetDisplayTypeName(targetType)}'.");
+                }
+
+                Type actualType = typeof(XAMLColor);
+                if (!AcceptsColor(targetType))
+                {
+                    throw new InvalidOperationException($"Static resource '{expression.Value.Key}' cannot be assigned to target property '{targetProperty}': expected '{GetDisplayTypeName(targetType)}', but resolved value has type '{GetDisplayTypeName(actualType)}'.");
+                }
+
+                return color;
+            }
+
+            if (value is string literalStringValue)
+            {
+                TypeConverter converter = TypeDescriptor.GetConverter(targetType);
+                return converter.ConvertFrom(null, CultureInfo.InvariantCulture, literalStringValue);
+            }
+
+            return value;
+        }
+
+        private static bool AcceptsColor(Type targetType) => targetType == typeof(XAMLColor) || targetType == typeof(XAMLColor?);
+
+        private static string GetDisplayTypeName(Type type) => Nullable.GetUnderlyingType(type) is Type underlyingType
+            ? $"Nullable<{underlyingType.Name}>"
+            : type.Name;
 
         private static void AppendStyleScope(IEnumerable<Style> Styles, string ScopeName, NamedStyleScopeCollection StylesByName,
             Dictionary<MGElementType, Dictionary<string, List<object>>> StylesByType, List<Style> AddedNamedStyles,

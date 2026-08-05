@@ -4,7 +4,9 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.ExceptionServices;
 using MGUI.Core.UI;
+using MGUI.Core.UI.Brushes.Fill_Brushes;
 using MGUI.Core.UI.XAML;
+using Microsoft.Xna.Framework;
 #if UseWPF
 using System.Xaml;
 #else
@@ -59,6 +61,57 @@ public class StyleDictionaryTests
         Assert.Contains("named styles", ex.Message);
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void XAMLParser_LoadStyleDictionary_ParsesKeyedColorsAndNamedStyles(bool sanitizeXamlString)
+    {
+        string xaml = sanitizeXamlString
+            ? """
+                <ResourceDictionary>
+                    <Color Key="Accent" Value="#336699" />
+                    <Style Name="ActionButton" TargetType="Button" />
+                    <Color Key="Warning" Value="rgb(200, 100, 50)" />
+                </ResourceDictionary>
+                """
+            : """
+                <MGUI:ResourceDictionary xmlns:MGUI="clr-namespace:MGUI.Core.UI.XAML;assembly=MGUI.Core">
+                    <MGUI:ColorResource Key="Accent" Value="#336699" />
+                    <MGUI:Style Name="ActionButton" TargetType="Button" />
+                    <MGUI:ColorResource Key="Warning" Value="rgb(200, 100, 50)" />
+                </MGUI:ResourceDictionary>
+                """;
+
+        ResourceDictionary dictionary = XAMLParser.LoadStyleDictionary(xaml, sanitizeXamlString);
+
+        Assert.Equal(new[] { "ColorResource", "Style", "ColorResource" }, dictionary.Entries.Select(x => x.GetType().Name));
+        Assert.Equal("ActionButton", Assert.Single(dictionary.Styles).Name);
+        Assert.Equal(new[] { "Accent", "Warning" }, dictionary.ColorResources.Select(x => x.Key));
+        Assert.Equal(new XAMLColor(51, 102, 153), dictionary.ColorResources[0].Value);
+    }
+
+    [Theory]
+    [InlineData(" ")]
+    [InlineData("")]
+    public void XAMLParser_LoadStyleDictionary_RejectsBlankColorKeys(string key)
+    {
+        string xaml = $"<ResourceDictionary><Color Key=\"{key}\" Value=\"Red\" /></ResourceDictionary>";
+
+        InvalidOperationException ex = Assert.Throws<InvalidOperationException>(() => XAMLParser.LoadStyleDictionary(xaml, sanitizeXamlString: true));
+
+        Assert.Contains(nameof(ColorResource.Key), ex.Message);
+    }
+
+    [Fact]
+    public void XAMLParser_LoadStyleDictionary_RejectsDuplicateColorKeys()
+    {
+        const string xaml = "<ResourceDictionary><Color Key=\"Accent\" Value=\"Red\" /><Color Key=\"Accent\" Value=\"Blue\" /></ResourceDictionary>";
+
+        InvalidOperationException ex = Assert.Throws<InvalidOperationException>(() => XAMLParser.LoadStyleDictionary(xaml, sanitizeXamlString: true));
+
+        Assert.Contains("Accent", ex.Message);
+    }
+
     [Fact]
     public void MGResources_AddStyles_RegistersNamedStylesFromDictionary()
     {
@@ -75,6 +128,61 @@ public class StyleDictionaryTests
 
         Assert.True(resources.Styles.ContainsKey("ActionButton"));
         Assert.Same(dictionary.Styles[0], resources.Styles["ActionButton"]);
+    }
+
+    [Fact]
+    public void MGResources_AddResources_RegistersStylesAndColors()
+    {
+        MGResources resources = CreateResources();
+        ResourceDictionary dictionary = new()
+        {
+            Styles = { new Style() { Name = "ActionButton", TargetType = MGElementType.Button } },
+            ColorResources = { new ColorResource() { Key = "Accent", Value = new XAMLColor(51, 102, 153) } }
+        };
+
+        resources.AddResources(dictionary);
+
+        Assert.Same(dictionary.Styles[0], resources.Styles["ActionButton"]);
+        Assert.Equal(dictionary.ColorResources[0].Value, resources.Colors["Accent"]);
+        Assert.True(resources.TryGetColor("Accent", out XAMLColor color));
+        Assert.Equal(dictionary.ColorResources[0].Value, color);
+    }
+
+    [Fact]
+    public void MGResources_AddResources_RejectsDuplicateGlobalColorWithoutPartialRegistration()
+    {
+        MGResources resources = CreateResources();
+        resources.AddResources(new ResourceDictionary()
+        {
+            ColorResources = { new ColorResource() { Key = "Accent", Value = new XAMLColor(1, 2, 3) } }
+        });
+        ResourceDictionary dictionary = new()
+        {
+            Styles = { new Style() { Name = "ActionButton", TargetType = MGElementType.Button } },
+            ColorResources = { new ColorResource() { Key = "Accent", Value = new XAMLColor(4, 5, 6) } }
+        };
+
+        InvalidOperationException ex = Assert.Throws<InvalidOperationException>(() => resources.AddResources(dictionary));
+
+        Assert.Contains("Accent", ex.Message);
+        Assert.False(resources.Styles.ContainsKey("ActionButton"));
+        Assert.Single(resources.Colors);
+    }
+
+    [Fact]
+    public void MGResources_AddResources_RejectsInvalidStylesWithoutRegisteringColors()
+    {
+        MGResources resources = CreateResources();
+        ResourceDictionary dictionary = new()
+        {
+            Styles = { new Style() { TargetType = MGElementType.Button } },
+            ColorResources = { new ColorResource() { Key = "Accent", Value = new XAMLColor(1, 2, 3) } }
+        };
+
+        Assert.Throws<InvalidOperationException>(() => resources.AddResources(dictionary));
+
+        Assert.Empty(resources.Styles);
+        Assert.Empty(resources.Colors);
     }
 
     [Fact]
@@ -433,16 +541,287 @@ public class StyleDictionaryTests
         Assert.Contains("Header", ex.Message);
     }
 
+    [Fact]
+    public void ProcessStyles_StaticResource_ResolvesDirectColorProperty()
+    {
+        StackPanel root = new()
+        {
+            Resources = new()
+            {
+                ColorResources = { new ColorResource() { Key = "Accent", Value = new XAMLColor(12, 34, 56) } }
+            },
+            Children =
+            {
+                new Image() { TextureColor = ColorStringConverter.ParseColor("{StaticResource Accent}") }
+            }
+        };
+
+        ProcessStyles(root);
+
+        Assert.Equal(new XAMLColor(12, 34, 56), ((Image)root.Children[0]).TextureColor);
+    }
+
+    [Fact]
+    public void XAMLParser_StaticResource_ParsesAndResolvesDirectColorProperty()
+    {
+        const string xaml = """
+            <StackPanel xmlns="clr-namespace:MGUI.Core.UI.XAML;assembly=MGUI.Core">
+                <StackPanel.Resources>
+                    <ResourceDictionary>
+                        <ColorResource Key="Accent" Value="#0C2238" />
+                    </ResourceDictionary>
+                </StackPanel.Resources>
+                <Image TextureColor="{StaticResource Accent}" />
+            </StackPanel>
+            """;
+
+        StackPanel root = (StackPanel)XamlServices.Parse(xaml);
+
+        ProcessStyles(root);
+
+        Assert.Equal(new XAMLColor(12, 34, 56), ((Image)root.Children[0]).TextureColor);
+    }
+
+    [Fact]
+    public void XAMLParser_StaticResource_ParsesSanitizedStyleSetter()
+    {
+        const string xaml = """
+            <ResourceDictionary>
+                <Color Key="Accent" Value="#0C2238" />
+                <Style Name="AccentImage" TargetType="Image">
+                    <Setter Property="TextureColor" Value="{StaticResource Accent}" />
+                </Style>
+            </ResourceDictionary>
+            """;
+        MGResources resources = CreateResources();
+        resources.AddResources(XAMLParser.LoadStyleDictionary(xaml, sanitizeXamlString: true));
+        Image target = new() { StyleNames = "AccentImage" };
+
+        ProcessStyles(target, resources);
+
+        Assert.Equal(new XAMLColor(12, 34, 56), target.TextureColor);
+    }
+
+    [Fact]
+    public void XAMLParser_StaticResource_ResolvesAndMaterializesNestedFillBrushColor()
+    {
+        const string xaml = """
+            <StackPanel xmlns="clr-namespace:MGUI.Core.UI.XAML;assembly=MGUI.Core">
+                <StackPanel.Resources>
+                    <ResourceDictionary>
+                        <ColorResource Key="Accent" Value="#0C2238" />
+                    </ResourceDictionary>
+                </StackPanel.Resources>
+                <Border>
+                    <Border.Background>
+                        <SolidFillBrush Color="{StaticResource Accent}" />
+                    </Border.Background>
+                </Border>
+            </StackPanel>
+            """;
+        StackPanel root = (StackPanel)XamlServices.Parse(xaml);
+
+        ProcessStyles(root);
+
+        Border border = (Border)root.Children[0];
+        SolidFillBrush brush = Assert.IsType<SolidFillBrush>(border.Background);
+        MGSolidFillBrush materializedBrush = Assert.IsType<MGSolidFillBrush>(brush.ToFillBrush(null, null));
+        Assert.Equal(new XAMLColor(12, 34, 56), brush.Color);
+        Assert.Equal(new Color(12, 34, 56), materializedBrush.Color);
+    }
+
+    [Fact]
+    public void ProcessStyles_StaticResource_NestedFillBrushUsesNearestScopeAndGlobalFallback()
+    {
+        Border localTarget = new()
+        {
+            Background = new SolidFillBrush(ColorStringConverter.ParseColor("{StaticResource Accent}"))
+        };
+        Border globalTarget = new()
+        {
+            Background = new SolidFillBrush(ColorStringConverter.ParseColor("{StaticResource GlobalAccent}"))
+        };
+        StackPanel root = new()
+        {
+            Resources = new()
+            {
+                ColorResources = { new ColorResource() { Key = "Accent", Value = new XAMLColor(1, 2, 3) } }
+            },
+            Children =
+            {
+                new StackPanel()
+                {
+                    Resources = new()
+                    {
+                        ColorResources = { new ColorResource() { Key = "Accent", Value = new XAMLColor(4, 5, 6) } }
+                    },
+                    Children = { localTarget, globalTarget }
+                }
+            }
+        };
+        MGResources resources = CreateResources();
+        resources.AddResources(new ResourceDictionary()
+        {
+            ColorResources = { new ColorResource() { Key = "GlobalAccent", Value = new XAMLColor(7, 8, 9) } }
+        });
+
+        ProcessStyles(root, resources);
+
+        Assert.Equal(new XAMLColor(4, 5, 6), Assert.IsType<SolidFillBrush>(localTarget.Background).Color);
+        Assert.Equal(new XAMLColor(7, 8, 9), Assert.IsType<SolidFillBrush>(globalTarget.Background).Color);
+    }
+
+    [Fact]
+    public void ProcessStyles_StaticResource_ReportsMissingNestedColorKeyAndPath()
+    {
+        Border target = new()
+        {
+            Background = new SolidFillBrush(ColorStringConverter.ParseColor("{StaticResource MissingAccent}"))
+        };
+
+        InvalidOperationException ex = Assert.Throws<InvalidOperationException>(() => ProcessStyles(target));
+
+        Assert.Contains("MissingAccent", ex.Message);
+        Assert.Contains("Border.Background.Color", ex.Message);
+        Assert.Contains(nameof(XAMLColor), ex.Message);
+    }
+
+    [Fact]
+    public void ProcessStyles_StaticResource_ResolvesNamedAndImplicitStyleSettersIncludingBasedOn()
+    {
+        Image namedTarget = new() { StyleNames = "AccentImage" };
+        Image implicitTarget = new();
+        StackPanel root = new()
+        {
+            Resources = new()
+            {
+                ColorResources = { new ColorResource() { Key = "Accent", Value = new XAMLColor(12, 34, 56) } },
+                Styles =
+                {
+                    new Style()
+                    {
+                        Name = "BaseImage",
+                        TargetType = MGElementType.Image,
+                        Setters = { new Setter() { Property = nameof(Image.TextureColor), Value = "{StaticResource Accent}" } }
+                    },
+                    new Style() { Name = "AccentImage", TargetType = MGElementType.Image, BasedOn = "BaseImage" },
+                    new Style()
+                    {
+                        TargetType = MGElementType.Image,
+                        Setters = { new Setter() { Property = nameof(Image.HoveredTextureColor), Value = "{StaticResource Accent}" } }
+                    }
+                }
+            },
+            Children = { namedTarget, implicitTarget }
+        };
+
+        ProcessStyles(root);
+
+        Assert.Equal(new XAMLColor(12, 34, 56), namedTarget.TextureColor);
+        Assert.Equal(new XAMLColor(12, 34, 56), namedTarget.HoveredTextureColor);
+        Assert.Equal(new XAMLColor(12, 34, 56), implicitTarget.HoveredTextureColor);
+    }
+
+    [Fact]
+    public void ProcessStyles_StaticResource_UsesNearestColorScopeThenGlobalFallback()
+    {
+        Image nestedTarget = new() { TextureColor = ColorStringConverter.ParseColor("{StaticResource Accent}") };
+        Image fallbackTarget = new() { TextureColor = ColorStringConverter.ParseColor("{StaticResource GlobalAccent}") };
+        StackPanel root = new()
+        {
+            Resources = new()
+            {
+                ColorResources = { new ColorResource() { Key = "Accent", Value = new XAMLColor(1, 2, 3) } }
+            },
+            Children =
+            {
+                new StackPanel()
+                {
+                    Resources = new()
+                    {
+                        ColorResources = { new ColorResource() { Key = "Accent", Value = new XAMLColor(4, 5, 6) } }
+                    },
+                    Children = { nestedTarget, fallbackTarget }
+                }
+            }
+        };
+        MGResources resources = CreateResources();
+        resources.AddResources(new ResourceDictionary()
+        {
+            ColorResources = { new ColorResource() { Key = "GlobalAccent", Value = new XAMLColor(7, 8, 9) } }
+        });
+
+        ProcessStyles(root, resources);
+
+        Assert.Equal(new XAMLColor(4, 5, 6), nestedTarget.TextureColor);
+        Assert.Equal(new XAMLColor(7, 8, 9), fallbackTarget.TextureColor);
+    }
+
+    [Fact]
+    public void ProcessStyles_StaticResource_PreservesLiteralColorValues()
+    {
+        Image target = new() { TextureColor = ColorStringConverter.ParseColor("Red") };
+
+        ProcessStyles(target);
+
+        Assert.Equal(ColorStringConverter.ParseColor("Red"), target.TextureColor);
+    }
+
+    [Fact]
+    public void ProcessStyles_StaticResource_ReportsMissingKeyAndTargetPath()
+    {
+        Image target = new() { TextureColor = ColorStringConverter.ParseColor("{StaticResource MissingAccent}") };
+
+        InvalidOperationException ex = Assert.Throws<InvalidOperationException>(() => ProcessStyles(target));
+
+        Assert.Contains("MissingAccent", ex.Message);
+        Assert.Contains("Image.TextureColor", ex.Message);
+        Assert.Contains("Nullable<XAMLColor>", ex.Message);
+    }
+
+    [Fact]
+    public void ProcessStyles_StaticResource_ReportsIncompatibleSetterTarget()
+    {
+        Image target = new() { StyleNames = "BadStyle" };
+        StackPanel root = new()
+        {
+            Resources = new()
+            {
+                ColorResources = { new ColorResource() { Key = "Accent", Value = new XAMLColor(12, 34, 56) } },
+                Styles =
+                {
+                    new Style()
+                    {
+                        Name = "BadStyle",
+                        TargetType = MGElementType.Image,
+                        Setters = { new Setter() { Property = nameof(Element.Opacity), Value = "{StaticResource Accent}" } }
+                    }
+                }
+            },
+            Children = { target }
+        };
+
+        InvalidOperationException ex = Assert.Throws<InvalidOperationException>(() => ProcessStyles(root));
+
+        Assert.Contains("Accent", ex.Message);
+        Assert.Contains("Image.Opacity", ex.Message);
+        Assert.Contains("Nullable<Single>", ex.Message);
+        Assert.Contains(nameof(XAMLColor), ex.Message);
+    }
+
     private static MGResources CreateResources() => new(new MGTheme("TestFont"));
 
     private static NamedStyleScopeCollection CreateStyleScopes(IReadOnlyDictionary<string, Style> styles)
         => new(styles);
 
     private static void ProcessStyles(Element element)
+        => ProcessStyles(element, CreateResources());
+
+    private static void ProcessStyles(Element element, MGResources resources)
     {
         try
         {
-            ProcessStylesMethod.Invoke(element, new object[] { CreateResources() });
+            ProcessStylesMethod.Invoke(element, new object[] { resources });
         }
         catch (TargetInvocationException ex) when (ex.InnerException != null)
         {

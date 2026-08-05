@@ -127,7 +127,7 @@ namespace MGUI.Samples
             string resourceName = $"{nameof(MGUI)}.{nameof(Samples)}.{nameof(Features)}.SharedStyles.xaml";
             string xaml = GeneralUtils.ReadEmbeddedResourceAsString(Assembly.GetExecutingAssembly(), resourceName);
             ResourceDictionary dictionary = XAMLParser.LoadStyleDictionary(xaml);
-            Desktop.Resources.AddStyles(dictionary);
+            Desktop.Resources.AddResources(dictionary);
         }
 
         /// <summary>Toggles the active text rendering engine between <see cref="SpriteFontTextEngine"/> and <see cref="FontStashSharpTextEngine"/></summary>
