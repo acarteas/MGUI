@@ -880,6 +880,164 @@ public class StyleDictionaryTests
     }
 
     [Fact]
+    public void ProcessStyles_StaticResource_StyleSetterNestedFillBrushResolvesIndependentlyPerTargetScope()
+    {
+        Border firstTarget = new();
+        Border secondTarget = new();
+        SolidFillBrush sourceBrush = new(ColorStringConverter.ParseColor("{StaticResource Accent}"));
+        Style sourceStyle = new()
+        {
+            TargetType = MGElementType.Border,
+            Setters =
+            {
+                new Setter()
+                {
+                    Property = nameof(Border.Background),
+                    Value = sourceBrush
+                }
+            }
+        };
+        StackPanel root = new()
+        {
+            Resources = new()
+            {
+                Styles =
+                {
+                    sourceStyle
+                }
+            },
+            Children =
+            {
+                new StackPanel()
+                {
+                    Resources = new()
+                    {
+                        ColorResources =
+                        {
+                            new ColorResource()
+                            {
+                                Key = "Accent",
+                                Value = new XAMLColor(10, 20, 30)
+                            }
+                        }
+                    },
+                    Children = { firstTarget }
+                },
+                new StackPanel()
+                {
+                    Resources = new()
+                    {
+                        ColorResources =
+                        {
+                            new ColorResource()
+                            {
+                                Key = "Accent",
+                                Value = new XAMLColor(40, 50, 60)
+                            }
+                        }
+                    },
+                    Children = { secondTarget }
+                }
+            }
+        };
+
+        ProcessStyles(root);
+
+        SolidFillBrush firstBrush = Assert.IsType<SolidFillBrush>(firstTarget.Background);
+        SolidFillBrush secondBrush = Assert.IsType<SolidFillBrush>(secondTarget.Background);
+        Assert.NotSame(firstBrush, secondBrush);
+        Assert.NotSame(sourceBrush, firstBrush);
+        Assert.NotSame(sourceBrush, secondBrush);
+        Assert.Equal("Accent", sourceBrush.Color.StaticResourceKey);
+        Assert.Equal(
+            new XAMLColor(10, 20, 30),
+            firstBrush.Color
+        );
+        Assert.Equal(
+            new XAMLColor(40, 50, 60),
+            secondBrush.Color
+        );
+    }
+
+    [Fact]
+    public void ProcessStyles_StaticResource_StyleSetterEffectBrushParameterResolvesIndependentlyPerTargetScope()
+    {
+        Border firstTarget = new() { StyleNames = "AccentBorder" };
+        Border secondTarget = new() { StyleNames = "AccentBorder" };
+        EffectParameter sourceParameter = new()
+        {
+            Name = "Accent",
+            Type = MGEffectParameterType.Color,
+            Value = "{StaticResource Accent}"
+        };
+        EffectFillBrush sourceBrush = new()
+        {
+            EffectName = "Effect",
+            Parameters = { sourceParameter }
+        };
+        StackPanel root = new()
+        {
+            Resources = new()
+            {
+                Styles =
+                {
+                    new Style()
+                    {
+                        Name = "BaseAccentBorder",
+                        TargetType = MGElementType.Border,
+                        Setters =
+                        {
+                            new Setter()
+                            {
+                                Property = nameof(Border.Background),
+                                Value = sourceBrush
+                            }
+                        }
+                    },
+                    new Style()
+                    {
+                        Name = "AccentBorder",
+                        TargetType = MGElementType.Border,
+                        BasedOn = "BaseAccentBorder"
+                    }
+                }
+            },
+            Children =
+            {
+                new StackPanel()
+                {
+                    Resources = new()
+                    {
+                        ColorResources = { new ColorResource() { Key = "Accent", Value = new XAMLColor(10, 20, 30) } }
+                    },
+                    Children = { firstTarget }
+                },
+                new StackPanel()
+                {
+                    Resources = new()
+                    {
+                        ColorResources = { new ColorResource() { Key = "Accent", Value = new XAMLColor(40, 50, 60) } }
+                    },
+                    Children = { secondTarget }
+                }
+            }
+        };
+
+        ProcessStyles(root);
+
+        EffectFillBrush firstBrush = Assert.IsType<EffectFillBrush>(firstTarget.Background);
+        EffectFillBrush secondBrush = Assert.IsType<EffectFillBrush>(secondTarget.Background);
+        EffectParameter firstParameter = Assert.Single(firstBrush.Parameters);
+        EffectParameter secondParameter = Assert.Single(secondBrush.Parameters);
+        Assert.NotSame(firstBrush, secondBrush);
+        Assert.NotSame(firstParameter, secondParameter);
+        Assert.NotSame(sourceParameter, firstParameter);
+        Assert.Equal("{StaticResource Accent}", sourceParameter.Value);
+        Assert.Equal(new XAMLColor(10, 20, 30).ToXNAColor().ToVector4(), firstParameter.ToParameterValue().Value);
+        Assert.Equal(new XAMLColor(40, 50, 60).ToXNAColor().ToVector4(), secondParameter.ToParameterValue().Value);
+    }
+
+    [Fact]
     public void ProcessStyles_StaticResource_StyleSetterChildElementUsesItsOwnColorResourceScope()
     {
         Border target = new();

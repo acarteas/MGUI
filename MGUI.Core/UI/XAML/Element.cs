@@ -1,5 +1,6 @@
 ﻿using MGUI.Core.UI.Data_Binding;
 using MGUI.Core.UI.Data_Binding.Converters;
+using MGUI.Shared.Helpers;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -665,7 +666,8 @@ namespace MGUI.Core.UI.XAML
 
         private void AssignStyleSetterValue(PropertyInfo property, object value, string targetProperty, ResourceScopeCollection resourceScopes)
         {
-            property.SetValue(this, ResolveAndConvertValue(value, property.PropertyType, targetProperty, resourceScopes));
+            object valueToAssign = value is XAMLBindableBase bindable ? bindable.Copy() : value;
+            property.SetValue(this, ResolveAndConvertValue(valueToAssign, property.PropertyType, targetProperty, resourceScopes));
             ResolveStaticResources(property.GetValue(this), targetProperty, resourceScopes);
         }
 
