@@ -55,12 +55,19 @@ namespace MGUI.Core.UI.XAML
 
             if (serviceProvider?.GetService(typeof(IProvideValueTarget)) is IProvideValueTarget target
                 && target.TargetProperty is System.Reflection.PropertyInfo property
-                && property.PropertyType == typeof(string))
+                && RequiresTypeConversion(property.PropertyType))
             {
                 return $"{{StaticResource {Key}}}";
             }
 
             return XAMLColor.FromStaticResource(Key);
+        }
+
+        private static bool RequiresTypeConversion(Type targetType)
+        {
+            return targetType == typeof(string)
+                || typeof(FillBrush).IsAssignableFrom(targetType)
+                || typeof(BorderBrush).IsAssignableFrom(targetType);
         }
     }
 }

@@ -732,13 +732,23 @@ namespace MGUI.Core.UI.XAML
                     throw new InvalidOperationException($"Static resource '{expression.Value.Key}' was not found for target property '{targetProperty}', which expects '{GetDisplayTypeName(targetType)}'.");
                 }
 
-                Type actualType = typeof(XAMLColor);
-                if (!AcceptsColor(targetType))
+                if (AcceptsColor(targetType))
                 {
-                    throw new InvalidOperationException($"Static resource '{expression.Value.Key}' cannot be assigned to target property '{targetProperty}': expected '{GetDisplayTypeName(targetType)}', but resolved value has type '{GetDisplayTypeName(actualType)}'.");
+                    return color;
                 }
 
-                return color;
+                if (typeof(FillBrush).IsAssignableFrom(targetType))
+                {
+                    return new SolidFillBrush(color);
+                }
+
+                if (typeof(BorderBrush).IsAssignableFrom(targetType))
+                {
+                    return new UniformBorderBrush(new SolidFillBrush(color));
+                }
+
+                Type actualType = typeof(XAMLColor);
+                throw new InvalidOperationException($"Static resource '{expression.Value.Key}' cannot be assigned to target property '{targetProperty}': expected '{GetDisplayTypeName(targetType)}', but resolved value has type '{GetDisplayTypeName(actualType)}'.");
             }
 
             if (value is string literalStringValue)

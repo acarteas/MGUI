@@ -211,6 +211,58 @@ public class StyleDictionaryTests
     }
 
     [Fact]
+    public void MGResources_RemoveColor_RemovesColorAndRaisesEvent()
+    {
+        MGResources resources = CreateResources();
+        XAMLColor expectedColor = new(51, 102, 153);
+        (string Key, XAMLColor Color)? removedColor = null;
+        resources.OnColorRemoved += (_, value) => removedColor = value;
+        resources.AddResources(new ResourceDictionary()
+        {
+            ColorResources = { new ColorResource() { Key = "Accent", Value = expectedColor } }
+        });
+
+        bool result = resources.RemoveColor("Accent");
+
+        Assert.True(result);
+        Assert.False(resources.Colors.ContainsKey("Accent"));
+        Assert.Equal(("Accent", expectedColor), removedColor);
+    }
+
+    [Fact]
+    public void MGResources_RemoveColor_ReturnsFalseWithoutRaisingEventWhenKeyIsMissing()
+    {
+        MGResources resources = CreateResources();
+        bool eventRaised = false;
+        resources.OnColorRemoved += (_, _) => eventRaised = true;
+
+        bool result = resources.RemoveColor("MissingAccent");
+
+        Assert.False(result);
+        Assert.False(eventRaised);
+    }
+
+    [Fact]
+    public void MGResources_RemoveColor_AllowsReAddingKeyWithNewValue()
+    {
+        MGResources resources = CreateResources();
+        resources.AddResources(new ResourceDictionary()
+        {
+            ColorResources = { new ColorResource() { Key = "Accent", Value = new XAMLColor(1, 2, 3) } }
+        });
+
+        Assert.True(resources.RemoveColor("Accent"));
+
+        XAMLColor expectedColor = new(4, 5, 6);
+        resources.AddResources(new ResourceDictionary()
+        {
+            ColorResources = { new ColorResource() { Key = "Accent", Value = expectedColor } }
+        });
+
+        Assert.Equal(expectedColor, resources.Colors["Accent"]);
+    }
+
+    [Fact]
     public void MGResources_AddResources_RejectsDuplicateGlobalColorWithoutPartialRegistration()
     {
         MGResources resources = CreateResources();
@@ -665,6 +717,29 @@ public class StyleDictionaryTests
     }
 
     [Fact]
+    public void XAMLParser_StaticResource_ResolvesStyleSettersForFillAndBorderBrushes()
+    {
+        const string xaml = """
+            <ResourceDictionary>
+                <Color Key="Accent" Value="#0C2238" />
+                <Style Name="AccentBorder" TargetType="Border">
+                    <Setter Property="Background" Value="{StaticResource Accent}" />
+                    <Setter Property="BorderBrush" Value="{StaticResource Accent}" />
+                </Style>
+            </ResourceDictionary>
+            """;
+        MGResources resources = CreateResources();
+        resources.AddResources(XAMLParser.LoadStyleDictionary(xaml, sanitizeXamlString: true));
+        Border target = new() { StyleNames = "AccentBorder" };
+
+        ProcessStyles(target, resources);
+
+        Assert.Equal(new XAMLColor(12, 34, 56), Assert.IsType<SolidFillBrush>(target.Background).Color);
+        UniformBorderBrush borderBrush = Assert.IsType<UniformBorderBrush>(target.BorderBrush);
+        Assert.Equal(new XAMLColor(12, 34, 56), Assert.IsType<SolidFillBrush>(borderBrush.Brush).Color);
+    }
+
+    [Fact]
     public void XAMLParser_StaticResource_ResolvesAndMaterializesNestedFillBrushColor()
     {
         const string xaml = """
@@ -690,6 +765,41 @@ public class StyleDictionaryTests
         MGSolidFillBrush materializedBrush = Assert.IsType<MGSolidFillBrush>(brush.ToFillBrush(null, null));
         Assert.Equal(new XAMLColor(12, 34, 56), brush.Color);
         Assert.Equal(new Color(12, 34, 56), materializedBrush.Color);
+    }
+
+    [Fact]
+    public void XAMLParser_StaticResource_ResolvesDirectFillAndBorderBrushColor()
+    {
+        const string xaml = """
+            <StackPanel xmlns="clr-namespace:MGUI.Core.UI.XAML;assembly=MGUI.Core">
+                <StackPanel.Resources>
+                    <ResourceDictionary>
+                        <ColorResource Key="Accent" Value="#0C2238" />
+                    </ResourceDictionary>
+                </StackPanel.Resources>
+                <Border Background="{StaticResource Accent}" BorderBrush="{StaticResource Accent}" />
+                <Border>
+                    <Border.BorderBrush>
+                        <BandedBorderBrush>
+                            <BorderBand><UniformBorderBrush><SolidFillBrush Color="{StaticResource Accent}" /></UniformBorderBrush></BorderBand>
+                        </BandedBorderBrush>
+                    </Border.BorderBrush>
+                </Border>
+            </StackPanel>
+            """;
+        StackPanel root = (StackPanel)XamlServices.Parse(xaml);
+
+        ProcessStyles(root);
+
+        Border border = (Border)root.Children[0];
+        Assert.Equal(new XAMLColor(12, 34, 56), Assert.IsType<SolidFillBrush>(border.Background).Color);
+        UniformBorderBrush borderBrush = Assert.IsType<UniformBorderBrush>(border.BorderBrush);
+        Assert.Equal(new XAMLColor(12, 34, 56), Assert.IsType<SolidFillBrush>(borderBrush.Brush).Color);
+
+        Border bandedBorder = (Border)root.Children[1];
+        BandedBorderBrush bandedBorderBrush = Assert.IsType<BandedBorderBrush>(bandedBorder.BorderBrush);
+        UniformBorderBrush bandBrush = Assert.IsType<UniformBorderBrush>(Assert.Single(bandedBorderBrush.Bands).Brush);
+        Assert.Equal(new XAMLColor(12, 34, 56), Assert.IsType<SolidFillBrush>(bandBrush.Brush).Color);
     }
 
     [Fact]

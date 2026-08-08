@@ -760,6 +760,16 @@ namespace MGUI.Core.UI.XAML
         public override string ToString() => $"{nameof(UniformBorderBrush)}: {Brush}";
 
         public override IBorderBrush ToBorderBrush(MGDesktop Desktop, MGElement Element) => new MGUniformBorderBrush(Brush.ToFillBrush(Desktop, Element));
+
+        protected internal override IEnumerable<(XAMLBindableBase, string)> GetNestedBindableObjects()
+        {
+            foreach (var Item in base.GetNestedBindableObjects())
+            {
+                yield return Item;
+            }
+
+            yield return (Brush, nameof(Brush));
+        }
     }
 
     public class DockedBorderBrush : BorderBrush
@@ -808,6 +818,19 @@ namespace MGUI.Core.UI.XAML
         public override string ToString() => $"{nameof(BandedBorderBrush)}: {Bands.Count} band(s)";
 
         public override IBorderBrush ToBorderBrush(MGDesktop Desktop, MGElement Element) => new MGBandedBorderBrush(Bands.Select(x => x.ToBorderBand(Desktop, Element)).ToArray());
+
+        protected internal override IEnumerable<(XAMLBindableBase, string)> GetNestedBindableObjects()
+        {
+            foreach (var Item in base.GetNestedBindableObjects())
+            {
+                yield return Item;
+            }
+
+            for (int index = 0; index < Bands.Count; index++)
+            {
+                yield return (Bands[index].Brush, $"{nameof(Bands)}[{index}].{nameof(BorderBand.Brush)}");
+            }
+        }
     }
 
     [ContentProperty(nameof(Brush))]

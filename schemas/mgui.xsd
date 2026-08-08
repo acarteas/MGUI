@@ -523,6 +523,23 @@
     <xs:attribute name="ThicknessWeight" type="mgui:MguiBindableDouble" />
     <xs:anyAttribute namespace="##other" processContents="lax" />
   </xs:complexType>
+  <xs:complexType name="ColorResource">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="ColorResource.Value">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:XAMLColor" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
+    </xs:choice>
+    <xs:attribute name="Key" type="xs:string" />
+    <xs:attribute name="Value" type="xs:string" />
+    <xs:anyAttribute namespace="##other" processContents="lax" />
+  </xs:complexType>
   <xs:complexType name="ContentTemplate">
     <xs:choice minOccurs="0" maxOccurs="unbounded">
       <xs:element ref="mgui:Border" />
@@ -645,12 +662,6 @@
     </xs:choice>
     <xs:attribute name="ContentTemplateName" type="xs:string" />
     <xs:attribute name="Content" type="xs:string" />
-    <xs:anyAttribute namespace="##other" processContents="lax" />
-  </xs:complexType>
-  <xs:complexType name="EffectParameter">
-    <xs:attribute name="Name" type="xs:string" />
-    <xs:attribute name="Type" type="mgui:MGEffectParameterTypeEnum" />
-    <xs:attribute name="Value" type="xs:string" />
     <xs:anyAttribute namespace="##other" processContents="lax" />
   </xs:complexType>
   <xs:complexType name="ListViewColumn">
@@ -802,25 +813,18 @@
   </xs:complexType>
   <xs:complexType name="ResourceDictionary">
     <xs:choice minOccurs="0" maxOccurs="unbounded">
-      <xs:element ref="mgui:Style" />
-      <xs:element name="ResourceDictionary.Styles">
+      <xs:element name="ResourceDictionary.ColorResources">
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="unbounded">
-            <xs:element ref="mgui:Style" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
           </xs:choice>
           <xs:anyAttribute namespace="##other" processContents="lax" />
         </xs:complexType>
       </xs:element>
-      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
-    </xs:choice>
-    <xs:anyAttribute namespace="##other" processContents="lax" />
-  </xs:complexType>
-  <xs:complexType name="Setter">
-    <xs:choice minOccurs="0" maxOccurs="unbounded">
-      <xs:element name="Setter.Value">
+      <xs:element name="ResourceDictionary.Entries">
         <xs:complexType mixed="true">
-          <xs:choice minOccurs="0" maxOccurs="1">
+          <xs:choice minOccurs="0" maxOccurs="unbounded">
             <xs:element ref="mgui:BandedBorderBrush" />
             <xs:element ref="mgui:Border" />
             <xs:element ref="mgui:BorderBand" />
@@ -828,6 +832,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -886,6 +891,119 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
+            <xs:element ref="mgui:Stopwatch" />
+            <xs:element ref="mgui:Style" />
+            <xs:element ref="mgui:TabControl" />
+            <xs:element ref="mgui:TabItem" />
+            <xs:element ref="mgui:TextBlock" />
+            <xs:element ref="mgui:TextBox" />
+            <xs:element ref="mgui:TextureFillBrush" />
+            <xs:element ref="mgui:TexturedBorderBrush" />
+            <xs:element ref="mgui:Thickness" />
+            <xs:element ref="mgui:Timer" />
+            <xs:element ref="mgui:ToggleButton" />
+            <xs:element ref="mgui:ToolTip" />
+            <xs:element ref="mgui:TreeView" />
+            <xs:element ref="mgui:TreeViewItem" />
+            <xs:element ref="mgui:UniformBorderBrush" />
+            <xs:element ref="mgui:UniformGrid" />
+            <xs:element ref="mgui:Window" />
+            <xs:element ref="mgui:XAMLColor" />
+            <xs:element ref="mgui:XAMLDesigner" />
+            <xs:element ref="mgui:XAMLLoadOptions" />
+            <xs:element ref="mgui:XAMLPoint" />
+            <xs:element ref="mgui:XAMLRectangle" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="ResourceDictionary.Styles">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="unbounded">
+            <xs:element ref="mgui:Style" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
+    </xs:choice>
+    <xs:anyAttribute namespace="##other" processContents="lax" />
+  </xs:complexType>
+  <xs:complexType name="Setter">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="Setter.Value">
+        <xs:complexType mixed="true">
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:BandedBorderBrush" />
+            <xs:element ref="mgui:Border" />
+            <xs:element ref="mgui:BorderBand" />
+            <xs:element ref="mgui:BorderedFillBrush" />
+            <xs:element ref="mgui:Button" />
+            <xs:element ref="mgui:ChatBox" />
+            <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
+            <xs:element ref="mgui:ColumnDefinition" />
+            <xs:element ref="mgui:ComboBox" />
+            <xs:element ref="mgui:CompositedBorderBrush" />
+            <xs:element ref="mgui:CompositedFillBrush" />
+            <xs:element ref="mgui:ContentPresenter" />
+            <xs:element ref="mgui:ContentTemplate" />
+            <xs:element ref="mgui:ContextMenu" />
+            <xs:element ref="mgui:ContextMenuButton" />
+            <xs:element ref="mgui:ContextMenuRadioButton" />
+            <xs:element ref="mgui:ContextMenuSeparator" />
+            <xs:element ref="mgui:ContextMenuToggle" />
+            <xs:element ref="mgui:ContextualContentPresenter" />
+            <xs:element ref="mgui:DiagonalGradientFillBrush" />
+            <xs:element ref="mgui:DockPanel" />
+            <xs:element ref="mgui:DockedBorderBrush" />
+            <xs:element ref="mgui:EffectFillBrush" />
+            <xs:element ref="mgui:EffectParameter" />
+            <xs:element ref="mgui:Expander" />
+            <xs:element ref="mgui:GradientFillBrush" />
+            <xs:element ref="mgui:Grid" />
+            <xs:element ref="mgui:GridColorPicker" />
+            <xs:element ref="mgui:GridSplitter" />
+            <xs:element ref="mgui:GroupBox" />
+            <xs:element ref="mgui:HeaderedContentPresenter" />
+            <xs:element ref="mgui:HighlightBorderBrush" />
+            <xs:element ref="mgui:HighlightFillBrush" />
+            <xs:element ref="mgui:Image" />
+            <xs:element ref="mgui:InputConsumer" />
+            <xs:element ref="mgui:ListBox" />
+            <xs:element ref="mgui:ListView" />
+            <xs:element ref="mgui:ListViewColumn" />
+            <xs:element ref="mgui:ListViewColumnWidth" />
+            <xs:element ref="mgui:MGBinding" />
+            <xs:element ref="mgui:MenuBar" />
+            <xs:element ref="mgui:MenuBarItem" />
+            <xs:element ref="mgui:NineSliceFillBrush" />
+            <xs:element ref="mgui:Overlay" />
+            <xs:element ref="mgui:OverlayHost" />
+            <xs:element ref="mgui:OverlayPanel" />
+            <xs:element ref="mgui:PaddedFillBrush" />
+            <xs:element ref="mgui:PasswordBox" />
+            <xs:element ref="mgui:ProgressBar" />
+            <xs:element ref="mgui:ProgressButton" />
+            <xs:element ref="mgui:RadioButton" />
+            <xs:element ref="mgui:RatingControl" />
+            <xs:element ref="mgui:Rectangle" />
+            <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
+            <xs:element ref="mgui:RowDefinition" />
+            <xs:element ref="mgui:ScrollViewer" />
+            <xs:element ref="mgui:Separator" />
+            <xs:element ref="mgui:Setter" />
+            <xs:element ref="mgui:Size" />
+            <xs:element ref="mgui:Slider" />
+            <xs:element ref="mgui:SolidFillBrush" />
+            <xs:element ref="mgui:Spacer" />
+            <xs:element ref="mgui:Spoiler" />
+            <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -961,6 +1079,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -1019,6 +1138,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -1056,6 +1176,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -1114,6 +1235,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -1165,6 +1287,10 @@
     <xs:attribute name="Height" type="mgui:MguiBindableInt" />
     <xs:anyAttribute namespace="##other" processContents="lax" />
   </xs:complexType>
+  <xs:complexType name="StaticResource">
+    <xs:attribute name="Key" type="xs:string" />
+    <xs:anyAttribute namespace="##other" processContents="lax" />
+  </xs:complexType>
   <xs:complexType name="Thickness">
     <xs:attribute name="Left" type="mgui:MguiBindableInt" />
     <xs:attribute name="Top" type="mgui:MguiBindableInt" />
@@ -1203,6 +1329,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -1261,6 +1388,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -1290,6 +1418,113 @@
       </xs:element>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
     </xs:choice>
+    <xs:attribute name="DataContext" type="xs:string" />
+    <xs:anyAttribute namespace="##other" processContents="lax" />
+  </xs:complexType>
+  <xs:complexType name="EffectParameter">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="EffectParameter.DataContext">
+        <xs:complexType mixed="true">
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="mgui:BandedBorderBrush" />
+            <xs:element ref="mgui:Border" />
+            <xs:element ref="mgui:BorderBand" />
+            <xs:element ref="mgui:BorderedFillBrush" />
+            <xs:element ref="mgui:Button" />
+            <xs:element ref="mgui:ChatBox" />
+            <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
+            <xs:element ref="mgui:ColumnDefinition" />
+            <xs:element ref="mgui:ComboBox" />
+            <xs:element ref="mgui:CompositedBorderBrush" />
+            <xs:element ref="mgui:CompositedFillBrush" />
+            <xs:element ref="mgui:ContentPresenter" />
+            <xs:element ref="mgui:ContentTemplate" />
+            <xs:element ref="mgui:ContextMenu" />
+            <xs:element ref="mgui:ContextMenuButton" />
+            <xs:element ref="mgui:ContextMenuRadioButton" />
+            <xs:element ref="mgui:ContextMenuSeparator" />
+            <xs:element ref="mgui:ContextMenuToggle" />
+            <xs:element ref="mgui:ContextualContentPresenter" />
+            <xs:element ref="mgui:DiagonalGradientFillBrush" />
+            <xs:element ref="mgui:DockPanel" />
+            <xs:element ref="mgui:DockedBorderBrush" />
+            <xs:element ref="mgui:EffectFillBrush" />
+            <xs:element ref="mgui:EffectParameter" />
+            <xs:element ref="mgui:Expander" />
+            <xs:element ref="mgui:GradientFillBrush" />
+            <xs:element ref="mgui:Grid" />
+            <xs:element ref="mgui:GridColorPicker" />
+            <xs:element ref="mgui:GridSplitter" />
+            <xs:element ref="mgui:GroupBox" />
+            <xs:element ref="mgui:HeaderedContentPresenter" />
+            <xs:element ref="mgui:HighlightBorderBrush" />
+            <xs:element ref="mgui:HighlightFillBrush" />
+            <xs:element ref="mgui:Image" />
+            <xs:element ref="mgui:InputConsumer" />
+            <xs:element ref="mgui:ListBox" />
+            <xs:element ref="mgui:ListView" />
+            <xs:element ref="mgui:ListViewColumn" />
+            <xs:element ref="mgui:ListViewColumnWidth" />
+            <xs:element ref="mgui:MGBinding" />
+            <xs:element ref="mgui:MenuBar" />
+            <xs:element ref="mgui:MenuBarItem" />
+            <xs:element ref="mgui:NineSliceFillBrush" />
+            <xs:element ref="mgui:Overlay" />
+            <xs:element ref="mgui:OverlayHost" />
+            <xs:element ref="mgui:OverlayPanel" />
+            <xs:element ref="mgui:PaddedFillBrush" />
+            <xs:element ref="mgui:PasswordBox" />
+            <xs:element ref="mgui:ProgressBar" />
+            <xs:element ref="mgui:ProgressButton" />
+            <xs:element ref="mgui:RadioButton" />
+            <xs:element ref="mgui:RatingControl" />
+            <xs:element ref="mgui:Rectangle" />
+            <xs:element ref="mgui:ResizeGrip" />
+            <xs:element ref="mgui:ResourceDictionary" />
+            <xs:element ref="mgui:RowDefinition" />
+            <xs:element ref="mgui:ScrollViewer" />
+            <xs:element ref="mgui:Separator" />
+            <xs:element ref="mgui:Setter" />
+            <xs:element ref="mgui:Size" />
+            <xs:element ref="mgui:Slider" />
+            <xs:element ref="mgui:SolidFillBrush" />
+            <xs:element ref="mgui:Spacer" />
+            <xs:element ref="mgui:Spoiler" />
+            <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
+            <xs:element ref="mgui:Stopwatch" />
+            <xs:element ref="mgui:Style" />
+            <xs:element ref="mgui:TabControl" />
+            <xs:element ref="mgui:TabItem" />
+            <xs:element ref="mgui:TextBlock" />
+            <xs:element ref="mgui:TextBox" />
+            <xs:element ref="mgui:TextureFillBrush" />
+            <xs:element ref="mgui:TexturedBorderBrush" />
+            <xs:element ref="mgui:Thickness" />
+            <xs:element ref="mgui:Timer" />
+            <xs:element ref="mgui:ToggleButton" />
+            <xs:element ref="mgui:ToolTip" />
+            <xs:element ref="mgui:TreeView" />
+            <xs:element ref="mgui:TreeViewItem" />
+            <xs:element ref="mgui:UniformBorderBrush" />
+            <xs:element ref="mgui:UniformGrid" />
+            <xs:element ref="mgui:Window" />
+            <xs:element ref="mgui:XAMLColor" />
+            <xs:element ref="mgui:XAMLDesigner" />
+            <xs:element ref="mgui:XAMLLoadOptions" />
+            <xs:element ref="mgui:XAMLPoint" />
+            <xs:element ref="mgui:XAMLRectangle" />
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="1" />
+          </xs:choice>
+          <xs:anyAttribute namespace="##other" processContents="lax" />
+        </xs:complexType>
+      </xs:element>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
+    </xs:choice>
+    <xs:attribute name="Name" type="xs:string" />
+    <xs:attribute name="Type" type="mgui:MGEffectParameterTypeEnum" />
+    <xs:attribute name="Value" type="xs:string" />
     <xs:attribute name="DataContext" type="xs:string" />
     <xs:anyAttribute namespace="##other" processContents="lax" />
   </xs:complexType>
@@ -1350,6 +1585,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -1408,6 +1644,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -1562,6 +1799,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -1620,6 +1858,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -1741,6 +1980,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -1799,6 +2039,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -1853,6 +2094,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -1911,6 +2153,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -1988,6 +2231,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -2046,6 +2290,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -2189,6 +2434,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -2247,6 +2493,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -2438,6 +2685,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -2496,6 +2744,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -2647,6 +2896,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -2705,6 +2955,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -2777,6 +3028,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -2835,6 +3087,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -2924,6 +3177,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -2982,6 +3236,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -3198,6 +3453,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -3256,6 +3512,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -3460,6 +3717,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -3518,6 +3776,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -3583,6 +3842,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -3641,6 +3901,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -3744,6 +4005,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -3802,6 +4064,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -3894,6 +4157,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -3952,6 +4216,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -4104,6 +4369,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -4162,6 +4428,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -4411,6 +4678,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -4469,6 +4737,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -4679,6 +4948,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -4737,6 +5007,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -4909,6 +5180,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -4967,6 +5239,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -5106,6 +5379,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -5164,6 +5438,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -5249,6 +5524,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -5307,6 +5583,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -5421,6 +5698,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -5479,6 +5757,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -5678,6 +5957,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -5736,6 +6016,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -6037,6 +6318,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -6095,6 +6377,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -6249,6 +6532,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -6307,6 +6591,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -6429,6 +6714,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -6487,6 +6773,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -6610,6 +6897,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -6668,6 +6956,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -6825,6 +7114,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -6883,6 +7173,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -7055,6 +7346,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -7113,6 +7405,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -7303,6 +7596,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -7361,6 +7655,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -7551,6 +7846,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -7609,6 +7905,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -7811,6 +8108,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -7869,6 +8167,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -8050,6 +8349,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -8108,6 +8408,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -8277,6 +8578,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -8335,6 +8637,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -8498,6 +8801,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -8556,6 +8860,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -8725,6 +9030,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -8783,6 +9089,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -8937,6 +9244,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -8995,6 +9303,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -9279,6 +9588,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -9337,6 +9647,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -9491,6 +9802,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -9549,6 +9861,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -9716,6 +10029,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -9774,6 +10088,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -9987,6 +10302,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -10045,6 +10361,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -10281,6 +10598,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -10339,6 +10657,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -10429,6 +10748,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -10487,6 +10807,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -10641,6 +10962,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -10699,6 +11021,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -10897,6 +11220,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -10955,6 +11279,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -11109,6 +11434,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -11167,6 +11493,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -11383,6 +11710,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -11441,6 +11769,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -11640,6 +11969,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -11698,6 +12028,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -11881,6 +12212,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -11939,6 +12271,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -12120,6 +12453,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -12178,6 +12512,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -12403,6 +12738,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -12461,6 +12797,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -12651,6 +12988,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -12709,6 +13047,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -12897,6 +13236,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -12955,6 +13295,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -13011,6 +13352,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -13069,6 +13411,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -13206,6 +13549,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -13264,6 +13608,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -13418,6 +13763,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -13476,6 +13822,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -13644,6 +13991,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -13702,6 +14050,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -13792,6 +14141,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -13850,6 +14200,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -14004,6 +14355,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -14062,6 +14414,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -14367,6 +14720,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -14425,6 +14779,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -14579,6 +14934,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -14637,6 +14993,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -14954,6 +15311,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -15012,6 +15370,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -15175,6 +15534,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -15233,6 +15593,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -15560,6 +15921,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -15618,6 +15980,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -15772,6 +16135,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -15830,6 +16194,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -16039,6 +16404,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -16097,6 +16463,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -16341,6 +16708,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -16399,6 +16767,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -16535,6 +16904,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -16593,6 +16963,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -16890,6 +17261,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -16948,6 +17320,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -17102,6 +17475,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -17160,6 +17534,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -17443,6 +17818,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -17501,6 +17877,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -17655,6 +18032,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -17713,6 +18091,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -17996,6 +18375,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -18054,6 +18434,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -18208,6 +18589,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -18266,6 +18648,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -18549,6 +18932,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -18607,6 +18991,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -18909,6 +19294,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -18967,6 +19353,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -19274,6 +19661,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -19332,6 +19720,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -19549,6 +19938,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -19607,6 +19997,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -19938,6 +20329,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -19996,6 +20388,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -20239,6 +20632,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -20297,6 +20691,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -20589,6 +20984,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -20647,6 +21043,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -20863,6 +21260,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -20921,6 +21319,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -21207,6 +21606,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -21265,6 +21665,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -21419,6 +21820,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -21477,6 +21879,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -21666,6 +22069,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -21724,6 +22128,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -21900,6 +22305,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -21958,6 +22364,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -22149,6 +22556,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -22207,6 +22615,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -22253,6 +22662,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -22311,6 +22721,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -22548,6 +22959,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -22606,6 +23018,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -22787,6 +23200,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -22845,6 +23259,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -23088,6 +23503,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -23146,6 +23562,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -23318,6 +23735,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -23376,6 +23794,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -23611,6 +24030,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -23669,6 +24089,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -23844,6 +24265,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -23902,6 +24324,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -24228,6 +24651,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -24286,6 +24710,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -24440,6 +24865,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -24498,6 +24924,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -24787,6 +25214,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -24845,6 +25273,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -25026,6 +25455,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -25084,6 +25514,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -25369,6 +25800,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -25427,6 +25859,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -25581,6 +26014,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -25639,6 +26073,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -25846,6 +26281,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -25904,6 +26340,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -26094,6 +26531,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -26152,6 +26590,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -26525,6 +26964,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -26583,6 +27023,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -26805,6 +27246,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -26863,6 +27305,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -27204,6 +27647,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -27262,6 +27706,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -27425,6 +27870,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -27483,6 +27929,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -27777,6 +28224,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -27835,6 +28283,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -28061,6 +28510,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -28119,6 +28569,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -28419,6 +28870,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -28477,6 +28929,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -28631,6 +29084,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -28689,6 +29143,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -29052,6 +29507,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -29110,6 +29566,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -29264,6 +29721,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -29322,6 +29780,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -29609,6 +30068,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -29667,6 +30127,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -29883,6 +30344,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -29941,6 +30403,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -30285,6 +30748,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -30343,6 +30807,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -30497,6 +30962,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -30555,6 +31021,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -30867,6 +31334,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -30925,6 +31393,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -31106,6 +31575,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -31164,6 +31634,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -31451,6 +31922,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -31509,6 +31981,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -31663,6 +32136,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -31721,6 +32195,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -32032,6 +32507,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -32090,6 +32566,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -32298,6 +32775,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -32356,6 +32834,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -32716,6 +33195,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -32774,6 +33254,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -32959,6 +33440,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -33017,6 +33499,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -33341,6 +33824,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -33399,6 +33883,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -33614,6 +34099,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -33672,6 +34158,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -34005,6 +34492,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -34063,6 +34551,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -34226,6 +34715,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -34284,6 +34774,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -34609,6 +35100,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -34667,6 +35159,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -34861,6 +35354,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -34919,6 +35413,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -35246,6 +35741,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -35304,6 +35800,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -35467,6 +35964,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -35525,6 +36023,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -35809,6 +36308,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -35867,6 +36367,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -36039,6 +36540,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -36097,6 +36599,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -36384,6 +36887,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -36442,6 +36946,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -36605,6 +37110,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -36663,6 +37169,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -36951,6 +37458,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -37009,6 +37517,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -37172,6 +37681,7 @@
             <xs:element ref="mgui:Button" />
             <xs:element ref="mgui:ChatBox" />
             <xs:element ref="mgui:CheckBox" />
+            <xs:element ref="mgui:ColorResource" />
             <xs:element ref="mgui:ColumnDefinition" />
             <xs:element ref="mgui:ComboBox" />
             <xs:element ref="mgui:CompositedBorderBrush" />
@@ -37230,6 +37740,7 @@
             <xs:element ref="mgui:Spacer" />
             <xs:element ref="mgui:Spoiler" />
             <xs:element ref="mgui:StackPanel" />
+            <xs:element ref="mgui:StaticResource" />
             <xs:element ref="mgui:Stopwatch" />
             <xs:element ref="mgui:Style" />
             <xs:element ref="mgui:TabControl" />
@@ -37351,6 +37862,7 @@
   <xs:element name="Button" type="mgui:Button" />
   <xs:element name="ChatBox" type="mgui:ChatBox" />
   <xs:element name="CheckBox" type="mgui:CheckBox" />
+  <xs:element name="ColorResource" type="mgui:ColorResource" />
   <xs:element name="ColumnDefinition" type="mgui:ColumnDefinition" />
   <xs:element name="ComboBox" type="mgui:ComboBox" />
   <xs:element name="CompositedBorderBrush" type="mgui:CompositedBorderBrush" />
@@ -37409,6 +37921,7 @@
   <xs:element name="Spacer" type="mgui:Spacer" />
   <xs:element name="Spoiler" type="mgui:Spoiler" />
   <xs:element name="StackPanel" type="mgui:StackPanel" />
+  <xs:element name="StaticResource" type="mgui:StaticResource" />
   <xs:element name="Stopwatch" type="mgui:Stopwatch" />
   <xs:element name="Style" type="mgui:Style" />
   <xs:element name="TabControl" type="mgui:TabControl" />

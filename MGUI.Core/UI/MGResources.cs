@@ -469,9 +469,24 @@ namespace MGUI.Core.UI
                 return false;
         }
 
+        public bool RemoveColor(string Key)
+        {
+            if (_Colors.TryGetValue(Key, out XAMLColor Color))
+            {
+                _Colors.Remove(Key);
+                OnColorRemoved?.Invoke(this, (Key, Color));
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
         public event EventHandler<(string Name, Style Style)> OnStyleAdded;
         public event EventHandler<(string Name, Style Style)> OnStyleRemoved;
         public event EventHandler<(string Key, XAMLColor Color)> OnColorAdded;
+        public event EventHandler<(string Key, XAMLColor Color)> OnColorRemoved;
         #endregion Styles
 
         #region StaticResources
