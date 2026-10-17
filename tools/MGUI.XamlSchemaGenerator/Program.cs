@@ -54,7 +54,7 @@ internal sealed class XamlSchemaGenerator
         return 0;
     }
 
-    private XDocument GenerateSchemaDocument()
+    internal XDocument GenerateSchemaDocument()
     {
         XElement schema = new(
             Xs + "schema",
@@ -71,6 +71,7 @@ internal sealed class XamlSchemaGenerator
             )
         );
 
+        schema.Add(GenerateMarkupExtensionType());
         schema.Add(GenerateBindingMarkupExtensionType());
         schema.Add(GenerateMguiBooleanType());
         schema.Add(GenerateBindableNumericTypes());
@@ -97,6 +98,19 @@ internal sealed class XamlSchemaGenerator
         }
 
         return new XDocument(new XDeclaration("1.0", "utf-8", "yes"), schema);
+    }
+
+    private static XElement GenerateMarkupExtensionType()
+    {
+        return new XElement(
+            Xs + "simpleType",
+            new XAttribute("name", MarkupExtensionSchemaTypeName),
+            new XElement(
+                Xs + "restriction",
+                new XAttribute("base", "xs:string"),
+                new XElement(Xs + "pattern", new XAttribute("value", @"\s*\{.+\}\s*"))
+            )
+        );
     }
 
     private XElement GenerateBindingMarkupExtensionType()
@@ -378,25 +392,13 @@ internal sealed class XamlSchemaGenerator
         return enumTypes.Values;
     }
 
-    private IEnumerable<PropertyInfo> GetAttributePropertiesDeclaredOn(Type type)
-    {
-        return type
-            .GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly)
-            .Where(x => x.CanWrite)
-            .Where(x => x.GetIndexParameters().Length == 0)
-            .Where(IsBrowsable)
-            .Where(x => IsSimpleAttributeType(x.PropertyType))
-            .OrderBy(x => x.Name, StringComparer.Ordinal);
-    }
-
     private IEnumerable<PropertyInfo> GetAttributePropertiesVisibleOn(Type type)
     {
         return type
             .GetProperties(BindingFlags.Instance | BindingFlags.Public)
             .Where(x => x.CanWrite)
             .Where(x => x.GetIndexParameters().Length == 0)
-            .Where(IsBrowsable)
-            .Where(x => IsSimpleAttributeType(x.PropertyType));
+            .Where(IsBrowsable);
     }
 
     private IEnumerable<PropertyInfo> GetPropertyElementCandidates(Type type)
@@ -461,7 +463,9 @@ internal sealed class XamlSchemaGenerator
     {
         Type normalizedPropertyType = NormalizePropertyType(propertyType);
 
-        if (normalizedPropertyType == typeof(string) || normalizedPropertyType == typeof(object))
+        if (normalizedPropertyType == typeof(string)
+            || normalizedPropertyType == typeof(object)
+            || normalizedPropertyType == typeof(Type))
         {
             return true;
         }
@@ -504,6 +508,12 @@ internal sealed class XamlSchemaGenerator
     private static string GetAttributeSchemaType(Type propertyType)
     {
         Type normalizedPropertyType = NormalizePropertyType(propertyType);
+
+        // XAML markup extensions can supply values even when no string converter exists.
+        if (!IsSimpleAttributeType(normalizedPropertyType))
+        {
+            return $"mgui:{MarkupExtensionSchemaTypeName}";
+        }
 
         if (normalizedPropertyType.IsEnum)
         {
@@ -639,6 +649,7 @@ internal sealed class XamlSchemaGenerator
         return depth;
     }
 
+    private const string MarkupExtensionSchemaTypeName = "MguiMarkupExtension";
     private const string BindingMarkupExtensionSchemaTypeName = "MguiBindingMarkupExtension";
     private static readonly IReadOnlyList<(string SchemaTypeName, string XmlSchemaTypeName)> BindableNumericTypeMappings =
     [
