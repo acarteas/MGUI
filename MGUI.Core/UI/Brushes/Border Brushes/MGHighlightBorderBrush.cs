@@ -34,7 +34,7 @@ namespace MGUI.Core.UI.Brushes.Border_Brushes
     /// <summary>An <see cref="IBorderBrush"/> that draws a simple animation (using a <see cref="HighlightColor"/>) overtop of the border, typically to direct the user's attention
     /// to the bordered element. <see cref="MGHighlightBorderBrush"/>es are particularly useful for tutorials or directing the user's focus to a newly-unlocked piece of content on the UI.<para/>
     /// See also: <see cref="MGUniformBorderBrush"/>, <see cref="MGDockedBorderBrush"/>, <see cref="MGTexturedBorderBrush"/>, <see cref="MGBandedBorderBrush"/>, <see cref="MGCompositedBorderBrush"/></summary>
-    public class MGHighlightBorderBrush : ViewModelBase, IBorderBrush
+    public partial class MGHighlightBorderBrush : ViewModelBase, IBorderBrush
     {
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		private IBorderBrush _Underlay;
@@ -47,6 +47,7 @@ namespace MGUI.Core.UI.Brushes.Border_Brushes
 				if (_Underlay != value)
 				{
 					_Underlay = value;
+					_RenderCacheSource?.Invalidate();
 					NPC(nameof(Underlay));
 				}
 			}
@@ -63,6 +64,7 @@ namespace MGUI.Core.UI.Brushes.Border_Brushes
 				if (_HighlightColor != value)
 				{
 					_HighlightColor = value;
+					_RenderCacheSource?.Invalidate();
 					NPC(nameof(HighlightColor));
 					HighlightFillBrush = HighlightColor.AsFillBrush();
 					HighlightBorderBrush = new MGUniformBorderBrush(HighlightFillBrush);
@@ -91,6 +93,7 @@ namespace MGUI.Core.UI.Brushes.Border_Brushes
 				if (_AnimationType != value)
 				{
 					_AnimationType = value;
+					_RenderCacheSource?.Invalidate();
 					NPC(nameof(AnimationType));
 				}
 			}
@@ -111,6 +114,7 @@ namespace MGUI.Core.UI.Brushes.Border_Brushes
 				if (_AnimationProgress != value)
 				{
 					_AnimationProgress = value;
+					_RenderCacheSource?.Invalidate();
 					NPC(nameof(AnimationProgress));
 					NPC(nameof(ActualAnimationProgress));
 
@@ -143,6 +147,7 @@ namespace MGUI.Core.UI.Brushes.Border_Brushes
 				if (_PulseFadeDuration != value)
 				{
 					_PulseFadeDuration = value;
+					_RenderCacheSource?.Invalidate();
 					NPC(nameof(PulseFadeDuration));
 				}
 			}
@@ -165,6 +170,7 @@ namespace MGUI.Core.UI.Brushes.Border_Brushes
 				if (_PulseDelay != value)
 				{
 					_PulseDelay = value;
+					_RenderCacheSource?.Invalidate();
 					NPC(nameof(PulseDelay));
 				}
 			}
@@ -191,6 +197,7 @@ namespace MGUI.Core.UI.Brushes.Border_Brushes
 				if (_FlashShowDuration != value)
 				{
 					_FlashShowDuration = value;
+					_RenderCacheSource?.Invalidate();
 					NPC(nameof(FlashShowDuration));
 				}
 			}
@@ -213,6 +220,7 @@ namespace MGUI.Core.UI.Brushes.Border_Brushes
 				if (_FlashHideDuration != value)
 				{
 					_FlashHideDuration = value;
+					_RenderCacheSource?.Invalidate();
 					NPC(nameof(FlashHideDuration));
 				}
 			}
@@ -236,6 +244,7 @@ namespace MGUI.Core.UI.Brushes.Border_Brushes
 				if (_ProgressFlowDirection != value)
 				{
 					_ProgressFlowDirection = value;
+					_RenderCacheSource?.Invalidate();
 					NPC(nameof(ProgressFlowDirection));
 				}
 			}
@@ -258,6 +267,7 @@ namespace MGUI.Core.UI.Brushes.Border_Brushes
 				if (_ProgressDuration != value)
 				{
 					_ProgressDuration = value;
+					_RenderCacheSource?.Invalidate();
 					NPC(nameof(ProgressDuration));
 				}
 			}
@@ -280,6 +290,7 @@ namespace MGUI.Core.UI.Brushes.Border_Brushes
 				if (_ProgressSize != value)
 				{
 					_ProgressSize = value;
+					_RenderCacheSource?.Invalidate();
 					NPC(nameof(ProgressSize));
 				}
 			}
@@ -303,6 +314,7 @@ namespace MGUI.Core.UI.Brushes.Border_Brushes
 				if (_ScanOrientation != value)
 				{
 					_ScanOrientation = value;
+					_RenderCacheSource?.Invalidate();
 					NPC(nameof(ScanOrientation));
 				}
 			}
@@ -323,6 +335,7 @@ namespace MGUI.Core.UI.Brushes.Border_Brushes
 				if (_ScanIsReversed != value)
 				{
 					_ScanIsReversed = value;
+					_RenderCacheSource?.Invalidate();
 					NPC(nameof(ScanIsReversed));
 				}
 			}
@@ -345,6 +358,7 @@ namespace MGUI.Core.UI.Brushes.Border_Brushes
 				if (_ScanDuration != value)
 				{
 					_ScanDuration = value;
+					_RenderCacheSource?.Invalidate();
 					NPC(nameof(ScanDuration));
 				}
 			}
@@ -369,6 +383,7 @@ namespace MGUI.Core.UI.Brushes.Border_Brushes
 				if (_ScanSize != value)
 				{
 					_ScanSize = value;
+					_RenderCacheSource?.Invalidate();
 					NPC(nameof(ScanSize));
 				}
 			}
@@ -387,6 +402,7 @@ namespace MGUI.Core.UI.Brushes.Border_Brushes
 				if (_IsEnabled != value)
 				{
 					_IsEnabled = value;
+					_RenderCacheSource?.Invalidate();
 					NPC(nameof(IsEnabled));
 				}
 			}
@@ -403,6 +419,7 @@ namespace MGUI.Core.UI.Brushes.Border_Brushes
 				if (_Target != value)
 				{
 					_Target = value;
+					_RenderCacheSource?.Invalidate();
 					NPC(nameof(Target));
 				}
 			}
@@ -419,6 +436,7 @@ namespace MGUI.Core.UI.Brushes.Border_Brushes
 				if (_StopOnMouseOver != value)
 				{
 					_StopOnMouseOver = value;
+					_RenderCacheSource?.Invalidate();
 					NPC(nameof(StopOnMouseOver));
 				}
 			}
@@ -436,6 +454,7 @@ namespace MGUI.Core.UI.Brushes.Border_Brushes
 				if (_StopOnClick != value)
 				{
 					_StopOnClick = value;
+					_RenderCacheSource?.Invalidate();
 					NPC(nameof(StopOnClick));
 				}
 			}

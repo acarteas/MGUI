@@ -8,6 +8,7 @@ public class RenderCacheNativeTests
     private static readonly Lazy<IReadOnlyDictionary<string, bool>> Results = new(RunHost);
 
     [Theory]
+    [InlineData("native-source-lifetimes-manual-invalidation-weak-owners")]
     [InlineData("native-settings-first-bind-readback")]
     [InlineData("caller-resource-ownership")]
     [InlineData("unused-and-queued-cpu-only")]

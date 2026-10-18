@@ -13,7 +13,7 @@ namespace MGUI.Core.UI.Brushes.Fill_Brushes
     /// <summary>A brush that directs the user's focus to a particular region either by brightening the focused region or by dimming the unfocused region.<para/>
     /// This brush is commonly used to apply a 35% transparent black color overlay to an entire window except for a particular rectangular region,
     /// so that the uncolored region stands out visually.</summary>
-    public class MGHighlightFillBrush : XAMLBindableBase, IFillBrush, 
+    public partial class MGHighlightFillBrush : XAMLBindableBase, IFillBrush,
 		IElementNameResolver, IResourcesResolver, IDesktopResolver
     {
 		/// <summary>Only used for databindings purposes in XAML. Do not modify.</summary>
@@ -43,6 +43,7 @@ namespace MGUI.Core.UI.Brushes.Fill_Brushes
 				if (_IsEnabled != value)
 				{
 					_IsEnabled = value;
+					_RenderCacheSource?.Invalidate();
 					NPC(nameof(IsEnabled));
 				}
 			}
@@ -61,6 +62,7 @@ namespace MGUI.Core.UI.Brushes.Fill_Brushes
 				if (_FillFocusedRegion != value)
 				{
 					_FillFocusedRegion = value;
+					_RenderCacheSource?.Invalidate();
 					NPC(nameof(FillFocusedRegion));
 				}
 			}
@@ -79,6 +81,7 @@ namespace MGUI.Core.UI.Brushes.Fill_Brushes
 				if (_FocusedColor != value)
 				{
 					_FocusedColor = value;
+					_RenderCacheSource?.Invalidate();
 					NPC(nameof(FocusedColor));
 				}
 			}
@@ -98,6 +101,7 @@ namespace MGUI.Core.UI.Brushes.Fill_Brushes
 				if (_FillUnfocusedRegion != value)
 				{
 					_FillUnfocusedRegion = value;
+					_RenderCacheSource?.Invalidate();
 					NPC(nameof(FillUnfocusedRegion));
 				}
 			}
@@ -116,6 +120,7 @@ namespace MGUI.Core.UI.Brushes.Fill_Brushes
 				if (_UnfocusedColor != value)
 				{
 					_UnfocusedColor = value;
+					_RenderCacheSource?.Invalidate();
 					NPC(nameof(UnfocusedColor));
 				}
 			}
@@ -140,8 +145,9 @@ namespace MGUI.Core.UI.Brushes.Fill_Brushes
 				if (_FocusedBounds != value)
 				{
 					_FocusedBounds = value;
-					NPC(nameof(FocusedBounds));
-					CachedUnfocusedRegions.Clear();
+                    CachedUnfocusedRegions.Clear();
+                    _RenderCacheSource?.Invalidate();
+                    NPC(nameof(FocusedBounds));
 				}
 			}
 		}
@@ -160,25 +166,14 @@ namespace MGUI.Core.UI.Brushes.Fill_Brushes
 			{
 				if (_FocusedElements != value)
 				{
-					void HandleLayoutBoundsChanged(object sender, EventArgs<Rectangle> e) => CachedUnfocusedRegions.Clear();
-
-					if (FocusedElements != null)
-					{
-						foreach (MGElement Element in FocusedElements)
-							Element.OnLayoutBoundsChanged -= HandleLayoutBoundsChanged;
-					}
+                    DetachFocusedElementNotifications();
 
                     _FocusedElements = value;
-					NPC(nameof(FocusedElements));
-					NPC(nameof(FocusedElement));
-
-                    if (FocusedElements != null)
-                    {
-                        foreach (MGElement Element in FocusedElements)
-                            Element.OnLayoutBoundsChanged += HandleLayoutBoundsChanged;
-                    }
-
+                    AttachFocusedElementNotifications();
                     CachedUnfocusedRegions.Clear();
+                    _RenderCacheSource?.Invalidate();
+                    NPC(nameof(FocusedElements));
+                    NPC(nameof(FocusedElement));
                 }
 			}
 		}
@@ -195,8 +190,9 @@ namespace MGUI.Core.UI.Brushes.Fill_Brushes
 				if (_FocusedElementPadding != value)
 				{
 					_FocusedElementPadding = value;
-					NPC(nameof(FocusedElementPadding));
                     CachedUnfocusedRegions.Clear();
+                    _RenderCacheSource?.Invalidate();
+                    NPC(nameof(FocusedElementPadding));
                 }
 			}
 		}
@@ -207,6 +203,42 @@ namespace MGUI.Core.UI.Brushes.Fill_Brushes
 			get => FocusedElements?.FirstOrDefault();
 			set => FocusedElements = value == null ? new List<MGElement>() : new List<MGElement>() { value };
 		}
+
+        private readonly List<Action> FocusedElementUnsubscribe = new();
+        private void DetachFocusedElementNotifications()
+        {
+            foreach (Action unsubscribe in FocusedElementUnsubscribe)
+            {
+                unsubscribe();
+            }
+            FocusedElementUnsubscribe.Clear();
+        }
+        private void AttachFocusedElementNotifications()
+        {
+            if (FocusedElements == null)
+            {
+                return;
+            }
+            foreach (MGElement element in FocusedElements)
+            {
+                var weak = new WeakReference<MGHighlightFillBrush>(this);
+                EventHandler<EventArgs<Rectangle>> handler = null;
+                handler = (sender, args) =>
+                {
+                    if (weak.TryGetTarget(out var brush))
+                    {
+                        brush.CachedUnfocusedRegions.Clear();
+                        brush._RenderCacheSource?.Invalidate();
+                    }
+                    else
+                    {
+                        element.OnLayoutBoundsChanged -= handler;
+                    }
+                };
+                element.OnLayoutBoundsChanged += handler;
+                FocusedElementUnsubscribe.Add(() => element.OnLayoutBoundsChanged -= handler);
+            }
+        }
 
 		private readonly List<(Rectangle, List<Rectangle>)> CachedUnfocusedRegions = new List<(Rectangle, List<Rectangle>)>();
 		private const int MaxCachedUnfocusedRegions = 20;

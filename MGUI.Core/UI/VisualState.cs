@@ -50,7 +50,7 @@ namespace MGUI.Core.UI
         }
     }
 
-    public class VisualStateSetting<TDataType> : ViewModelBase
+    public partial class VisualStateSetting<TDataType> : ViewModelBase
     {
         private readonly EqualityComparer<TDataType> EqualityComparer = EqualityComparer<TDataType>.Default;
 
@@ -64,6 +64,7 @@ namespace MGUI.Core.UI
                 if (!EqualityComparer.Equals(_DisabledValue, value))
                 {
                     _DisabledValue = value;
+                    NotifyRenderSourceChanged();
                     NPC(nameof(DisabledValue));
                 }
             }
@@ -79,6 +80,7 @@ namespace MGUI.Core.UI
                 if (!EqualityComparer.Equals(_SelectedValue, value))
                 {
                     _SelectedValue = value;
+                    NotifyRenderSourceChanged();
                     NPC(nameof(SelectedValue));
                 }
             }
@@ -94,6 +96,7 @@ namespace MGUI.Core.UI
                 if (!EqualityComparer.Equals(_NormalValue, value))
                 {
                     _NormalValue = value;
+                    NotifyRenderSourceChanged();
                     NPC(nameof(NormalValue));
                 }
             }
@@ -151,6 +154,7 @@ namespace MGUI.Core.UI
                     _HoveredColor = value;
                     UpdateFocusedOverlay();
                     UpdatePressedOverlay();
+                    NotifyRenderSourceChanged();
                     NPC(nameof(FocusedColor));
                     NPC(nameof(HoveredColorOverlay));
                     NPC(nameof(PressedColorOverlay));
@@ -171,6 +175,7 @@ namespace MGUI.Core.UI
                 {
                     _PressedModifier = value;
                     UpdatePressedOverlay();
+                    NotifyRenderSourceChanged();
                     NPC(nameof(PressedModifier));
                 }
             }
@@ -187,6 +192,7 @@ namespace MGUI.Core.UI
                 {
                     _PressedModifierType = value;
                     UpdatePressedOverlay();
+                    NotifyRenderSourceChanged();
                     NPC(nameof(PressedModifierType));
                 }
             }

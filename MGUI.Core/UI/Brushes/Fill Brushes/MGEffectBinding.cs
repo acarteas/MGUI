@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace MGUI.Core.UI.Brushes.Fill_Brushes
 {
-    internal sealed class MGEffectBinding
+    internal sealed partial class MGEffectBinding
     {
         private Effect _Effect;
         public Effect Effect
@@ -19,18 +19,51 @@ namespace MGUI.Core.UI.Brushes.Fill_Brushes
                 {
                     _Effect = value;
                     ParameterCache.Clear();
+                    _RenderCacheSource?.Invalidate();
                 }
             }
         }
 
-        public Action<Effect, ElementDrawArgs, MGElement, Rectangle> ConfigureEffect { get; set; }
-        public bool UseStandardParameters { get; set; }
+        private Action<Effect, ElementDrawArgs, MGElement, Rectangle> _ConfigureEffect;
+        public Action<Effect, ElementDrawArgs, MGElement, Rectangle> ConfigureEffect
+        {
+            get => _ConfigureEffect;
+            set
+            {
+                if (!EqualityComparer<Action<Effect, ElementDrawArgs, MGElement, Rectangle>>.Default.Equals(_ConfigureEffect, value))
+                {
+                    _ConfigureEffect = value;
+                    _RenderCacheSource?.Invalidate();
+                }
+            }
+        }
+        private bool _UseStandardParameters;
+        public bool UseStandardParameters
+        {
+            get => _UseStandardParameters;
+            set
+            {
+                if (!EqualityComparer<bool>.Default.Equals(_UseStandardParameters, value))
+                {
+                    _UseStandardParameters = value;
+                    _RenderCacheSource?.Invalidate();
+                }
+            }
+        }
 
         private MGEffectParameterValue[] _Parameters = Array.Empty<MGEffectParameterValue>();
         public IReadOnlyList<MGEffectParameterValue> Parameters
         {
             get => _Parameters;
-            set => _Parameters = value?.ToArray() ?? Array.Empty<MGEffectParameterValue>();
+            set
+            {
+                MGEffectParameterValue[] parameters = value?.ToArray() ?? Array.Empty<MGEffectParameterValue>();
+                if (!_Parameters.SequenceEqual(parameters))
+                {
+                    _Parameters = parameters;
+                    _RenderCacheSource?.Invalidate();
+                }
+            }
         }
 
         private readonly Dictionary<string, EffectParameter> ParameterCache = new();

@@ -21,7 +21,7 @@ namespace MGUI.Core.UI
     /// a caller-owned runtime <see cref="Effect"/> used by an effect-backed brush,
     /// or the name of an object in <see cref="StaticResources"/> for databinding purposes.<para/>
     /// This instance is usually accessed via <see cref="MGDesktop.Resources"/> (See also: <see cref="MGElement.GetResources"/>)</summary>
-    public class MGResources
+    public partial class MGResources
     {
         public MGResources(FontManager FontManager)
             : this(new MGTheme(FontManager.DefaultFontFamily)) { }
@@ -39,6 +39,7 @@ namespace MGUI.Core.UI
         public void AddTexture(string Name, MGTextureData Data)
         {
             _Textures.Add(Name, Data);
+            _RenderCacheSource?.Invalidate();
             OnTextureAdded?.Invoke(this, (Name, Data));
         }
 
@@ -47,6 +48,7 @@ namespace MGUI.Core.UI
             if (_Textures.TryGetValue(Name, out MGTextureData Data))
             {
                 _Textures.Remove(Name);
+                _RenderCacheSource?.Invalidate();
                 OnTextureRemoved?.Invoke(this, (Name, Data));
                 return true;
             }
@@ -126,6 +128,7 @@ namespace MGUI.Core.UI
             }
 
             _Effects.Add(Name, Effect);
+            _RenderCacheSource?.Invalidate();
             OnEffectAdded?.Invoke(this, (Name, Effect));
         }
 
@@ -147,6 +150,7 @@ namespace MGUI.Core.UI
             if (Name != null && _Effects.TryGetValue(Name, out Effect Effect))
             {
                 _Effects.Remove(Name);
+                _RenderCacheSource?.Invalidate();
                 OnEffectRemoved?.Invoke(this, (Name, Effect));
                 return true;
             }
@@ -184,6 +188,7 @@ namespace MGUI.Core.UI
         public void AddCommand(string Name, Action<MGElement> Command)
         {
             _Commands.Add(Name, Command);
+            _RenderCacheSource?.Invalidate();
             OnCommandAdded?.Invoke(this, (Name, Command));
         }
 
@@ -199,6 +204,7 @@ namespace MGUI.Core.UI
             if (_Commands.TryGetValue(Name, out Action<MGElement> Command))
             {
                 _Commands.Remove(Name);
+                _RenderCacheSource?.Invalidate();
                 OnCommandRemoved?.Invoke(this, (Name, Command));
                 return true;
             }
@@ -235,6 +241,7 @@ namespace MGUI.Core.UI
         public void AddTheme(string Name, MGTheme Theme)
         {
             _Themes.Add(Name, Theme);
+            _RenderCacheSource?.Invalidate();
             OnThemeAdded?.Invoke(this, (Name, Theme));
         }
 
@@ -243,6 +250,7 @@ namespace MGUI.Core.UI
             if (_Themes.TryGetValue(Name, out MGTheme Theme))
             {
                 _Themes.Remove(Name);
+                _RenderCacheSource?.Invalidate();
                 OnThemeRemoved?.Invoke(this, (Name, Theme));
                 return true;
             }
@@ -277,7 +285,15 @@ namespace MGUI.Core.UI
         public MGTheme DefaultTheme
         {
             get => _DefaultTheme;
-            set => _DefaultTheme = value ?? throw new ArgumentNullException(nameof(DefaultTheme));
+            set
+            {
+                ArgumentNullException.ThrowIfNull(value);
+                if (!ReferenceEquals(_DefaultTheme, value))
+                {
+                    _DefaultTheme = value;
+                    _RenderCacheSource?.Invalidate();
+                }
+            }
         }
         #endregion Themes
 
@@ -366,6 +382,7 @@ namespace MGUI.Core.UI
             foreach (KeyValuePair<string, Style> kvp in incomingStyles)
             {
                 _Styles.Add(kvp.Key, kvp.Value);
+                _RenderCacheSource?.Invalidate();
                 OnStyleAdded?.Invoke(this, (kvp.Key, kvp.Value));
             }
         }
@@ -393,12 +410,14 @@ namespace MGUI.Core.UI
             foreach (KeyValuePair<string, Style> kvp in incomingStyles)
             {
                 _Styles.Add(kvp.Key, kvp.Value);
+                _RenderCacheSource?.Invalidate();
                 OnStyleAdded?.Invoke(this, (kvp.Key, kvp.Value));
             }
 
             foreach (KeyValuePair<string, XAMLColor> kvp in incomingColors)
             {
                 _Colors.Add(kvp.Key, kvp.Value);
+                _RenderCacheSource?.Invalidate();
                 OnColorAdded?.Invoke(this, (kvp.Key, kvp.Value));
             }
         }
@@ -462,6 +481,7 @@ namespace MGUI.Core.UI
             if (_Styles.TryGetValue(Name, out Style Style))
             {
                 _Styles.Remove(Name);
+                _RenderCacheSource?.Invalidate();
                 OnStyleRemoved?.Invoke(this, (Name, Style));
                 return true;
             }
@@ -474,6 +494,7 @@ namespace MGUI.Core.UI
             if (_Colors.TryGetValue(Key, out XAMLColor Color))
             {
                 _Colors.Remove(Key);
+                _RenderCacheSource?.Invalidate();
                 OnColorRemoved?.Invoke(this, (Key, Color));
                 return true;
             }
@@ -497,6 +518,7 @@ namespace MGUI.Core.UI
         public void AddStaticResource(string Name, object Value)
         {
             _StaticResources.Add(Name, Value);
+            _RenderCacheSource?.Invalidate();
             OnStaticResourceAdded?.Invoke(this, (Name, Value));
         }
 
@@ -505,6 +527,7 @@ namespace MGUI.Core.UI
             if (_StaticResources.TryGetValue(Name, out object Value))
             {
                 _StaticResources.Remove(Name);
+                _RenderCacheSource?.Invalidate();
                 OnStaticResourceRemoved?.Invoke(this, (Name, Value));
                 return true;
             }
@@ -535,6 +558,7 @@ namespace MGUI.Core.UI
         public void AddElementTemplate(MGElementTemplate Template)
         {
             _ElementTemplates.Add(Template.Name, Template);
+            _RenderCacheSource?.Invalidate();
             OnElementTemplateAdded?.Invoke(this, (Template.Name, Template));
         }
 
@@ -543,6 +567,7 @@ namespace MGUI.Core.UI
             if (_ElementTemplates.TryGetValue(Name, out MGElementTemplate Template))
             {
                 _ElementTemplates.Remove(Name);
+                _RenderCacheSource?.Invalidate();
                 OnElementTemplateRemoved?.Invoke(this, (Name, Template));
                 return true;
             }

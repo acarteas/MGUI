@@ -47,6 +47,8 @@ internal sealed class ResourceTests : Game
     }
     protected override void LoadContent()
     {
+        SourceTests.Run(GraphicsDevice);
+        Pass("native-source-lifetimes-manual-invalidation-weak-owners");
         TestNativeAllocationAndOwnership();
         TestDeferredSampledAndBoundRetirement(false);
         TestDeferredSampledAndBoundRetirement(true);
