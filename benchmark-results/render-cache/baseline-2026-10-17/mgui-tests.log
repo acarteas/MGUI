@@ -1,0 +1,4 @@
+Test run for /home/acarteas/code/MGUI/MGUI.Tests/bin/Release/net8.0/MGUI.Tests.dll (.NETCoreApp,Version=v8.0)
+A total of 1 test files matched the specified pattern.
+
+Passed!  - Failed:     0, Passed:   341, Skipped:     0, Total:   341, Duration: 701 ms - MGUI.Tests.dll (net8.0)

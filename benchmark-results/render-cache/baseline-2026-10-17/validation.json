@@ -1,0 +1,54 @@
+{
+  "hostBuild": {
+    "command": "flock --close /tmp/mgui-render-cache-dotnet.lock dotnet build MGUI.RenderCacheTestHost/MGUI.RenderCacheTestHost.csproj -c Release --nologo -v:q",
+    "passed": true,
+    "warnings": 0,
+    "errors": 0,
+    "log": "build.log"
+  },
+  "driverTests": {
+    "command": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tools/render-cache -v",
+    "passed": 7,
+    "failed": 0,
+    "log": "driver-tests.log"
+  },
+  "mguiTests": {
+    "command": "flock --close /tmp/mgui-render-cache-dotnet.lock dotnet test MGUI.Tests/MGUI.Tests.csproj -c Release --nologo -v:q",
+    "display": "Owned private Xvfb via benchmark.native_display(); graphics lock /tmp/mgui-render-cache-graphics.lock",
+    "passed": 341,
+    "failed": 0,
+    "skipped": 0,
+    "log": "mgui-tests.log"
+  },
+  "effectHostProtocol": {
+    "command": [
+      "dotnet",
+      "/home/acarteas/code/MGUI/MGUI.EffectTestHost/bin/Release/net8.0/MGUI.EffectTestHost.dll"
+    ],
+    "cwd": "/home/acarteas/code/MGUI/MGUI.EffectTestHost/bin/Release/net8.0",
+    "display": ":27212",
+    "passedRequirements": 23,
+    "log": "effect-host-protocol.log"
+  },
+  "nativeCapture": {
+    "command": "python3 tools/render-cache/benchmark.py --output benchmark-results/render-cache/baseline-2026-10-17",
+    "workloads": 18,
+    "repeats": 3,
+    "rawJsonCaptures": 54,
+    "validPngs": 54,
+    "measuredPresentedFrames": 16200,
+    "totalPresentedFrames": 22734,
+    "sourceFixtureDirtyDriftCheck": "passed",
+    "allCapturesImmediatePresentation": true,
+    "allNativeSceneUiPixelChecks": "passed",
+    "allRepeatsStateHashes": "identical",
+    "pngAudit": "Pillow Image.verify() passed for all 54 PNGs; dimensions match each workload"
+  },
+  "preexistingEdits": "All seven SHA-256 hashes in /tmp/mgui-preexisting-20261017/manifest.json unchanged after capture",
+  "limitations": [
+    "Mesa llvmpipe software rendering; no hardware FPS inference",
+    "GPU execution timing unavailable through portable MonoGame API",
+    "Allocation counts cover only game thread phase-local managed allocations",
+    "Wall-clock timings are observations, not test thresholds"
+  ]
+}
