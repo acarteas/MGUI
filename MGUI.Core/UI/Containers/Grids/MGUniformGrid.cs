@@ -416,6 +416,7 @@ namespace MGUI.Core.UI.Containers.Grids
                 if (_CurrentSelection != value)
                 {
                     _CurrentSelection = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(CurrentSelection));
                     SelectionChanged?.Invoke(this, CurrentSelection);
                 }
@@ -483,6 +484,8 @@ namespace MGUI.Core.UI.Containers.Grids
                 if (_SelectionBackground != value)
                 {
                     _SelectionBackground = value;
+                    RefreshBaseRenderSources();
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
                     NPC(nameof(SelectionBackground));
                 }
             }
@@ -498,6 +501,8 @@ namespace MGUI.Core.UI.Containers.Grids
                 if (_SelectionOverlay != value)
                 {
                     _SelectionOverlay = value;
+                    RefreshBaseRenderSources();
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
                     NPC(nameof(SelectionOverlay));
                 }
             }
@@ -516,6 +521,7 @@ namespace MGUI.Core.UI.Containers.Grids
                 if (_GridLineIntersectionHandling != value)
                 {
                     _GridLineIntersectionHandling = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(GridLineIntersectionHandling));
                 }
             }
@@ -531,8 +537,12 @@ namespace MGUI.Core.UI.Containers.Grids
             {
                 if (_GridLinesVisibility != value)
                 {
+                    GridLinesVisibility Previous = _GridLinesVisibility;
                     _GridLinesVisibility = value;
-                    CheckIfOuterPaddingChanged();
+                    if (!CheckIfOuterPaddingChanged(Previous, GridLineMargin))
+                    {
+                        InvalidateRenderState(MGRenderInvalidationKind.Visual);
+                    }
                     NPC(nameof(GridLinesVisibility));
                 }
             }
@@ -551,8 +561,12 @@ namespace MGUI.Core.UI.Containers.Grids
             {
                 if (_GridLineMargin != value)
                 {
+                    int Previous = _GridLineMargin;
                     _GridLineMargin = value;
-                    CheckIfOuterPaddingChanged();
+                    if (!CheckIfOuterPaddingChanged(GridLinesVisibility, Previous))
+                    {
+                        InvalidateRenderState(MGRenderInvalidationKind.Visual);
+                    }
                     NPC(nameof(GridLineMargin));
                 }
             }
@@ -568,6 +582,8 @@ namespace MGUI.Core.UI.Containers.Grids
                 if (_HorizontalGridLineBrush != value)
                 {
                     _HorizontalGridLineBrush = value;
+                    RefreshBaseRenderSources();
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
                     NPC(nameof(HorizontalGridLineBrush));
                 }
             }
@@ -583,28 +599,32 @@ namespace MGUI.Core.UI.Containers.Grids
                 if (_VerticalGridLineBrush != value)
                 {
                     _VerticalGridLineBrush = value;
+                    RefreshBaseRenderSources();
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
                     NPC(nameof(VerticalGridLineBrush));
                 }
             }
         }
         #endregion GridLines
 
-        private void CheckIfOuterPaddingChanged()
+        private bool CheckIfOuterPaddingChanged(GridLinesVisibility PreviousVisibility, int PreviousMargin)
         {
             int RowSpacing = EffectiveRowSpacing;
             int ColumnSpacing = EffectiveColumnSpacing;
-            int GridLineMargin = EffectiveGridLineMargin;
+            int GridLineMargin = Math.Min(EffectiveGridLineMargin,
+                EffectiveScaleSettings.ScaleInt(PreviousMargin, MGScaleCategory.Spacing));
+            GridLinesVisibility AffectedVisibility = GridLinesVisibility | PreviousVisibility;
 
-            if (RowSpacing > 0 && GridLineMargin < RowSpacing &&
-                (GridLinesVisibility.HasFlag(GridLinesVisibility.TopEdge) || GridLinesVisibility.HasFlag(GridLinesVisibility.BottomEdge)))
+            if ((RowSpacing > 0 && GridLineMargin < RowSpacing &&
+                    (AffectedVisibility & (GridLinesVisibility.TopEdge | GridLinesVisibility.BottomEdge)) != 0) ||
+                (ColumnSpacing > 0 && GridLineMargin < ColumnSpacing &&
+                    (AffectedVisibility & (GridLinesVisibility.LeftEdge | GridLinesVisibility.RightEdge)) != 0))
             {
                 LayoutChanged(this, true);
+                return true;
             }
-            else if (ColumnSpacing > 0 && GridLineMargin < ColumnSpacing &&
-                (GridLinesVisibility.HasFlag(GridLinesVisibility.LeftEdge) || GridLinesVisibility.HasFlag(GridLinesVisibility.RightEdge)))
-            {
-                LayoutChanged(this, true);
-            }
+
+            return false;
         }
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -655,6 +675,8 @@ namespace MGUI.Core.UI.Containers.Grids
                 if (_CellBackground != value)
                 {
                     _CellBackground = value;
+                    RefreshBaseRenderSources();
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
                     NPC(nameof(CellBackground));
                 }
             }
@@ -672,6 +694,7 @@ namespace MGUI.Core.UI.Containers.Grids
                 if (_DrawEmptyCells != value)
                 {
                     _DrawEmptyCells = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(DrawEmptyCells));
                 }
             }
@@ -691,10 +714,44 @@ namespace MGUI.Core.UI.Containers.Grids
                 this.CellBounds = CellBounds;
             }
         }
+        private EventHandler<RenderCellArgs> RenderCellHandlers;
+        private int RenderCellHandlerCount;
+        internal override int ControlPublicDrawCallbackCount => RenderCellHandlerCount;
+
         /// <summary>Invoked on each cell whenever the cell is being drawn..<para/>
         /// This event is invoked even on cells that have no content.<br/>
         /// You may wish to check if <see cref="GetCellContent(GridCellIndex)"/> is an empty list to skip custom rendering to empty cells.</summary>
-        public event EventHandler<RenderCellArgs> OnRenderCell;
+        public event EventHandler<RenderCellArgs> OnRenderCell
+        {
+            add
+            {
+                if (value != null)
+                {
+                    RenderCellHandlers += value;
+                    RenderCellHandlerCount = RenderCellHandlers.GetInvocationList().Length;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
+                }
+            }
+            remove
+            {
+                EventHandler<RenderCellArgs> Previous = RenderCellHandlers;
+                RenderCellHandlers -= value;
+                if (!Equals(Previous, RenderCellHandlers))
+                {
+                    RenderCellHandlerCount = RenderCellHandlers?.GetInvocationList().Length ?? 0;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
+                }
+            }
+        }
+
+        protected override IEnumerable<object> EnumerateControlRenderSources()
+        {
+            yield return SelectionBackground;
+            yield return SelectionOverlay;
+            yield return HorizontalGridLineBrush;
+            yield return VerticalGridLineBrush;
+            yield return CellBackground;
+        }
 
         public MGUniformGrid(MGWindow Window, int Rows, int Columns, Size CellSize)
             : base(Window, MGElementType.UniformGrid)
@@ -733,7 +790,7 @@ namespace MGUI.Core.UI.Containers.Grids
                     }
                 };
 
-                OnEndingDraw += (sender, e) =>
+                OnEndingDrawBuiltIn += (sender, e) =>
                 {
                     //  Draw the selection overlay
                     if (HasSelection && SelectionOverlay != null)
@@ -744,8 +801,10 @@ namespace MGUI.Core.UI.Containers.Grids
                             if (_CellBounds.TryGetValue(Cell, out Rectangle Bounds))
                             {
                                 Rectangle ScreenSpaceBounds = ConvertCoordinateSpace(CoordinateSpace.UnscaledScreen, CoordinateSpace.Screen, Bounds.GetTranslated(e.DA.Offset));
-                                if (ScissorBounds.HasValue && ScreenSpaceBounds.Intersects(ScissorBounds.Value))
+                                if (ScissorBounds.HasValue && e.DA.DT.MapScreenClip(ScreenSpaceBounds).Intersects(ScissorBounds.Value))
+                                {
                                     SelectionOverlay.Draw(e.DA, this, Bounds);
+                                }
                             }
                         }
                     }
@@ -878,7 +937,10 @@ namespace MGUI.Core.UI.Containers.Grids
                         CellBackground.GetFillOverlay(VisualState.Secondary)?.Draw(DA, this, Bounds);
                     }
 
-                    OnRenderCell?.Invoke(this, new RenderCellArgs(DA, Index, Bounds));
+                    if (!DA.DT.IsCacheCapture)
+                    {
+                        RenderCellHandlers?.Invoke(this, new RenderCellArgs(DA, Index, Bounds));
+                    }
                 }
             }
 

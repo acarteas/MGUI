@@ -65,6 +65,7 @@ namespace MGUI.Core.UI
 
                 if (WasOpen)
                 {
+                    _OpenOverlays.Remove(Overlay);
                     Overlay.InvokeOnClosed();
                     Overlay.NPC(nameof(MGOverlay.IsOpen));
                     UpdateActiveOverlay();
@@ -272,9 +273,19 @@ namespace MGUI.Core.UI
                 if (_OverlayBackground != value)
                 {
                     _OverlayBackground = value;
+                    RefreshBaseRenderSources();
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
                     NPC(nameof(OverlayBackground));
                 }
             }
+        }
+
+        // The content's public end-draw chain owns tint order, child opacity and its restored inherited clip.
+        internal override bool HasUnsupportedControlRenderState => true;
+
+        protected override IEnumerable<object> EnumerateControlRenderSources()
+        {
+            yield return OverlayBackground;
         }
 
         public override void DrawBackground(ElementDrawArgs DA, Rectangle LayoutBounds)

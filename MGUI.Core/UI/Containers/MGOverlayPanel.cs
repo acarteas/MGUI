@@ -91,12 +91,26 @@ namespace MGUI.Core.UI.Containers
                 return false;
 
             OverlayPanelChild ToRemove = PanelChildren.First(x => x.Item == Old);
+            if (ToRemove == new OverlayPanelChild(New, Offset, ZIndex))
+            {
+                return true;
+            }
+
             PanelChildren.Remove(ToRemove);
             PanelChildren.Add(new OverlayPanelChild(New, Offset, ZIndex));
-            _Children[Index] = New;
+            if (ReferenceEquals(Old, New))
+            {
+                ReconcileRenderPaintChildren();
+                if (!ToRemove.Offset.Equals(Offset))
+                {
+                    LayoutChanged(this, true);
+                }
+            }
+            else
+            {
+                _Children[Index] = New;
+            }
 
-            // Replacement can change layout metadata even when the element identity/order is unchanged.
-            InvalidateRenderState(MGRenderInvalidationKind.Structure);
             return true;
         }
 

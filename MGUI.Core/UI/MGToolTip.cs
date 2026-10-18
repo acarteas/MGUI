@@ -47,6 +47,7 @@ namespace MGUI.Core.UI
                 if (_DrawOffset != value)
                 {
                     _DrawOffset = value;
+                    InvalidateRenderContextSubtree(MGRenderInvalidationKind.Visual);
                     NPC(nameof(DrawOffset));
                 }
             }

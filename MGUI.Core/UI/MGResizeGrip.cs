@@ -26,6 +26,8 @@ namespace MGUI.Core.UI
                 if (_Foreground != value)
                 {
                     _Foreground = value;
+                    RefreshBaseRenderSources();
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
                     NPC(nameof(Foreground));
                 }
             }
@@ -97,6 +99,7 @@ namespace MGUI.Core.UI
                 }
 
                 _Host = Value;
+                InvalidateRenderState(MGRenderInvalidationKind.Visual);
                 SetParent(Host);
                 NPC(nameof(Host));
                 NPC(nameof(ActualHost));
@@ -173,6 +176,7 @@ namespace MGUI.Core.UI
                     if (e.IsLMB && Parent != null)
                     {
                         IsDragging = true;
+                        InvalidateRenderState(MGRenderInvalidationKind.Visual);
                         SpoofIsPressedWhileDrawingBackground = false;
                         InitialWidth = Parent is MGWindow ? ParentWindow.WindowWidth : Parent.ActualWidth;
                         InitialHeight = Parent is MGWindow ? ParentWindow.WindowHeight : Parent.ActualHeight;
@@ -204,10 +208,18 @@ namespace MGUI.Core.UI
                     if (e.IsLMB && IsDragging)
                     {
                         IsDragging = false;
+                        InvalidateRenderState(MGRenderInvalidationKind.Visual);
                         SpoofIsPressedWhileDrawingBackground = true;
                     }
                 };
             }
+        }
+
+        internal override bool HasUnsupportedControlRenderState => !IsComponent && Host != null;
+
+        protected override IEnumerable<object> EnumerateControlRenderSources()
+        {
+            yield return Foreground;
         }
 
         public override Thickness MeasureSelfOverride(Size AvailableSize, out Thickness SharedSize)

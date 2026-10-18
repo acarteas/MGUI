@@ -42,6 +42,10 @@ internal static class Program
             {
                 return TextImageTests.RunAllNative();
             }
+            if (args.Length == 1 && args[0] == "--decorations")
+            {
+                return DecorationTests.RunAllNative();
+            }
             Options options = Options.Parse(args);
             using BenchmarkGame game = new(options);
             game.Run();
