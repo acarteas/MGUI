@@ -2031,7 +2031,7 @@ namespace MGUI.Core.UI
                     foreach (MGElement Component in Components.Where(x => x.DrawAfterContents).Select(x => x.BaseElement))
                         Component.Draw(DA);
 
-                    OverlayBrush?.Draw(DA, this, GetBackgroundBounds(LayoutBounds));
+                    DrawFillBrushAtSite(OverlayBrush, DA, GetBackgroundBounds(LayoutBounds), MGFillBrushPaintSite.Overlay);
 
                     if (DA.DT?.IsCacheCapture != true) { OnEndingDraw?.Invoke(this, DrawEventArgs); }
                 }
@@ -2085,9 +2085,9 @@ namespace MGUI.Core.UI
         public virtual void DrawBackground(ElementDrawArgs DA, Rectangle LayoutBounds)
 		{
             Rectangle BackgroundBounds = GetBackgroundBounds(LayoutBounds);
-            BackgroundBrush.GetUnderlay(DA.VisualState.Primary)?.Draw(DA, this, BackgroundBounds);
+            DrawFillBrushAtSite(BackgroundBrush.GetUnderlay(DA.VisualState.Primary), DA, BackgroundBounds, MGFillBrushPaintSite.BackgroundUnderlay);
             SecondaryVisualState SecondaryState = DA.VisualState.GetSecondaryState(SpoofIsPressedWhileDrawingBackground, SpoofIsHoveredWhileDrawingBackground);
-            BackgroundBrush.GetFillOverlay(SecondaryState)?.Draw(DA, this, BackgroundBounds);
+            DrawFillBrushAtSite(BackgroundBrush.GetFillOverlay(SecondaryState), DA, BackgroundBounds, MGFillBrushPaintSite.BackgroundOverlay);
         }
 
         public virtual void DrawSelf(ElementDrawArgs DA, Rectangle LayoutBounds) 

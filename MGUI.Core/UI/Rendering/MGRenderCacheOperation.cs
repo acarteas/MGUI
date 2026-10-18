@@ -3,6 +3,8 @@ using MGUI.Shared.Helpers;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace MGUI.Core.UI
 {
@@ -26,7 +28,8 @@ namespace MGUI.Core.UI
             Desktop = desktop;
             Owner = new(owner);
             Registration = desktop.RenderCaches.Register(owner, this);
-            _ = new InvalidationForwarder(this, desktop, owner);
+            OwnerInvalidationHub.Subscribe(owner, this);
+            RootInvalidationHub.Subscribe(desktop, this);
         }
 
         /// <summary>Must be constant-time, and check maintained source state, support, layout and lifetimes.</summary>
@@ -117,34 +120,69 @@ namespace MGUI.Core.UI
             Paint((MGElement)owner, new(new(Desktop.Renderer.UpdateArgs.TotalElapsed, transaction, key.Opacity), state, key.Offset), key.Bounds);
         }
 
-        // Event publishers retain only this weak forwarder, never a paint producer or its desktop.
-        private sealed class InvalidationForwarder
+        internal static int GetRootListenerCount(MGDesktop desktop) => RootInvalidationHub.Count(desktop);
+
+        // One dispatcher per publisher; change-time registration prunes dead operations without tree scans.
+        private sealed class OwnerInvalidationHub
         {
-            private readonly WeakReference<MGRenderCacheOperation> Operation;
-            private readonly WeakReference<MGDesktop> Desktop;
-            private readonly WeakReference<MGElement> Owner;
-            internal InvalidationForwarder(MGRenderCacheOperation operation, MGDesktop desktop, MGElement owner)
+            private static readonly ConditionalWeakTable<MGElement, OwnerInvalidationHub> Hubs = new();
+            private readonly List<WeakReference<MGRenderCacheOperation>> Operations = new();
+            private OwnerInvalidationHub(MGElement owner) { owner.RenderInvalidated += Changed; }
+            internal static void Subscribe(MGElement owner, MGRenderCacheOperation operation)
             {
-                Operation = new(operation); Desktop = new(desktop); Owner = new(owner);
-                owner.RenderInvalidated += Changed;
-                desktop.RenderRootDetached += Detached;
-            }
-            private bool Resolve(out MGRenderCacheOperation operation)
-            {
-                if (Operation.TryGetTarget(out operation)) { return true; }
-                if (Owner.TryGetTarget(out var owner)) { owner.RenderInvalidated -= Changed; }
-                if (Desktop.TryGetTarget(out var desktop)) { desktop.RenderRootDetached -= Detached; }
-                return false;
+                var hub = Hubs.GetValue(owner, static publisher => new(publisher));
+                Prune(hub.Operations);
+                hub.Operations.Add(new(operation));
             }
             private void Changed(MGElement owner, MGRenderInvalidationKind kind, MGRenderMutationStamp stamp)
             {
-                if (Resolve(out var operation)) { operation.Invalidate(); }
+                for (int index = Operations.Count - 1; index >= 0; index--)
+                {
+                    if (Operations[index].TryGetTarget(out var operation))
+                    {
+                        operation.Invalidate();
+                    }
+                    else
+                    {
+                        Operations.RemoveAt(index);
+                    }
+                }
             }
+        }
+        private sealed class RootInvalidationHub
+        {
+            private static readonly ConditionalWeakTable<MGDesktop, RootInvalidationHub> Hubs = new();
+            private readonly List<WeakReference<MGRenderCacheOperation>> Operations = new();
+            private RootInvalidationHub(MGDesktop desktop) { desktop.RenderRootDetached += Detached; }
+            internal static void Subscribe(MGDesktop desktop, MGRenderCacheOperation operation)
+            {
+                var hub = Hubs.GetValue(desktop, static publisher => new(publisher));
+                Prune(hub.Operations);
+                hub.Operations.Add(new(operation));
+            }
+            internal static int Count(MGDesktop desktop) => Hubs.TryGetValue(desktop, out var hub) ? hub.Operations.Count : 0;
             private void Detached(MGWindow window, MGRenderRootAttachment attachment)
             {
-                if (Resolve(out var operation) && ReferenceEquals(operation.Attachment, attachment))
+                for (int index = Operations.Count - 1; index >= 0; index--)
                 {
-                    operation.Invalidate();
+                    if (!Operations[index].TryGetTarget(out var operation))
+                    {
+                        Operations.RemoveAt(index);
+                    }
+                    else if (ReferenceEquals(operation.Attachment, attachment))
+                    {
+                        operation.Invalidate();
+                    }
+                }
+            }
+        }
+        private static void Prune(List<WeakReference<MGRenderCacheOperation>> operations)
+        {
+            for (int index = operations.Count - 1; index >= 0; index--)
+            {
+                if (!operations[index].TryGetTarget(out _))
+                {
+                    operations.RemoveAt(index);
                 }
             }
         }

@@ -22,6 +22,10 @@ internal static class Program
             {
                 return PreparationTests.RunAllNative();
             }
+            if (args.Length == 1 && args[0] == "--cached-brush")
+            {
+                return CachedBrushTests.RunAllNative();
+            }
             Options options = Options.Parse(args);
             using BenchmarkGame game = new(options);
             game.Run();

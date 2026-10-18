@@ -29,6 +29,7 @@ namespace MGUI.Core.UI
         bool LocalSupportsRenderCaching { get; }
         bool LocalIsRenderVolatile { get; }
         bool DependenciesAffectEligibility => true;
+        bool DependencySupportAffectsEligibility => true;
         bool LocalHasUnboundedPaint => false;
         void ReconcileRenderCacheSources();
     }
@@ -251,11 +252,15 @@ namespace MGUI.Core.UI
                 bool volatileSource = IsRenderVolatile;
                 bool alive = Alive;
                 bool unbounded = HasUnboundedPaint;
-                HashSet<object> childVisited = container.DependenciesAffectEligibility ? visited
+                HashSet<object> childVisited = container.DependenciesAffectEligibility && container.DependencySupportAffectsEligibility ? visited
                     : new HashSet<object>(path, ReferenceEqualityComparer.Instance);
                 foreach (object child in container.RenderCacheSources)
                 {
                     Visit(child, childVisited, path);
+                }
+                if (!container.DependencySupportAffectsEligibility)
+                {
+                    SupportsRenderCaching = supported;
                 }
                 if (!container.DependenciesAffectEligibility)
                 {
