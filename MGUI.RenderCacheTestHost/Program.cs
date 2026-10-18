@@ -38,6 +38,10 @@ internal static class Program
             {
                 return CachedBrushXamlTests.RunAllNative();
             }
+            if (args.Length == 1 && args[0] == "--text-images")
+            {
+                return TextImageTests.RunAllNative();
+            }
             Options options = Options.Parse(args);
             using BenchmarkGame game = new(options);
             game.Run();

@@ -142,6 +142,22 @@ namespace MGUI.Core.UI
             }
         }
 
+        /// <summary>Preserves normal measurement invalidation while reusing an observable resource mutation.</summary>
+        internal void LayoutChangedForRenderMutation(MGRenderMutationStamp Stamp)
+        {
+            Stamp = InvalidateRenderState(MGRenderInvalidationKind.Layout, Stamp);
+            var Previous = ForwardedLayoutMutation;
+            ForwardedLayoutMutation = (this, Stamp);
+            try
+            {
+                LayoutChanged(this, true);
+            }
+            finally
+            {
+                ForwardedLayoutMutation = Previous;
+            }
+        }
+
         private (MGRenderMutationStamp Stamp, bool Forwarded) TakeLayoutMutation(MGElement Source)
         {
             if (ForwardedLayoutMutation is { } Forwarded && ReferenceEquals(Forwarded.Source, Source))

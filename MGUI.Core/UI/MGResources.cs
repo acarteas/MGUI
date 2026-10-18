@@ -36,11 +36,26 @@ namespace MGUI.Core.UI
         private readonly Dictionary<string, MGTextureData> _Textures = new();
         public IReadOnlyDictionary<string, MGTextureData> Textures => _Textures;
 
+        internal MGRenderMutationStamp? CurrentTextureRenderMutation { get; private set; }
+
         public void AddTexture(string Name, MGTextureData Data)
         {
             _Textures.Add(Name, Data);
-            _RenderCacheSource?.Invalidate();
-            OnTextureAdded?.Invoke(this, (Name, Data));
+            var Previous = CurrentTextureRenderMutation;
+            try
+            {
+                MGRenderMutationStamp Stamp = MGRenderRevisionClock.NextMutation();
+                CurrentTextureRenderMutation = Stamp;
+                if (_RenderCacheSource != null)
+                {
+                    CurrentTextureRenderMutation = _RenderCacheSource.Invalidate(Stamp);
+                }
+                OnTextureAdded?.Invoke(this, (Name, Data));
+            }
+            finally
+            {
+                CurrentTextureRenderMutation = Previous;
+            }
         }
 
         public bool RemoveTexture(string Name)
@@ -48,12 +63,27 @@ namespace MGUI.Core.UI
             if (_Textures.TryGetValue(Name, out MGTextureData Data))
             {
                 _Textures.Remove(Name);
-                _RenderCacheSource?.Invalidate();
-                OnTextureRemoved?.Invoke(this, (Name, Data));
+                var Previous = CurrentTextureRenderMutation;
+                try
+                {
+                    MGRenderMutationStamp Stamp = MGRenderRevisionClock.NextMutation();
+                    CurrentTextureRenderMutation = Stamp;
+                    if (_RenderCacheSource != null)
+                    {
+                        CurrentTextureRenderMutation = _RenderCacheSource.Invalidate(Stamp);
+                    }
+                    OnTextureRemoved?.Invoke(this, (Name, Data));
+                }
+                finally
+                {
+                    CurrentTextureRenderMutation = Previous;
+                }
                 return true;
             }
             else
+            {
                 return false;
+            }
         }
 
         public bool TryGetTexture(string Name, out MGTextureData Data)

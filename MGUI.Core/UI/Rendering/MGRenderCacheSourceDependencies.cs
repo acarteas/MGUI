@@ -66,6 +66,22 @@ namespace MGUI.Core.UI
             Dependencies.Reconcile();
             Notify(MGRenderRevisionClock.NextMutation());
         }
+        internal MGRenderMutationStamp Invalidate(MGRenderMutationStamp stamp)
+        {
+            EnsureTracking();
+            Dependencies.Reconcile();
+            if (Revision == ulong.MaxValue)
+            {
+                MGRenderRevisionClock.RestartEpoch();
+                Revision = 0;
+            }
+            if (!ReferenceEquals(stamp.Epoch, MGRenderRevisionClock.CurrentEpoch))
+            {
+                stamp = MGRenderRevisionClock.NextMutation();
+            }
+            Notify(stamp);
+            return stamp;
+        }
         private void Notify() => Notify(Dependencies.LastNotificationStamp);
         private void Notify(MGRenderMutationStamp stamp)
         {
