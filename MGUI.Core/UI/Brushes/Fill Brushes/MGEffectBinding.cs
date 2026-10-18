@@ -93,6 +93,7 @@ namespace MGUI.Core.UI.Brushes.Fill_Brushes
             }
 
             ApplyCustomParameters();
+            MGUI.Shared.Rendering.DrawTransactionTrace.Configuration(Effect, ConfigureEffect != null);
             ConfigureEffect?.Invoke(Effect, DA, Element, Bounds);
         }
 

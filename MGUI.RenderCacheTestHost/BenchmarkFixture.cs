@@ -13,7 +13,7 @@ namespace MGUI.RenderCacheTestHost;
 
 internal readonly record struct WorkloadState(int SimulationFrame, int WorldOffset, string Score, float ScrollOffset);
 
-internal sealed class BenchmarkFixture : IRenderHost, IDisposable
+internal sealed partial class BenchmarkFixture : IRenderHost, IDisposable
 {
     private readonly Game Game;
     private readonly Options Options;
@@ -61,6 +61,12 @@ internal sealed class BenchmarkFixture : IRenderHost, IDisposable
             ClipToBounds = true
         };
         Desktop.Windows.Add(window);
+        Score = Text(window, "SCORE 001200", Color.Gold, 20);
+        if (options.IsComparison)
+        {
+            BuildComparison(window);
+            return;
+        }
         MGStackPanel root = Stack(window, Orientation.Vertical, 8);
         if (options.Mode == "disabled")
         {
@@ -72,7 +78,6 @@ internal sealed class BenchmarkFixture : IRenderHost, IDisposable
         {
             window.SetContent(root);
         }
-        Score = Text(window, "SCORE 001200", Color.Gold, 20);
         if (options.Scenario is "hud" or "animated-score")
         {
             BuildHud(window, root);
@@ -182,7 +187,7 @@ internal sealed class BenchmarkFixture : IRenderHost, IDisposable
     public void Update(int frame)
     {
         PreviewUpdate?.Invoke(this, TimeSpan.FromSeconds((frame + 1) / 60.0));
-        if (Options.Scenario == "animated-score")
+        if (Options.Scenario is "animated-score" or "compare-mixed" or "compare-dirty")
         {
             Score.Text = $"SCORE {1200 + frame:000000}";
         }
@@ -192,6 +197,7 @@ internal sealed class BenchmarkFixture : IRenderHost, IDisposable
             Scroller.VerticalOffset = frame * 2 % Math.Max(1, (int)Scroller.MaxVerticalOffset);
         }
 
+        UpdateComparison(frame);
         Desktop.Update();
         EndUpdate?.Invoke(this, EventArgs.Empty);
         State = new(frame, frame % 64, Score.Text, Scroller?.VerticalOffset ?? 0);
@@ -202,7 +208,7 @@ internal sealed class BenchmarkFixture : IRenderHost, IDisposable
         MGRenderCacheManager manager = Desktop.RenderCaches;
         var statistics = manager.Statistics;
         return new(statistics.Allocations, statistics.Builds, statistics.TargetSwitches,
-            manager.RetainedBytes, manager.EntryCount, manager.PendingCount);
+            manager.RetainedBytes, manager.EntryCount, manager.PendingCount, statistics.Hits, statistics.Misses, statistics.Evictions, statistics.Disposals);
     }
 
     public Rectangle GetBounds() => new(0, 0, Options.Width, Options.Height);

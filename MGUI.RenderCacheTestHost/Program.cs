@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text.Json;
 using MGUI.Core.UI;
+using MGUI.Shared.Rendering;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -100,6 +101,7 @@ internal static class Program
                 uiScale = options.Scale,
                 options.Seed,
                 warmupFrames = options.Warmup,
+                drawableWarmupPresents = options.IsComparison ? 3 : 0,
                 measuredPresentedFrames = options.Frames,
                 totalPresentedFrames = game.PresentedFrames,
                 backend = "MonoGame DesktopGL",
@@ -113,6 +115,10 @@ internal static class Program
                 screenshot = options.Screenshot,
                 screenshotSha256 = game.ScreenshotHash,
                 nativePixelValidation = game.PixelValidation,
+                coldFrames = game.ColdSamples,
+                stateTrace = game.StateTrace,
+                parityCaptureEnabled = options.CaptureParity,
+                parityFrames = game.ParityFrames,
                 frames = game.Samples
             }, new JsonSerializerOptions { WriteIndented = true }));
             return 0;
@@ -128,19 +134,27 @@ internal static class Program
 internal sealed record Options(string Scenario, int Width, int Height, float Scale, int Seed, int Warmup, int Frames, string Output, string Screenshot, string Mode = "normal")
 {
     public static readonly string[] Scenarios = ["batched", "layered", "hud", "animated-score", "scrolling", "nested-clips"];
+    public static readonly string[] ComparisonScenarios = ["compare-cells", "compare-layered", "compare-mixed", "compare-dirty", "compare-scroll", "compare-change", "compare-churn"];
+    public bool CaptureParity { get; } = Environment.GetEnvironmentVariable("MGUI_COMPARISON_PARITY") == "1";
+    public bool IsComparison => Scenario.StartsWith("compare-", StringComparison.Ordinal);
 
     public static Options Parse(string[] args)
     {
         if (args.Length is not (9 or 10))
         {
-            throw new ArgumentException("Usage: <scenario> <width> <height> <scale> <seed> <warmup> <frames> <output.json> <screenshot.png> [normal|disabled]");
+            throw new ArgumentException("Usage: <scenario> <width> <height> <scale> <seed> <warmup> <frames> <output.json> <screenshot.png> [normal|disabled|normal-batching|background|panel]");
         }
 
         Options result = new(args[0], int.Parse(args[1]), int.Parse(args[2]), float.Parse(args[3], System.Globalization.CultureInfo.InvariantCulture),
             int.Parse(args[4]), int.Parse(args[5]), int.Parse(args[6]), args[7], args[8], args.Length == 10 ? args[9] : "normal");
-        if (result.Mode is not ("normal" or "disabled") || !Scenarios.Contains(result.Scenario) || result.Width < 320 || result.Height < 240 || !float.IsFinite(result.Scale) || result.Scale <= 0 || result.Warmup < 0 || result.Frames < 1)
+        if (result.Mode is not ("normal" or "disabled" or "normal-batching" or "background" or "panel") || !(Scenarios.Contains(result.Scenario) || ComparisonScenarios.Contains(result.Scenario)) || result.Width < 320 || result.Height < 240 || !float.IsFinite(result.Scale) || result.Scale <= 0 || result.Warmup < 0 || result.Frames < 1)
         {
             throw new ArgumentException("Invalid benchmark configuration.");
+        }
+
+        if (!result.IsComparison && result.Mode is not ("normal" or "disabled" or "normal-batching"))
+        {
+            throw new ArgumentException("Cache comparison modes require an explicitly named compare-* fixture.");
         }
 
         return result;
@@ -157,9 +171,9 @@ internal readonly record struct Counters(long DrawCalls, long Primitives, long S
     public static Counters From(GraphicsMetrics metrics) => new(metrics.DrawCount, metrics.PrimitiveCount, metrics.SpriteCount, metrics.TargetCount);
 }
 
-internal readonly record struct CacheCounters(long Allocations, long Builds, long TargetSwitches, long RetainedBytes, int Entries, int Pending);
+internal readonly record struct CacheCounters(long Allocations, long Builds, long TargetSwitches, long RetainedBytes, int Entries, int Pending, long Hits = 0, long Misses = 0, long Evictions = 0, long Disposals = 0);
 
-internal readonly record struct FrameSample(int Frame, WorkloadState State, Phase UpdateLayout, Phase Prepare, Phase WorldSubmission, Phase UiSubmission, Phase Present, Counters World, Counters Ui, Counters Total, CacheCounters Cache);
+internal readonly record struct FrameSample(int Frame, WorkloadState State, Phase UpdateLayout, Phase Prepare, Phase WorldSubmission, Phase UiSubmission, Phase Present, Counters World, Counters Ui, Counters Total, CacheCounters Cache, long TextureChanges = 0, ComparisonState? Comparison = null);
 
 internal sealed class BenchmarkGame : Game
 {
@@ -170,8 +184,12 @@ internal sealed class BenchmarkGame : Game
     private Texture2D WhitePixel = null!;
     private Phase PendingUpdate;
     private int UpdatesForFrame;
+    private int DrawableWarmupsRemaining;
     private FrameSample PendingSample;
     public FrameSample[] Samples { get; }
+    public List<FrameSample> ColdSamples { get; } = new();
+    public object? StateTrace { get; private set; }
+    public List<object> ParityFrames { get; } = new();
     public int PresentedFrames { get; private set; }
     public string? ScreenshotHash { get; private set; }
     public object? PixelValidation { get; private set; }
@@ -179,6 +197,7 @@ internal sealed class BenchmarkGame : Game
     public BenchmarkGame(Options options)
     {
         Options = options;
+        DrawableWarmupsRemaining = options.IsComparison ? 3 : 0;
         Samples = new FrameSample[options.Frames];
         Graphics = new(this)
         {
@@ -197,11 +216,18 @@ internal sealed class BenchmarkGame : Game
         WorldBatch = new(GraphicsDevice);
         WhitePixel = new(GraphicsDevice, 1, 1);
         WhitePixel.SetData(new[] { Color.White });
-        Fixture = new(this, Options);
+        if (DrawableWarmupsRemaining == 0)
+        {
+            Fixture = new(this, Options);
+        }
     }
 
     protected override void Update(GameTime gameTime)
     {
+        if (DrawableWarmupsRemaining > 0)
+        {
+            return;
+        }
         long bytes = GC.GetAllocatedBytesForCurrentThread();
         long ticks = Stopwatch.GetTimestamp();
         Fixture.Update(PresentedFrames);
@@ -212,8 +238,14 @@ internal sealed class BenchmarkGame : Game
 
     protected override void Draw(GameTime gameTime)
     {
+        if (DrawableWarmupsRemaining > 0)
+        {
+            GraphicsDevice.Clear(Color.Black);
+            return;
+        }
         long bytes = GC.GetAllocatedBytesForCurrentThread();
         long ticks = Stopwatch.GetTimestamp();
+        DrawTransactionTrace.Start(PresentedFrames == Options.Warmup);
         Fixture.Desktop.PrepareRenderCaches();
         Phase prepare = Phase.Since(ticks, bytes);
         bytes = GC.GetAllocatedBytesForCurrentThread();
@@ -239,15 +271,39 @@ internal sealed class BenchmarkGame : Game
         Fixture.Desktop.Draw();
         Phase ui = Phase.Since(ticks, bytes);
         GraphicsMetrics afterUi = GraphicsDevice.Metrics;
+        object? trace = DrawTransactionTrace.Finish();
+        if (trace != null)
+        {
+            StateTrace = trace;
+        }
         if (UpdatesForFrame == 0 || afterUi.DrawCount == before.DrawCount || afterUi.PrimitiveCount == before.PrimitiveCount)
         {
             throw new InvalidOperationException("Frame did not update and submit native graphics work.");
         }
 
         PendingSample = new(PresentedFrames, Fixture.State, PendingUpdate, prepare, world, ui, default,
-            Counters.From(afterWorld - before), Counters.From(afterUi - afterWorld), Counters.From(afterUi - before), Fixture.GetCacheCounters());
+            Counters.From(afterWorld - before), Counters.From(afterUi - afterWorld), Counters.From(afterUi - before), Fixture.GetCacheCounters(), afterUi.TextureCount - afterWorld.TextureCount, Fixture.GetComparisonState());
         PendingUpdate = default;
         UpdatesForFrame = 0;
+
+        // Untimed correctness-only readbacks. The performance runner rejects this marked mode.
+        int changeFrame = Options.Warmup + Options.Frames / 2;
+        if (Options.CaptureParity && Options.IsComparison && (PresentedFrames <= 3
+            || PresentedFrames == Options.Warmup - 1 || Math.Abs(PresentedFrames - changeFrame) <= 4))
+        {
+            Color[] parityPixels = new Color[Options.Width * Options.Height];
+            GraphicsDevice.GetBackBufferData(parityPixels);
+            string path = Options.Screenshot + ".frame-" + PresentedFrames + ".png";
+            using Texture2D image = new(GraphicsDevice, Options.Width, Options.Height);
+            image.SetData(parityPixels);
+            using (FileStream stream = File.Create(path))
+            {
+                image.SaveAsPng(stream, Options.Width, Options.Height);
+            }
+            ParityFrames.Add(new { frame = PresentedFrames, state = Fixture.State, comparison = Fixture.GetComparisonState(),
+                cache = Fixture.GetCacheCounters(), screenshot = path,
+                screenshotSha256 = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path))).ToLowerInvariant() });
+        }
 
         // Capture on one extra unmeasured frame, so readback/PNG encoding never enters samples.
         if (PresentedFrames == Options.Warmup + Options.Frames)
@@ -299,10 +355,28 @@ internal sealed class BenchmarkGame : Game
 
     protected override void EndDraw()
     {
+        if (DrawableWarmupsRemaining > 0)
+        {
+            base.EndDraw();
+            DrawableWarmupsRemaining--;
+            if (DrawableWarmupsRemaining == 0)
+            {
+                if (Window.ClientBounds.Width != Options.Width || Window.ClientBounds.Height != Options.Height)
+                {
+                    throw new InvalidOperationException("Drawable did not reach the requested comparison dimensions.");
+                }
+                Fixture = new(this, Options);
+            }
+            return;
+        }
         long bytes = GC.GetAllocatedBytesForCurrentThread();
         long ticks = Stopwatch.GetTimestamp();
         base.EndDraw();
         Phase present = Phase.Since(ticks, bytes);
+        if (PresentedFrames < 8)
+        {
+            ColdSamples.Add(PendingSample with { Present = present });
+        }
         int index = PresentedFrames - Options.Warmup;
         if (index >= 0 && index < Samples.Length)
         {
@@ -318,7 +392,7 @@ internal sealed class BenchmarkGame : Game
 
     protected override void UnloadContent()
     {
-        Fixture.Dispose();
+        Fixture?.Dispose();
         WhitePixel.Dispose();
         WorldBatch.Dispose();
         base.UnloadContent();
