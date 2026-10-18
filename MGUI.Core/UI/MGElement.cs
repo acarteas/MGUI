@@ -1823,22 +1823,42 @@ namespace MGUI.Core.UI
                 && (!RecentDrawWasClipped || (Visibility == Visibility.Hidden && CanHandleInputsWhileHidden));
             bool CanReceiveMouseInput = BaseCanReceiveInput && CanParentReceiveMouseInput;
 
-            foreach (MGElement Component in Components.Where(x => x.DrawBeforeBackground).Select(x => x.BaseElement))
-                Component.ComputeTopmostHoveredElement(ComputedIsEnabled, ComputedIsHitTestVisible, CanReceiveMouseInput, ref Result);
-            foreach (MGElement Component in Components.Where(x => x.DrawBeforeSelf).Select(x => x.BaseElement))
-                Component.ComputeTopmostHoveredElement(ComputedIsEnabled, ComputedIsHitTestVisible, CanReceiveMouseInput, ref Result);
+            foreach (MGComponentBase Component in Components)
+            {
+                if (Component.DrawBeforeBackground)
+                {
+                    Component.BaseElement.ComputeTopmostHoveredElement(ComputedIsEnabled, ComputedIsHitTestVisible, CanReceiveMouseInput, ref Result);
+                }
+            }
+            foreach (MGComponentBase Component in Components)
+            {
+                if (Component.DrawBeforeSelf)
+                {
+                    Component.BaseElement.ComputeTopmostHoveredElement(ComputedIsEnabled, ComputedIsHitTestVisible, CanReceiveMouseInput, ref Result);
+                }
+            }
 
             if (CanReceiveMouseInput && ComputedIsHitTestVisible && !SelfOrParentWindow.HasModalWindow && IsHovered)
             {
                 Result = this;
             }
 
-            foreach (MGElement Component in Components.Where(x => x.DrawBeforeContents).Select(x => x.BaseElement))
-                Component.ComputeTopmostHoveredElement(ComputedIsEnabled, ComputedIsHitTestVisible, CanReceiveMouseInput, ref Result);
+            foreach (MGComponentBase Component in Components)
+            {
+                if (Component.DrawBeforeContents)
+                {
+                    Component.BaseElement.ComputeTopmostHoveredElement(ComputedIsEnabled, ComputedIsHitTestVisible, CanReceiveMouseInput, ref Result);
+                }
+            }
             foreach (MGElement Child in GetVisualTreeChildren(false, true))
                 Child.ComputeTopmostHoveredElement(ComputedIsEnabled, ComputedIsHitTestVisible, CanReceiveMouseInput, ref Result);
-            foreach (MGElement Component in Components.Where(x => x.DrawAfterContents).Select(x => x.BaseElement))
-                Component.ComputeTopmostHoveredElement(ComputedIsEnabled, ComputedIsHitTestVisible, CanReceiveMouseInput, ref Result);
+            foreach (MGComponentBase Component in Components)
+            {
+                if (Component.DrawAfterContents)
+                {
+                    Component.BaseElement.ComputeTopmostHoveredElement(ComputedIsEnabled, ComputedIsHitTestVisible, CanReceiveMouseInput, ref Result);
+                }
+            }
         }
 
         public void Update(ElementUpdateArgs UA)
@@ -1915,11 +1935,21 @@ namespace MGUI.Core.UI
             _CanReceiveKeyboardInput = BaseCanReceiveInput && (Parent?._CanReceiveKeyboardInput ?? true);
 
             OnBeginUpdateContents?.Invoke(this, UpdateEventArgs);
-			foreach (MGElement Component in Components.Where(x => x.UpdateBeforeContents).Select(x => x.BaseElement))
-				Component.Update(UA);
+            foreach (MGComponentBase Component in Components)
+            {
+                if (Component.UpdateBeforeContents)
+                {
+                    Component.BaseElement.Update(UA);
+                }
+            }
 			UpdateContents(UA);
-            foreach (MGElement Component in Components.Where(x => x.UpdateAfterContents).Select(x => x.BaseElement))
-                Component.Update(UA);
+            foreach (MGComponentBase Component in Components)
+            {
+                if (Component.UpdateAfterContents)
+                {
+                    Component.BaseElement.Update(UA);
+                }
+            }
             OnEndUpdateContents?.Invoke(this, UpdateEventArgs);
 
             if (ComputedIsHitTestVisible)
