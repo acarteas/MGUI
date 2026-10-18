@@ -67,3 +67,7 @@ XAML supports a uniform-scale convenience on `Window`:
 `MGScaleSnapshot` provides read-only scale values for diagnostics and logging. `MGElement.EffectiveUIScaleSnapshot` reports the scale currently used by an element after `UIScaleMode` and window override resolution. `MGWindow.ResolvedUIScaleSnapshot` reports the resolved window scale before any element-level opt-out is applied.
 
 Snapshots are not a layout mutation mechanism. Change runtime scale through `MGDesktop.SetUniformUIScale`, `MGDesktop.UIScale`, `MGWindow.SetUniformUIScaleOverride`, or `MGWindow.UIScaleOverride`.
+
+## Render Caching
+
+Layout-aware `MGDesktop.UIScale` and resolved window UI scale participate in layout and cache revisions; after a scale change, the next eligible draw records fresh pixels. `MGWindow.Scale` is a post-layout transform and may bypass a cache boundary when it falls outside the supported render context. See [Render Caching](./ui/render-caching.md) for eligibility and lifecycle details.

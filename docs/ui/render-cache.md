@@ -1,24 +1,11 @@
 # Render cache
 
-`RenderCache` is an explicit single-content wrapper. It materializes `MGUI.Core.UI.Containers.MGRenderCache`; ordinary sibling elements remain live and retain their painter order. Its content can contain normal text, images, controls and nested containers.
+`MGUI.Core.UI.Containers.MGRenderCache` is an explicit single-content wrapper. Ordinary sibling elements remain live in their painter order, and the wrapper's own background, decorations and public callbacks keep their normal paint stages. Only eligible `Content` pixels are reused.
 
-```xml
-<StackPanel>
-  <RenderCache IsCacheEnabled="True">
-    <StackPanel>
-      <TextBlock Text="Stable panel" />
-      <Image SourceName="PanelIcon" />
-      <Button Content="Action" />
-    </StackPanel>
-  </RenderCache>
-  <TextBlock Text="Live status" IsRenderVolatile="True" />
-</StackPanel>
-```
+XAML `IsCacheEnabled` is nullable and defaults to `true` on this explicit wrapper. The flag supports ordinary styles, including `BasedOn`, and `MGBinding` from window data context, element names and resource names. Explicit values follow the normal style precedence rules. `Content` uses the usual parent ownership, namescope, binding initialization and data-context propagation. Applying settings with content excluded preserves existing content while still applying an explicitly supplied cache flag.
 
-`Content` is the content property, so explicit `<RenderCache.Content>` syntax also works. Empty content is valid. `IsCacheEnabled` is nullable in XAML; omitting it preserves the runtime default `true`. `IsRenderVolatile` is a nullable common element property; omitting it preserves runtime `false`. Setting it to `true` keeps that element's paint live and prevents enclosing cache reuse. Setting it to `false` does not override intrinsic volatility of running controls.
+Preparation is optional. Call `desktop.PrepareRenderCaches()` after update and before clearing or drawing the scene. Omitting it or changing state after it causes direct painting until a fresh observation is prepared. The wrapper's drawing path leaves input, update, layout and other paint stages ordinary.
 
-Both flags support ordinary styles (including `BasedOn` inheritance) and `MGBinding`, including live window data context, element-name and resource-name sources. Explicit values take precedence over style setters according to existing style behavior. Content uses normal parent ownership, name scopes, binding initialization and data context propagation. Applying settings with content excluded preserves existing content and still applies explicitly supplied flags.
+See the complete [render caching guide](render-caching.md) for APIs, invalidation and lifecycle details. The runnable [XAML sample](../../MGUI.Samples/Features/RenderCaching.xaml) shows the content wrapper beside live content. Pure [RenderCache XAML tests](../../MGUI.Tests/XAML/RenderCacheXamlTests.cs) cover syntax/defaults and invalid input; the [native parser test](../../MGUI.Tests/Rendering/RenderCacheXamlNativeTests.cs) checks runtime trees, styles, content exclusion and live binding replacement.
 
-Call `desktop.PrepareRenderCaches()` after normal update and before scene drawing, outside draw transactions. The wrapper's own decorations remain ordinary drawing; only eligible content pixels are reused. Unsupported content or contexts draw directly. See the [caching contract](render-caching-design.md) and [eligibility rules](render-caching-eligibility.md) for preparation, invalidation and disposal requirements. Caching adds no update, input or layout shortcut.
-
-Validation: the pure `RenderCacheXamlTests` lane checks content syntax, nullable flags, inherited styles and invalid input. `RenderCacheXamlNativeTests` uses a real MonoGame DesktopGL host to check parsed runtime trees/defaults/styles, content exclusion and live binding replacement through the normal parser lifecycle. Its helper owns a private Xvfb display and shared graphics lock on Linux.
+For qualified performance evidence, see the [matched comparison report](render-caching-comparison.md). Its synthetic panel fixtures often passed the timing gate, while dirty and scrolling content stayed live; these results do not predict whole-application FPS or a game's UI behavior.

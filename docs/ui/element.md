@@ -50,6 +50,7 @@ Abstract base for all XAML-authored UI elements in MGUI.
 | `ClipToBounds` | `bool?` |
 | `Opacity` | `float?` |
 | `RenderScale` | `float?` |
+| `IsRenderVolatile` | `bool?` |
 | `Dock` | `Dock` |
 | `Row` | `int` |
 | `Column` | `int` |
@@ -65,3 +66,5 @@ Abstract base for all XAML-authored UI elements in MGUI.
 | `Tag` | `object` |
 
 ## Related
+
+- [Render caching and `IsRenderVolatile`](render-caching.md)

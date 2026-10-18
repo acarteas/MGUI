@@ -18,3 +18,4 @@ Abstract element base for controls that expose exactly one primary child element
 
 - Base docs: [Element](./element.md)
 - Common element API: [Element](./element.md)
+- Explicit content pixel reuse: [Render caching](./render-caching.md)
