@@ -52,6 +52,26 @@ namespace MGUI.Core.UI.XAML
         }
     }
 
+    [ContentProperty(nameof(Content))]
+    public class RenderCache : SingleContentHost
+    {
+        public override MGElementType ElementType => MGElementType.RenderCache;
+
+        [Category("Behavior")]
+        public bool? IsCacheEnabled { get; set; }
+
+        protected override MGElement CreateElementInstance(MGWindow Window, MGElement Parent) => new MGRenderCache(Window);
+
+        protected internal override void ApplyDerivedSettings(MGElement Parent, MGElement Element, bool IncludeContent)
+        {
+            base.ApplyDerivedSettings(Parent, Element, IncludeContent);
+            if (IsCacheEnabled.HasValue)
+            {
+                ((MGRenderCache)Element).IsCacheEnabled = IsCacheEnabled.Value;
+            }
+        }
+    }
+
     public struct ColumnDefinition
     {
         [Category("Layout")]

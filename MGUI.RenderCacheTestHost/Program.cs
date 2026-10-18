@@ -58,6 +58,10 @@ internal static class Program
             {
                 return ContentBoundaryTests.RunAllNative();
             }
+            if (args.Length == 1 && args[0] == "--render-cache-xaml")
+            {
+                return RenderCacheXamlTests.RunAllNative();
+            }
             Options options = Options.Parse(args);
             using BenchmarkGame game = new(options);
             game.Run();
