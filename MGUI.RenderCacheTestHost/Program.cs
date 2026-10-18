@@ -15,6 +15,10 @@ internal static class Program
     {
         try
         {
+            if (args.Length == 2 && args[0] == "--stability")
+            {
+                return StabilityGame.Run(args[1]);
+            }
             if (args.Length == 1 && args[0] == "--resources")
             {
                 return ResourceTests.RunAllNative();
