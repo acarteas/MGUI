@@ -190,22 +190,42 @@ namespace MGUI.Core.UI
         }
 
         private static bool Eligible(ElementDrawArgs args, Rectangle bounds)
+            => GetContextBypassReason(args, bounds) == MGRenderCacheBypassReason.None;
+
+        internal static MGRenderCacheBypassReason GetContextBypassReason(ElementDrawArgs args, Rectangle bounds)
         {
             var settings = args.DT.CurrentSettings;
             Matrix m = settings.Transform;
             bool translation = m.M11 == 1 && m.M22 == 1 && m.M33 == 1 && m.M44 == 1
                 && m.M12 == 0 && m.M13 == 0 && m.M14 == 0 && m.M21 == 0 && m.M23 == 0 && m.M24 == 0
                 && m.M31 == 0 && m.M32 == 0 && m.M34 == 0 && m.M43 == 0
+                && float.IsFinite(m.M41) && float.IsFinite(m.M42)
                 && m.M41 == MathF.Truncate(m.M41) && m.M42 == MathF.Truncate(m.M42);
-            Rectangle screen = bounds.GetTranslated(args.Offset + new Point((int)m.M41, (int)m.M42));
+            if (!translation) { return MGRenderCacheBypassReason.Transform; }
+            if (args.Opacity != 1) { return MGRenderCacheBypassReason.Opacity; }
+            if (bounds.Width <= 0 || bounds.Height <= 0) { return MGRenderCacheBypassReason.InvalidBounds; }
+
+            // Double arithmetic avoids wrapping an otherwise integer-valued translation or rectangle edge.
+            double left = bounds.X + (double)args.Offset.X + m.M41;
+            double top = bounds.Y + (double)args.Offset.Y + m.M42;
+            if (left < int.MinValue || top < int.MinValue || left + bounds.Width > int.MaxValue || top + bounds.Height > int.MaxValue)
+            {
+                return MGRenderCacheBypassReason.InvalidBounds;
+            }
+            Rectangle screen = new((int)left, (int)top, bounds.Width, bounds.Height);
             var presentation = args.DT.GD.PresentationParameters;
-            bool fullViewport = args.DT.GD.Viewport.Bounds == new Rectangle(0, 0, presentation.BackBufferWidth, presentation.BackBufferHeight);
-            return fullViewport && args.Opacity == 1 && bounds.Width > 0 && bounds.Height > 0 && translation
-                && settings.RasterizerType == RasterizerType.SolidScissorTest && settings.Sort == SpriteSortMode.Deferred
-                && (settings.BlendType == BlendType.AlphaBlend || settings.BlendType == BlendType.Default)
-                && settings.SamplerType == SamplerType.PointClamp
-                && (settings.DepthStencilType == DepthStencilType.None || settings.DepthStencilType == DepthStencilType.Default)
-                && settings.Effect == null && args.DT.GD.ScissorRectangle.Contains(screen);
+            if (args.DT.GD.Viewport.Bounds != new Rectangle(0, 0, presentation.BackBufferWidth, presentation.BackBufferHeight))
+            {
+                return MGRenderCacheBypassReason.Viewport;
+            }
+            if (args.HasUnsupportedInheritedRasterizer || settings.RasterizerType != RasterizerType.SolidScissorTest) { return MGRenderCacheBypassReason.Rasterizer; }
+            if (settings.Sort != SpriteSortMode.Deferred) { return MGRenderCacheBypassReason.SortMode; }
+            if (settings.BlendType != BlendType.AlphaBlend && settings.BlendType != BlendType.Default) { return MGRenderCacheBypassReason.Blend; }
+            if (settings.SamplerType != SamplerType.PointClamp) { return MGRenderCacheBypassReason.Sampler; }
+            if (settings.DepthStencilType != DepthStencilType.None && settings.DepthStencilType != DepthStencilType.Default) { return MGRenderCacheBypassReason.Depth; }
+            if (settings.Effect != null) { return MGRenderCacheBypassReason.Effect; }
+            if (!args.DT.GD.ScissorRectangle.Contains(screen)) { return MGRenderCacheBypassReason.PartialClip; }
+            return MGRenderCacheBypassReason.None;
         }
     }
 }

@@ -8,7 +8,10 @@ namespace MGUI.Core.UI
     public enum MGRenderCacheBypassReason
     {
         None, Disabled, InvalidSize, DimensionLimit, Budget, QueueFull, Stale, OwnerUnavailable,
-        NativeFailure, FailureSuppressed, ResourceDisposed, UnsupportedCallContext
+        NativeFailure, FailureSuppressed, ResourceDisposed, UnsupportedCallContext,
+        DisabledOrEmpty, UnsupportedRenderer, Volatile, PublicDrawCallback, UnresolvedLayout,
+        UnboundedPaint, Transform, Opacity, Viewport, Rasterizer, SortMode, Blend, Sampler, Depth, Effect,
+        PartialClip, InvalidBounds
     }
 
     /// <summary>Value-only lifecycle counters. Reading these counters does not allocate.</summary>

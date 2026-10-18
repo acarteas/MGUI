@@ -37,6 +37,13 @@ namespace MGUI.Core.UI
         public bool IsEnabled => !VisualState.IsDisabled;
         public bool IsSelected => VisualState.IsSelected;
 
+        // Normal element clipping may enable scissors; retain an unsupported caller rasterizer through descendants.
+        internal bool HasUnsupportedInheritedRasterizer { get; init; }
+
+        internal ElementDrawArgs ObserveInheritedRasterizer()
+            => DT != null && DT.CurrentSettings.RasterizerType != RasterizerType.SolidScissorTest
+                ? this with { HasUnsupportedInheritedRasterizer = true } : this;
+
         public ElementDrawArgs SetOpacity(float Value) => this with { BA = BA.SetOpacity(Value) };
         public ElementDrawArgs SetOffset(Point Value) => this with { Offset = Value };
 
@@ -1986,7 +1993,7 @@ namespace MGUI.Core.UI
             bool DrawCompleted = false;
             try
             {
-                DrawCompleted = DrawBody(DA);
+                DrawCompleted = DrawBody(DA.ObserveInheritedRasterizer());
             }
             finally
             {
@@ -2002,6 +2009,9 @@ namespace MGUI.Core.UI
             MGElementDrawEventArgs DrawEventArgs = new(DA);
 
             if (DA.DT?.IsCacheCapture != true) { BeginDrawHandlers?.Invoke(this, DrawEventArgs); }
+
+            // Live begin callbacks can change settings before normal clipping enables the scissor test.
+            DA = DA.ObserveInheritedRasterizer();
 
             if (Visibility != Visibility.Visible || LayoutBounds.Width <= 0 || LayoutBounds.Height <= 0)
             {

@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 
 namespace MGUI.Core.UI
@@ -26,7 +27,8 @@ namespace MGUI.Core.UI
         private long UseSequence;
         private bool IsPreparing;
         private bool IsDraining;
-        private readonly long[] Bypasses = new long[(int)MGRenderCacheBypassReason.UnsupportedCallContext + 1];
+        private static readonly int BypassReasonCount = checked((int)Enum.GetValues<MGRenderCacheBypassReason>().Max() + 1);
+        private readonly long[] Bypasses = new long[BypassReasonCount];
         private Entry ActiveCandidate;
         private long Hits, Misses, Builds, Rejections, Stale, Evictions, Allocations, Disposals, Switches;
         private MGRenderCacheBypassReason LastBypass;

@@ -1738,6 +1738,7 @@ namespace MGUI.Core.UI
 
         public override void Draw(ElementDrawArgs DA)
         {
+            DA = DA.ObserveInheritedRasterizer();
             if (!IsWindowScaled && !ParentWindows.Any(x => x.IsWindowScaled))
                 base.Draw(DA);
             else

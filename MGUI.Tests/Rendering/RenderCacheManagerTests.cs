@@ -501,6 +501,20 @@ public class RenderCacheManagerTests
     }
 
     [Fact]
+    public void DiagnosticsAcceptEveryDefinedReasonAndRejectOutOfRangeValues()
+    {
+        using Harness h = new();
+        MGRenderCacheBypassReason[] reasons = Enum.GetValues<MGRenderCacheBypassReason>();
+        foreach (MGRenderCacheBypassReason reason in reasons)
+        {
+            Assert.Equal(0, h.Manager.GetBypassCount(reason));
+        }
+        Assert.Throws<ArgumentOutOfRangeException>(() => h.Manager.GetBypassCount((MGRenderCacheBypassReason)(-1)));
+        Assert.Throws<ArgumentOutOfRangeException>(() => h.Manager.GetBypassCount((MGRenderCacheBypassReason)((int)reasons.Max() + 1)));
+        Assert.Throws<ArgumentOutOfRangeException>(() => h.Manager.GetBypassCount((MGRenderCacheBypassReason)int.MaxValue));
+    }
+
+    [Fact]
     public void DiagnosticsCountBypassReasonsWithoutFormatting()
     {
         using Harness h = new();

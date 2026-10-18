@@ -62,6 +62,10 @@ internal static class Program
             {
                 return RenderCacheXamlTests.RunAllNative();
             }
+            if (args.Length == 1 && args[0] == "--composition")
+            {
+                return CompositionTests.RunAllNative();
+            }
             Options options = Options.Parse(args);
             using BenchmarkGame game = new(options);
             game.Run();

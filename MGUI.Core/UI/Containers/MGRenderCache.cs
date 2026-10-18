@@ -44,8 +44,29 @@ namespace MGUI.Core.UI.Containers
 
         // Derived wrappers can change virtual child enumeration or content painting. Their ordinary traversal
         // remains live; participation in an enclosing boundary is governed by the custom support contract.
-        private bool IsContentEligible => GetType() == typeof(MGRenderCache) && HasCacheableContent && ClipToBounds && IsLayoutValid
-            && !IsRenderVolatile && !IsBuiltInRenderVolatile && Content.GetRenderEligibilitySnapshot().IsEligible;
+        private bool IsContentEligible => GetContentBypassReason() == MGRenderCacheBypassReason.None;
+
+        /// <summary>The source/context decision at the most recent ordinary DrawContents invocation.
+        /// A skipped paint site leaves this value unchanged; None does not promise a ready texture.
+        /// Reading this diagnostic never discovers descendants or changes rendering.</summary>
+        public MGRenderCacheBypassReason LastBypassReason { get; private set; }
+
+        private MGRenderCacheBypassReason GetContentBypassReason()
+        {
+            if (GetType() != typeof(MGRenderCache)) { return MGRenderCacheBypassReason.UnsupportedRenderer; }
+            if (!HasCacheableContent) { return MGRenderCacheBypassReason.DisabledOrEmpty; }
+            if (!ClipToBounds) { return MGRenderCacheBypassReason.UnboundedPaint; }
+            if (!IsLayoutValid) { return MGRenderCacheBypassReason.UnresolvedLayout; }
+            if (IsRenderVolatile || IsBuiltInRenderVolatile) { return MGRenderCacheBypassReason.Volatile; }
+            var facts = Content.GetRenderEligibilitySnapshot();
+            if (facts.PublicDrawCallbackCount != 0) { return MGRenderCacheBypassReason.PublicDrawCallback; }
+            if (facts.VolatileCount != 0) { return MGRenderCacheBypassReason.Volatile; }
+            if (facts.UnsupportedTransformCount != 0) { return MGRenderCacheBypassReason.Transform; }
+            if (facts.UnboundedPaintCount != 0) { return MGRenderCacheBypassReason.UnboundedPaint; }
+            if (facts.UnresolvedLayoutCount != 0) { return MGRenderCacheBypassReason.UnresolvedLayout; }
+            if (facts.UnsupportedCount != 0) { return MGRenderCacheBypassReason.UnsupportedRenderer; }
+            return MGRenderCacheBypassReason.None;
+        }
 
         internal void InvalidateContentObservation() => Operation?.Invalidate();
 
@@ -57,7 +78,12 @@ namespace MGUI.Core.UI.Containers
                 return;
             }
 
-            bool eligible = IsContentEligible;
+            LastBypassReason = GetContentBypassReason();
+            bool eligible = LastBypassReason == MGRenderCacheBypassReason.None;
+            if (eligible)
+            {
+                LastBypassReason = MGRenderCacheOperation.GetContextBypassReason(DA, LayoutBounds);
+            }
             if (!eligible)
             {
                 InvalidateContentObservation();

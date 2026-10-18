@@ -612,7 +612,8 @@ namespace MGUI.Core.UI
         {
             ReconcileRenderRootAttachments();
             DrawBaseArgs BA = new(Renderer.UpdateArgs.TotalElapsed, DT, Opacity);
-            ElementDrawArgs DA = new(BA, new VisualState(PrimaryVisualState.Normal, SecondaryVisualState.None), Point.Zero);
+            ElementDrawArgs DA = new ElementDrawArgs(BA, new VisualState(PrimaryVisualState.Normal, SecondaryVisualState.None), Point.Zero)
+                .ObserveInheritedRasterizer();
 
             Rectangle ScreenBounds = ValidScreenBounds;
             if (!BA.DT.CurrentSettings.RasterizerState.ScissorTestEnable || ScreenBounds.Intersects(BA.DT.GD.ScissorRectangle))
