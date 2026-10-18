@@ -85,6 +85,79 @@ public class SchemaValidationTests
     }
 
     [Fact]
+    public void CacheXamlDeclarationsAreAccepted()
+    {
+        AssertValid($$"""
+            <StackPanel xmlns="{{XAMLParser.XMLLocalNameSpaceUri}}">
+                <RenderCache />
+                <RenderCache IsCacheEnabled="True">
+                    <RenderCache.Content>
+                        <TextBlock Text="Static" IsRenderVolatile="False">
+                            <TextBlock.Resources>
+                                <ResourceDictionary>
+                                    <ResourceDictionary.ColorResources>
+                                        <ColorResource Key="CacheAccent" Value="Red" />
+                                    </ResourceDictionary.ColorResources>
+                                </ResourceDictionary>
+                            </TextBlock.Resources>
+                            <TextBlock.Background>
+                                <CachedFillBrush IsCacheEnabled="True" SourceMode="ExplicitlyStatic">
+                                    <SolidFillBrush Color="{StaticResource CacheAccent}" />
+                                </CachedFillBrush>
+                            </TextBlock.Background>
+                        </TextBlock>
+                    </RenderCache.Content>
+                </RenderCache>
+                <RenderCache IsCacheEnabled="{MGBinding Path=CacheEnabled}">
+                    <TextBlock Text="Bound cache" IsRenderVolatile="{MGBinding Path=IsLive}" />
+                </RenderCache>
+                <TextBlock Text="Live sibling" IsRenderVolatile="True" />
+                <RenderCache IsCacheEnabled="False">
+                    <TextBlock Text="Disabled cache" />
+                </RenderCache>
+                <TextBlock>
+                    <TextBlock.Background>
+                        <CachedFillBrush SourceMode="{MGBinding Path=SourceMode}">
+                            <SolidFillBrush Color="Blue" />
+                        </CachedFillBrush>
+                    </TextBlock.Background>
+                </TextBlock>
+                <StackPanel.Resources>
+                    <ResourceDictionary>
+                        <ResourceDictionary.Styles>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="IsRenderVolatile" Value="True" />
+                            </Style>
+                        </ResourceDictionary.Styles>
+                    </ResourceDictionary>
+                </StackPanel.Resources>
+            </StackPanel>
+            """);
+    }
+
+    [Fact]
+    public void CachedBrushSourceRequirementIsEnforcedByRuntimeInitialization()
+    {
+        string xaml = $"<CachedFillBrush xmlns=\"{XAMLParser.XMLLocalNameSpaceUri}\" />";
+
+        AssertValid(xaml);
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
+            () => Portable.Xaml.XamlServices.Parse(xaml));
+        Assert.Contains("CachedFillBrush.Brush is required", exception.Message);
+    }
+
+    [Theory]
+    [InlineData("<RenderCache xmlns=\"{0}\" IsCacheEnabled=\"sometimes\" />")]
+    [InlineData("<TextBlock xmlns=\"{0}\" IsRenderVolatile=\"sometimes\" />")]
+    [InlineData("<TextBlock xmlns=\"{0}\"><TextBlock.Background><CachedFillBrush SourceMode=\"Always\" Brush=\"Red\" /></TextBlock.Background></TextBlock>")]
+    [InlineData("<TextBlock xmlns=\"{0}\" UnknownCacheOption=\"True\" />")]
+    [InlineData("<RenderCache xmlns=\"{0}\"><UnknownCacheElement /></RenderCache>")]
+    public void InvalidCacheXamlDeclarationsAreRejected(string template)
+    {
+        Assert.NotEmpty(Validate(string.Format(template, XAMLParser.XMLLocalNameSpaceUri)));
+    }
+
+    [Fact]
     public void CheckedInSchemaMatchesGenerator()
     {
         XDocument checkedInSchema = XDocument.Load(Path.Combine(AppContext.BaseDirectory, "mgui.xsd"));
