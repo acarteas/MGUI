@@ -72,7 +72,7 @@ public sealed class MGInteractiveVisualStateTests
             Assert.True(check.ButtonElement.VisualRevision > child.Visual);
             Assert.Equal(parent + 1, check.VisualRevision);
         }
-        Assert.Null(typeof(MGElement).GetField("OnEndingDraw", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(check.ButtonElement));
+        Assert.Equal(0, check.ButtonElement.PublicDrawCallbackCount);
     }
 
     [Fact]

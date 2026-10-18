@@ -206,6 +206,8 @@ namespace MGUI.Core.UI
                 return Stamp;
             }
 
+            RefreshLocalRenderEligibility();
+
             if ((Kind & (MGRenderInvalidationKind.Layout | MGRenderInvalidationKind.Structure)) != 0)
             {
                 Kind |= MGRenderInvalidationKind.Visual;

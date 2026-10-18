@@ -107,6 +107,7 @@ namespace MGUI.Core.UI
                 }
 
                 RetainedRenderPaintChildren = Children.AsReadOnly();
+                ReconcileRenderEligibilityChildren(Previous, RetainedRenderPaintChildren);
                 MGRenderMutationStamp Stamp = MGRenderRevisionClock.NextMutation();
                 Stamp = InvalidateRenderState(MGRenderInvalidationKind.Structure, Stamp);
                 foreach (MGElement Child in Previous)

@@ -1981,7 +1981,7 @@ namespace MGUI.Core.UI
             DA = DA.SetOpacity(DA.Opacity * Opacity) with { VisualState = VisualState };
             MGElementDrawEventArgs DrawEventArgs = new(DA);
 
-			if (DA.DT?.IsCacheCapture != true) { OnBeginDraw?.Invoke(this, DrawEventArgs); }
+			if (DA.DT?.IsCacheCapture != true) { BeginDrawHandlers?.Invoke(this, DrawEventArgs); }
 
             if (Visibility != Visibility.Visible || LayoutBounds.Width <= 0 || LayoutBounds.Height <= 0)
 			{
@@ -2034,7 +2034,7 @@ namespace MGUI.Core.UI
                     DrawFillBrushAtSite(OverlayBrush, DA, GetBackgroundBounds(LayoutBounds), MGFillBrushPaintSite.Overlay);
 
                     OnEndingDrawBuiltIn?.Invoke(this, DrawEventArgs);
-                    if (DA.DT?.IsCacheCapture != true) { OnEndingDraw?.Invoke(this, DrawEventArgs); }
+                    if (DA.DT?.IsCacheCapture != true) { EndingDrawHandlers?.Invoke(this, DrawEventArgs); }
                 }
             }
             else
@@ -2045,7 +2045,7 @@ namespace MGUI.Core.UI
             TempTransform?.Dispose();
             TempScissorRect?.Dispose();
 
-            if (DA.DT?.IsCacheCapture != true) { OnEndDraw?.Invoke(this, DrawEventArgs); }
+            if (DA.DT?.IsCacheCapture != true) { EndDrawHandlers?.Invoke(this, DrawEventArgs); }
 			}
 
         internal Rectangle GetDrawTargetBounds(ElementDrawArgs DA)
@@ -2064,18 +2064,30 @@ namespace MGUI.Core.UI
 			}
 		}
 
-		public event EventHandler<MGElementDrawEventArgs> OnBeginDraw;
+		public event EventHandler<MGElementDrawEventArgs> OnBeginDraw
+        {
+            add => ChangePublicDrawHandlers(ref BeginDrawHandlers, value, true);
+            remove => ChangePublicDrawHandlers(ref BeginDrawHandlers, value, false);
+        }
         /// <summary>Invoked after drawing the <see cref="BackgroundBrush"/>, self, all components, and the <see cref="OverlayBrush"/>,
         /// but while the <see cref="GraphicsDevice.ScissorRectangle"/> is still set to the desired screen-space bounds of this element.<para/>
         /// See also: <see cref="OnEndDraw"/></summary>
-        public event EventHandler<MGElementDrawEventArgs> OnEndingDraw;
+        public event EventHandler<MGElementDrawEventArgs> OnEndingDraw
+        {
+            add => ChangePublicDrawHandlers(ref EndingDrawHandlers, value, true);
+            remove => ChangePublicDrawHandlers(ref EndingDrawHandlers, value, false);
+        }
 
         // Trusted built-in paint stage retains the public ending stage order and active clip during capture.
         internal event EventHandler<MGElementDrawEventArgs> OnEndingDrawBuiltIn;
         /// <summary>Invoked at the very end of <see cref="MGElement.Draw(ElementDrawArgs)"/>.<br/>
         /// Unlike <see cref="OnEndingDraw"/>, this event is invoked AFTER the <see cref="GraphicsDevice.ScissorRectangle"/> has been reverted to its prior value.<para/>
         /// See also: <see cref="OnEndingDraw"/></summary>
-		public event EventHandler<MGElementDrawEventArgs> OnEndDraw;
+		public event EventHandler<MGElementDrawEventArgs> OnEndDraw
+        {
+            add => ChangePublicDrawHandlers(ref EndDrawHandlers, value, true);
+            remove => ChangePublicDrawHandlers(ref EndDrawHandlers, value, false);
+        }
 
         protected void DrawBackground(ElementDrawArgs DA) => DrawBackground(DA, LayoutBounds);
 
@@ -2107,6 +2119,7 @@ namespace MGUI.Core.UI
         #region Layout
 		internal protected void InvalidateLayout()
 		{
+            RenderEligibilityLayoutPending = true;
             InvalidateRenderState(MGRenderInvalidationKind.Layout);
             InvalidateLayoutMeasurements();
         }
@@ -2121,6 +2134,8 @@ namespace MGUI.Core.UI
         /// <summary>Invoked when a property that affects this <see cref="MGElement"/>'s layout has changed, such as <see cref="Padding"/>, <see cref="Margin"/>, or its content.</summary>
         protected virtual void LayoutChanged(MGElement Source, bool NotifyParent)
         {
+            RenderEligibilityLayoutPending = true;
+            RefreshLocalRenderEligibility();
             var (Stamp, Forwarded) = TakeLayoutMutation(Source);
 
             // Logical parents still invalidate measurement; only actual paint owners summarize revisions.
@@ -2156,6 +2171,8 @@ namespace MGUI.Core.UI
                 if (_IsLayoutValid != value)
                 {
                     _IsLayoutValid = value;
+                    RenderEligibilityLayoutPending = !value;
+                    RefreshLocalRenderEligibility();
                     NPC(nameof(IsLayoutValid));
                 }
             }
@@ -2169,6 +2186,7 @@ namespace MGUI.Core.UI
             try
             {
                 IsUpdatingLayout = true;
+                RefreshLocalRenderEligibility();
 
                 if (!IsLayoutValid)
                 {
@@ -2311,11 +2329,17 @@ namespace MGUI.Core.UI
                     InvalidateRenderState(MGRenderInvalidationKind.Layout);
                 }
 
+                RenderEligibilityLayoutPending = false;
                 IsLayoutValid = true;
+                RefreshLocalRenderEligibility();
                 OnLayoutUpdated?.Invoke(this, EventArgs.Empty);
                 OnLayoutBoundsChanged?.Invoke(this, new(PreviousLayoutBounds, LayoutBounds));
             }
-            finally { IsUpdatingLayout = false; }
+            finally
+            {
+                IsUpdatingLayout = false;
+                RefreshLocalRenderEligibility();
+            }
         }
 
 		public event EventHandler<EventArgs> OnLayoutUpdated;

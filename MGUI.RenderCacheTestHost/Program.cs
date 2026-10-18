@@ -46,6 +46,10 @@ internal static class Program
             {
                 return TextImageTests.RunAllNative();
             }
+            if (args.Length == 1 && args[0] == "--eligibility")
+            {
+                return EligibilityTests.RunAllNative();
+            }
             if (args.Length == 1 && args[0] == "--decorations")
             {
                 return DecorationTests.RunAllNative();
