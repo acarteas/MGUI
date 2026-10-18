@@ -92,6 +92,7 @@ namespace MGUI.Core.UI
                 if (_ExpanderDropdownArrowColor != value)
                 {
                     _ExpanderDropdownArrowColor = value;
+                    ExpanderToggleButton?.InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(ExpanderDropdownArrowColor));
                 }
             }
@@ -110,6 +111,7 @@ namespace MGUI.Core.UI
                 if (_ExpanderDropdownArrowSize != value)
                 {
                     _ExpanderDropdownArrowSize = value;
+                    ExpanderToggleButton?.InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(ExpanderDropdownArrowSize));
                 }
             }
@@ -213,6 +215,7 @@ namespace MGUI.Core.UI
                         return;
 
                     _IsExpanded = value;
+                    ExpanderToggleButton.InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     ExpanderToggleButton.IsChecked = IsExpanded;
                     NPC(nameof(IsExpanded));
                     NPC(nameof(IsCollapsed));
@@ -263,6 +266,13 @@ namespace MGUI.Core.UI
                 if (_ExpandedVisibility != value)
                 {
                     _ExpandedVisibility = value;
+                    if (IsExpanded && BoundItems != null)
+                    {
+                        foreach (MGElement Item in BoundItems)
+                        {
+                            Item.Visibility = value;
+                        }
+                    }
                     NPC(nameof(ExpandedVisibility));
                 }
             }
@@ -280,6 +290,13 @@ namespace MGUI.Core.UI
                 if (_CollapsedVisibility != value)
                 {
                     _CollapsedVisibility = value;
+                    if (IsCollapsed && BoundItems != null)
+                    {
+                        foreach (MGElement Item in BoundItems)
+                        {
+                            Item.Visibility = value;
+                        }
+                    }
                     NPC(nameof(CollapsedVisibility));
                 }
             }
@@ -346,7 +363,7 @@ namespace MGUI.Core.UI
                     this.IsExpanded = ExpanderToggleButton.IsChecked;
                 };
 
-                ExpanderToggleButton.OnEndingDraw += (sender, e) =>
+                ExpanderToggleButton.OnEndingDrawBuiltIn += (sender, e) =>
                 {
                     int DropdownArrowHeight = ExpanderDropdownArrowSize / 2;
                     if (DropdownArrowHeight % 2 != 0)

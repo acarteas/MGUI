@@ -159,6 +159,7 @@ namespace MGUI.Core.UI
         #region Items Source
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private ObservableCollection<MGListBoxItem<TItemType>> _InternalItems;
+        private IReadOnlyList<MGListBoxItem<TItemType>> PreviousInternalItems = Array.Empty<MGListBoxItem<TItemType>>();
         private ObservableCollection<MGListBoxItem<TItemType>> InternalItems
         {
             get => _InternalItems;
@@ -168,12 +169,16 @@ namespace MGUI.Core.UI
                 {
                     if (InternalItems != null)
                     {
-                        HandleTemplatedContentRemoved(InternalItems.Select(x => x.Content));
+                        foreach (MGListBoxItem<TItemType> Item in InternalItems)
+                        {
+                            Item.Detach();
+                        }
                         InternalItems.CollectionChanged -= ListBoxItems_CollectionChanged;
                         foreach (MGListBoxItem<TItemType> Removed in InternalItems)
                             OnListBoxItemRemoved?.Invoke(this, Removed);
                     }
                     _InternalItems = value;
+                    PreviousInternalItems = InternalItems?.ToArray() ?? Array.Empty<MGListBoxItem<TItemType>>();
                     if (InternalItems != null)
                     {
                         InternalItems.CollectionChanged += ListBoxItems_CollectionChanged;
@@ -203,15 +208,6 @@ namespace MGUI.Core.UI
         }
         public IReadOnlyList<MGListBoxItem<TItemType>> ListBoxItems => InternalItems;
 
-        private static void HandleTemplatedContentRemoved(IEnumerable<MGElement> Items)
-        {
-            if (Items != null)
-            {
-                foreach (var Item in Items)
-                    Item.RemoveDataBindings(true);
-            }
-        }
-
         private void ListBoxItems_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             using (ItemsPanel.AllowChangingContentTemporarily())
@@ -220,8 +216,13 @@ namespace MGUI.Core.UI
 
                 if (e.Action is NotifyCollectionChangedAction.Reset)
                 {
+                    Removed.UnionWith(PreviousInternalItems);
                     _ = ItemsPanel.TryRemoveAll();
                     ClearSelection();
+                    foreach (MGListBoxItem<TItemType> Item in Removed)
+                    {
+                        OnListBoxItemRemoved?.Invoke(this, Item);
+                    }
                 }
                 else if (e.Action is NotifyCollectionChangedAction.Add && e.NewItems != null)
                 {
@@ -268,7 +269,10 @@ namespace MGUI.Core.UI
                 }
                 else if (e.Action is NotifyCollectionChangedAction.Move)
                 {
-                    throw new NotImplementedException();
+                    MGListBoxItem<TItemType> Item = InternalItems[e.NewStartingIndex];
+                    ItemsPanel.TryRemoveChild(Item.ContentPresenter);
+                    ItemsPanel.TryInsertChild(e.NewStartingIndex, Item.ContentPresenter);
+                    RefreshRowBackgrounds();
                 }
 
                 //  Ensure none of the removed items are Selected
@@ -281,7 +285,11 @@ namespace MGUI.Core.UI
                 if (SelectionSourceItem != null && Removed.Contains(SelectionSourceItem))
                     SelectionSourceItem = null;
 
-                HandleTemplatedContentRemoved(Removed.Select(x => x.Content));
+                foreach (MGListBoxItem<TItemType> Item in Removed)
+                {
+                    Item.Detach();
+                }
+                PreviousInternalItems = InternalItems.ToArray();
             }
         }
 
@@ -357,7 +365,6 @@ namespace MGUI.Core.UI
         {
             if (e.Action is NotifyCollectionChangedAction.Reset)
             {
-                HandleTemplatedContentRemoved(InternalItems.Select(x => x.Content));
                 InternalItems.Clear();
             }
             else if (e.Action is NotifyCollectionChangedAction.Add && e.NewItems != null)
@@ -385,14 +392,13 @@ namespace MGUI.Core.UI
                 List<TItemType> New = e.NewItems.Cast<TItemType>().ToList();
                 for (int i = 0; i < Old.Count; i++)
                 {
-                    MGListBoxItem<TItemType> OldRowItem = InternalItems[i];
                     MGListBoxItem<TItemType> NewRowItem = new(this, New[i]);
                     InternalItems[e.OldStartingIndex + i] = NewRowItem;
                 }
             }
             else if (e.Action is NotifyCollectionChangedAction.Move)
             {
-                throw new NotImplementedException();
+                InternalItems.Move(e.OldStartingIndex, e.NewStartingIndex);
             }
         }
 
@@ -662,6 +668,12 @@ namespace MGUI.Core.UI
                     NPC(nameof(AlternatingRowBackgrounds));
                 }
             }
+        }
+
+        protected override void OnVisualInvalidated()
+        {
+            base.OnVisualInvalidated();
+            RefreshRowBackgrounds();
         }
 
         private void RefreshRowBackgrounds()
@@ -944,16 +956,28 @@ namespace MGUI.Core.UI
             this.Data = Data ?? throw new ArgumentNullException(nameof(Data));
             ContentPresenter = new(ListBox.SelfOrParentWindow);
 
-            ListBox.ItemTemplateChanged += (sender, e) =>
-            {
-                Content?.RemoveDataBindings(true);
-                Content = ListBox.ItemTemplate?.Invoke(this.Data);
-            };
+            ListBox.ItemTemplateChanged += OnItemTemplateChanged;
             Content = ListBox.ItemTemplate?.Invoke(this.Data);
             ContentPresenter.CanChangeContent = false;
 
-            ListBox.ItemContainerStyleChanged += (sender, e) => { ListBox.ItemContainerStyle?.Invoke(ContentPresenter); };
+            ListBox.ItemContainerStyleChanged += OnItemContainerStyleChanged;
             ListBox.ItemContainerStyle?.Invoke(ContentPresenter);
+        }
+
+        private void OnItemTemplateChanged(object sender, EventArgs e)
+        {
+            Content?.RemoveDataBindings(true);
+            Content = ListBox.ItemTemplate?.Invoke(Data);
+        }
+
+        private void OnItemContainerStyleChanged(object sender, EventArgs e)
+            => ListBox.ItemContainerStyle?.Invoke(ContentPresenter);
+
+        internal void Detach()
+        {
+            ListBox.ItemTemplateChanged -= OnItemTemplateChanged;
+            ListBox.ItemContainerStyleChanged -= OnItemContainerStyleChanged;
+            ContentPresenter.RemoveDataBindings(true);
         }
     }
 }

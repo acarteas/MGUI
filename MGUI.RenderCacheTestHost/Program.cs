@@ -26,6 +26,10 @@ internal static class Program
             {
                 return CachedBrushTests.RunAllNative();
             }
+            if (args.Length == 1 && args[0] == "--collection-controls")
+            {
+                return CollectionControlTests.RunAllNative();
+            }
             if (args.Length == 1 && args[0] == "--interactive")
             {
                 return InteractiveTests.RunAllNative();

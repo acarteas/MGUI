@@ -37,10 +37,6 @@ namespace MGUI.Core.UI
                 {
                     if (InternalRowItems != null)
                     {
-                        // Collect and clean up all templated content from existing rows before clearing
-                        IEnumerable<MGElement> OldElements = InternalRowItems
-                            .SelectMany(x => x.GetRowContents().Values);
-                        HandleTemplatedContentRemoved(OldElements);
                         InternalRowItems.CollectionChanged -= RowItems_CollectionChanged;  // Fix: was incorrectly += causing duplicate subscriptions
                     }
                     _InternalRowItems = value;
@@ -87,6 +83,10 @@ namespace MGUI.Core.UI
                         HandleTemplatedContentRemoved(OldElements);
                     }
                     _ = DataGrid.TryRemoveAll();
+                    foreach (RowDefinition Row in DataGrid.Rows.ToList())
+                    {
+                        DataGrid.RemoveRow(Row);
+                    }
                 }
                 else if (e.Action is NotifyCollectionChangedAction.Add && e.NewItems != null)
                 {
@@ -110,14 +110,12 @@ namespace MGUI.Core.UI
                     List<MGListViewItem<TItemType>> New = e.NewItems.Cast<MGListViewItem<TItemType>>().ToList();
                     for (int i = 0; i < Old.Count; i++)
                     {
-                        // Clean up old templated content before replacing
-                        HandleTemplatedContentRemoved(Old[i].GetRowContents().Values);
                         New[i].RefreshRowContent();
                     }
                 }
                 else if (e.Action is NotifyCollectionChangedAction.Move)
                 {
-                    throw new NotImplementedException();
+                    DataGrid.MoveRow(e.OldStartingIndex, e.NewStartingIndex);
                 }
             }
         }
@@ -138,6 +136,10 @@ namespace MGUI.Core.UI
                     if (ItemsSource != null)
                         ItemsSource.CollectionChanged += ItemsSource_CollectionChanged;
 
+                    if (InternalRowItems != null)
+                    {
+                        HandleTemplatedContentRemoved(InternalRowItems.SelectMany(Item => Item.GetRowContents().Values));
+                    }
                     using (DataGrid.AllowChangingContentTemporarily())
                     {
                         _ = DataGrid.TryRemoveAll();
@@ -167,6 +169,7 @@ namespace MGUI.Core.UI
         {
             if (e.Action is NotifyCollectionChangedAction.Reset)
             {
+                HandleTemplatedContentRemoved(InternalRowItems.SelectMany(Item => Item.GetRowContents().Values));
                 InternalRowItems.Clear();
             }
             else if (e.Action is NotifyCollectionChangedAction.Add && e.NewItems != null)
@@ -194,14 +197,14 @@ namespace MGUI.Core.UI
                 List<TItemType> New = e.NewItems.Cast<TItemType>().ToList();
                 for (int i = 0; i < Old.Count; i++)
                 {
-                    MGListViewItem<TItemType> OldRowItem = InternalRowItems[i];
+                    MGListViewItem<TItemType> OldRowItem = InternalRowItems[e.OldStartingIndex + i];
                     MGListViewItem<TItemType> NewRowItem = new(this, New[i], OldRowItem.DataRow);
                     InternalRowItems[e.OldStartingIndex + i] = NewRowItem;
                 }
             }
             else if (e.Action is NotifyCollectionChangedAction.Move)
             {
-                throw new NotImplementedException();
+                InternalRowItems.Move(e.OldStartingIndex, e.NewStartingIndex);
             }
         }
 

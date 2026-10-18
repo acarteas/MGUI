@@ -21,6 +21,7 @@ public class MGTreeViewItem : MGSingleContentHost
     internal MGTreeView _OwnerTreeView;
     private object _HeaderTemplate;
     private VisualStateFillBrush _PreviousHeaderBackgroundBrush;
+    private VisualStateSetting<Color?> _PreviousHeaderForeground;
 
     /// <summary>
     /// Gets the visual element that displays the header content.
@@ -73,6 +74,7 @@ public class MGTreeViewItem : MGSingleContentHost
             if (_Level != value)
             {
                 _Level = value;
+                UpdateIndentation();
                 NPC(nameof(Level));
             }
         }
@@ -100,6 +102,8 @@ public class MGTreeViewItem : MGSingleContentHost
                 _IsExpanded = value;
                 SetExpanderButtonState(value);
                 UpdateChildrenVisibility();
+                OwnerTreeView?.RebuildVisibleItemsCache();
+                InvalidateRenderState(MGRenderInvalidationKind.Visual);
                 NPC(nameof(IsExpanded));
             }
         }
@@ -361,12 +365,19 @@ public class MGTreeViewItem : MGSingleContentHost
     /// <param name="item">The item to remove.</param>
     public void RemoveItem(MGTreeViewItem item)
     {
-        _Items.Remove(item);
-        if (item != null)
+        if (!_Items.Contains(item))
         {
-            item.ParentItem = null;
-            item._OwnerTreeView = null;
+            return;
         }
+        if (OwnerTreeView != null && (OwnerTreeView.SelectedItem == item || item.IsAncestorOf(OwnerTreeView.SelectedItem)))
+        {
+            OwnerTreeView.ClearSelection();
+        }
+        _Items.Remove(item);
+        OwnerTreeView?.UnregisterItemRecursive(item);
+        item.ParentItem = null;
+        item._OwnerTreeView = null;
+        OwnerTreeView?.RebuildVisibleItemsCache();
     }
 
     /// <summary>
@@ -406,11 +417,22 @@ public class MGTreeViewItem : MGSingleContentHost
         if (selected && OwnerTreeView != null)
         {
             _PreviousHeaderBackgroundBrush = HeaderPanel.BackgroundBrush;
-            HeaderPanel.BackgroundBrush = OwnerTreeView.SelectionBackgroundBrush;
+            _PreviousHeaderForeground = HeaderPanel.DefaultTextForeground;
+            RefreshSelectedAppearance();
         }
         else
         {
             HeaderPanel.BackgroundBrush = _PreviousHeaderBackgroundBrush;
+            HeaderPanel.DefaultTextForeground = _PreviousHeaderForeground;
+        }
+    }
+
+    internal void RefreshSelectedAppearance()
+    {
+        if (IsSelected && OwnerTreeView != null)
+        {
+            HeaderPanel.BackgroundBrush = OwnerTreeView.SelectionBackgroundBrush;
+            HeaderPanel.DefaultTextForeground = new(OwnerTreeView.SelectionForeground);
         }
     }
 

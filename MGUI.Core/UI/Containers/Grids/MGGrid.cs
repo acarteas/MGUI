@@ -261,6 +261,15 @@ namespace MGUI.Core.UI.Containers.Grids
             return Row;
         }
 
+        internal void MoveRow(int OldIndex, int NewIndex)
+        {
+            if (OldIndex != NewIndex)
+            {
+                _Rows.Move(OldIndex, NewIndex);
+                LayoutChanged(this, true);
+            }
+        }
+
         public void RemoveRow(RowDefinition Row)
         {
             if (!CanChangeContent)
