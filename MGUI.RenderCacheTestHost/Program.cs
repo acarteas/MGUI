@@ -14,6 +14,10 @@ internal static class Program
     {
         try
         {
+            if (args.Length == 1 && args[0] == "--resources")
+            {
+                return ResourceTests.RunAllNative();
+            }
             Options options = Options.Parse(args);
             using BenchmarkGame game = new(options);
             game.Run();

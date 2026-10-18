@@ -26,6 +26,12 @@ namespace MGUI.Core.UI
     public partial class MGDesktop : ViewModelBase, IMouseHandlerHost, IKeyboardHandlerHost, IContextMenuHost
     {
         public MainRenderer Renderer { get; }
+
+        /// <summary>Desktop-owned bounded cache resources. Constructing a desktop allocates no cache targets.</summary>
+        public MGRenderCacheManager RenderCaches { get; }
+
+        /// <summary>Permanently releases cache resources. Call outside draw transactions before abandoning this desktop or its device.</summary>
+        public void DisposeRenderCaches() => RenderCaches.Dispose();
         public InputTracker InputTracker => Renderer.Input;
         public FontManager FontManager => Renderer.FontManager;
 
@@ -428,6 +434,7 @@ namespace MGUI.Core.UI
             }
 
             this.Renderer = Renderer;
+            RenderCaches = new(Renderer.GraphicsDevice);
             Windows = new();
             Resources = new(new MGTheme(Renderer.FontManager.DefaultFontFamily));
             _UIScale = new();

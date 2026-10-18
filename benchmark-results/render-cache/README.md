@@ -40,16 +40,10 @@ A frame counts only after `base.EndDraw` returns. An extra unmeasured frame afte
 
 Each metric reports median and nearest-rank p95 (`ceil(n * .95)`), plus min/max/count. `pooledSummary` covers 900 measured samples per workload; `repeatMedianSummary` summarizes the three run medians. Raw records allow other analyses without rerunning. There are no golden wall-time assertions. Software-renderer results characterize this environment only; do not infer hardware FPS.
 
-Validate the existing native effect protocol and all MGUI tests with an owned display and serialized build/test execution:
+Validate the existing native effect protocol and all MGUI tests with serialized build/test execution:
 
 ```sh
-PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY'
-import sys
-sys.path.insert(0, 'tools/render-cache')
-import benchmark
-with benchmark.native_display() as env:
-    print(benchmark.run(['flock', '--close', '/tmp/mgui-render-cache-dotnet.lock',
-                         'dotnet', 'test', 'MGUI.Tests/MGUI.Tests.csproj',
-                         '-c', 'Release', '--nologo', '-v:q'], env=env, timeout=300))
-PY
+flock --close /tmp/mgui-render-cache-dotnet.lock dotnet test MGUI.Tests/MGUI.Tests.csproj -c Release --nologo -v:q
 ```
+
+Each native test host acquires the graphics lock and owns its private Xvfb display through the shared child runner. Do not wrap this command in `benchmark.native_display()` or an outer graphics lock: that would nest the same lock and deadlock. See [resource service validation](../../docs/ui/render-cache-resource-tests.md) for the ownership protocol and standalone native commands.

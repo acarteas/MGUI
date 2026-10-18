@@ -2,3 +2,5 @@
 
 [assembly: InternalsVisibleTo("MGUI.Tests")]
 [assembly: InternalsVisibleTo("MGUI.EffectTestHost")]
+
+[assembly: InternalsVisibleTo("MGUI.RenderCacheTestHost")]
