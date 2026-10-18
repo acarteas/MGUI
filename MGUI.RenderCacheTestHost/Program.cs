@@ -34,6 +34,10 @@ internal static class Program
             {
                 return InteractiveTests.RunAllNative();
             }
+            if (args.Length == 1 && args[0] == "--background-parity")
+            {
+                return BackgroundParityTests.RunAllNative();
+            }
             if (args.Length == 1 && args[0] == "--cached-brush-xaml")
             {
                 return CachedBrushXamlTests.RunAllNative();
