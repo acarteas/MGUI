@@ -18,7 +18,7 @@ public sealed class CompositionNativeTests
             "offset-full-partial-clip-and-overflow", "main-preview-main-and-alternate-descendant-observations",
             "public-callbacks-never-prepare-and-recover", "scroll-clip-mapping-and-live-bookkeeping",
             "layout-scale-channels-override-and-inheritance", "position-dependent-effects-stay-live",
-            "desktop-rasterizer-provenance-including-brush", "live-begin-callback-rasterizer-provenance-and-recovery"];
+            "desktop-rasterizer-provenance-including-brush", "live-begin-callback-rasterizer-provenance-and-recovery", "rasterizer-context-survives-opacity-copies"];
         foreach (string name in required) { Assert.True(checks.GetProperty(name).GetBoolean(), name); }
         var comparisons = report.RootElement.GetProperty("comparisons").EnumerateArray().ToArray();
         Assert.True(comparisons.Length >= 30);

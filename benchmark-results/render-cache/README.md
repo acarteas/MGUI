@@ -47,3 +47,5 @@ flock --close /tmp/mgui-render-cache-dotnet.lock dotnet test MGUI.Tests/MGUI.Tes
 ```
 
 Each native test host acquires the graphics lock and owns its private Xvfb display through the shared child runner. Do not wrap this command in `benchmark.native_display()` or an outer graphics lock: that would nest the same lock and deadlock. See [resource service validation](../../docs/ui/render-cache-resource-tests.md) for the ownership protocol and standalone native commands.
+
+The additive normal/disabled comparison is documented in [normal rendering safeguards](../../docs/ui/render-cache-normal-tests.md). Run `python3 tools/render-cache/compare_normal.py --output <new-directory>` for alternating matched variants, separate Prepare accounting, strict pixel/state/native-counter equality and the design contract timing gates. The historical 54 runs remain immutable.

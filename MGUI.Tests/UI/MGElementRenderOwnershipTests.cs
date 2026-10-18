@@ -18,6 +18,59 @@ namespace MGUI.Tests.UI;
 public sealed class MGElementRenderOwnershipTests
 {
     [Fact]
+    public void SemanticVisualNotificationsAllocateNothingInAnUnobservedTree()
+    {
+        MGWindow window = CreateWindow();
+        TestMulti root = new(window);
+        TestMulti branch = new(window);
+        ProbeElement leaf = new(window);
+        root.Items.Add(branch); branch.Items.Add(leaf);
+        for (int iteration = 0; iteration < 1000; iteration++)
+        { leaf.InvalidateRenderState(MGRenderInvalidationKind.Visual); }
+        long before = GC.GetAllocatedBytesForCurrentThread();
+        for (int iteration = 0; iteration < 10000; iteration++)
+        { leaf.InvalidateRenderState(MGRenderInvalidationKind.Visual); }
+        long allocated = GC.GetAllocatedBytesForCurrentThread() - before;
+        Assert.Equal(0, allocated);
+        Assert.False(root.IsRenderSourceSubtreeTrackingEnabled);
+        Assert.False(branch.IsRenderSourceSubtreeTrackingEnabled);
+        Assert.False(leaf.IsRenderSourceSubtreeTrackingEnabled);
+    }
+
+    [Fact]
+    public void ReentrantParentRemovalAndIndependentMutationPreserveBothRevisionNotifications()
+    {
+        MGWindow window = CreateWindow();
+        ProbeElement leaf = new(window);
+        ProbeElement left = new(window);
+        ProbeElement right = new(window);
+        left.Children.Add(leaf); right.Children.Add(leaf);
+        left.ReconcileRenderPaintChildren(); right.ReconcileRenderPaintChildren();
+        int leftCalls = 0, rightCalls = 0;
+        bool reentered = false;
+        left.RenderInvalidated += (_, _, _) =>
+        {
+            leftCalls++;
+            if (!reentered)
+            {
+                reentered = true;
+                left.Children.Clear(); left.ReconcileRenderPaintChildren();
+                leaf.InvalidateRenderState(MGRenderInvalidationKind.Visual);
+            }
+        };
+        right.RenderInvalidated += (_, _, _) => rightCalls++;
+        leaf.InvalidateRenderState(MGRenderInvalidationKind.Visual);
+        Assert.True(reentered);
+        Assert.True(leftCalls >= 2);
+        Assert.True(rightCalls >= 1);
+        Assert.Empty(left.RenderPaintChildren);
+        int leftAfter = leftCalls, rightAfter = rightCalls;
+        leaf.InvalidateRenderState(MGRenderInvalidationKind.Visual);
+        Assert.Equal(leftAfter, leftCalls);
+        Assert.Equal(rightAfter + 1, rightCalls);
+    }
+
+    [Fact]
     public void DescendantChangesSummarizeOnlyCurrentPaintAncestors()
     {
         MGWindow window = CreateWindow();
@@ -80,6 +133,30 @@ public sealed class MGElementRenderOwnershipTests
 
         Assert.Equal(before.Visual + 1, owner.VisualRevision);
         Assert.Equal(1, notifications);
+    }
+
+    [Fact]
+    public void VisualOnlyDiamondNotifiesSharedAncestorOnceBeforeEachDescendant()
+    {
+        ProbeElement root = CreateUninitializedProbe();
+        ProbeElement left = CreateUninitializedProbe();
+        ProbeElement right = CreateUninitializedProbe();
+        ProbeElement leaf = CreateUninitializedProbe();
+        root.Children.AddRange(new[] { left, right });
+        left.Children.Add(leaf);
+        right.Children.Add(leaf);
+        root.InvalidateVisual();
+        ulong before = root.VisualRevision;
+        List<string> order = new();
+        root.RenderInvalidated += (_, _, _) => order.Add("root");
+        left.RenderInvalidated += (_, _, _) => order.Add("left");
+        right.RenderInvalidated += (_, _, _) => order.Add("right");
+        leaf.RenderInvalidated += (_, _, _) => order.Add("leaf");
+
+        leaf.InvalidateRenderState(MGRenderInvalidationKind.Visual);
+
+        Assert.Equal(before + 1, root.VisualRevision);
+        Assert.Equal(new[] { "root", "left", "right", "leaf" }, order);
     }
 
     [Fact]

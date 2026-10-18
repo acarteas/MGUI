@@ -52,9 +52,16 @@ namespace MGUI.Core.UI
             }
             AttemptedPreparationToken = CacheUpdateToken;
             GraphicsDevice device = Renderer.GraphicsDevice;
-            if (DrawTransaction.HasActiveTransactions(device) || device.GetRenderTargets().Length != 0)
+            if (DrawTransaction.HasActiveTransactions(device) || device.RenderTargetCount != 0)
             {
                 RenderCaches.RecordBypass(MGRenderCacheBypassReason.UnsupportedCallContext);
+                return;
+            }
+
+            // EntryCount includes retired/in-flight targets, so an empty service has no retirement work.
+            if (RenderCaches.PendingCount == 0 && RenderCaches.EntryCount == 0)
+            {
+                PreparedToken = CacheUpdateToken;
                 return;
             }
             ulong frame = CacheUpdateToken;
@@ -124,7 +131,7 @@ namespace MGUI.Core.UI
                         {
                             try
                             {
-                                if (device.GetRenderTargets().Length != 0)
+                                if (device.RenderTargetCount != 0)
                                 {
                                     device.SetRenderTarget(null);
                                     RenderCaches.RecordTargetSwitch();

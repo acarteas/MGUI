@@ -206,6 +206,22 @@ namespace MGUI.Core.UI
                 return Stamp;
             }
 
+            // Scrolling changes origins frequently; keep the untracked visual-only case small.
+            // Epoch changes, overflow, eligibility, and other categories use the general path below.
+            if (Kind == MGRenderInvalidationKind.Visual && RenderEligibility == null &&
+                ReferenceEquals(RenderRevisionEpoch, MGRenderRevisionClock.CurrentEpoch) &&
+                ReferenceEquals(Stamp.Epoch, RenderRevisionEpoch) && CurrentVisualRevision != ulong.MaxValue)
+            {
+                if (Stamp.Sequence > LastVisualMutation)
+                {
+                    ++CurrentVisualRevision;
+                    LastVisualMutation = Stamp.Sequence;
+                    PropagateRenderInvalidation(Kind, Stamp);
+                    RenderInvalidated?.Invoke(this, Kind, Stamp);
+                }
+                return Stamp;
+            }
+
             RefreshLocalRenderEligibility();
 
             if ((Kind & (MGRenderInvalidationKind.Layout | MGRenderInvalidationKind.Structure)) != 0)

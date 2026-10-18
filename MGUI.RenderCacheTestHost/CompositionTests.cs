@@ -328,12 +328,12 @@ internal sealed class CompositionTests : Game
         Checks["desktop-rasterizer-provenance-including-brush"] = true;
 
         boundary.BackgroundBrush = new(new MGCachedFillBrush(new MGSolidFillBrush(Color.DarkRed)));
-        void WarmPanelAndBrush()
+        void WarmPanelAndBrush(float opacity = 1)
         {
             boundary.IsCacheEnabled = true;
-            for (int settle = 0; settle < 5; settle++) { Update(); Paint(); }
+            for (int settle = 0; settle < 5; settle++) { Update(); Paint(opacity: opacity); }
             long hits = desktop.RenderCaches.Statistics.Hits;
-            Update(); Paint();
+            Update(); Paint(opacity: opacity);
             Check(desktop.RenderCaches.Statistics.Hits == hits + 2, "Callback scenario did not warm panel and brush.");
         }
         foreach (MGElement callbackOwner in new MGElement[] { boundary, window })
@@ -357,11 +357,22 @@ internal sealed class CompositionTests : Game
             Fallback(callbackOwner == boundary ? "wrapper-begin-rasterizer" : "ancestor-begin-rasterizer",
                 MGRenderCacheBypassReason.Rasterizer);
             Check(calls == beforePrepareCalls + 2, "Callback did not run exactly once in each normal/reference draw.");
+            window.Opacity = 0.5f;
+            changeRasterizer = false;
+            WarmPanelAndBrush(opacity: 2);
+            changeRasterizer = true;
+            Fallback(callbackOwner == boundary ? "wrapper-rasterizer-through-opacity-copy" : "ancestor-rasterizer-through-opacity-copy",
+                MGRenderCacheBypassReason.Rasterizer, opacity: 2);
+            boundary.IsCacheEnabled = true;
+            Fallback(callbackOwner == boundary ? "wrapper-rasterizer-half-opacity" : "ancestor-rasterizer-half-opacity",
+                MGRenderCacheBypassReason.Opacity, opacity: 1);
+            window.Opacity = 1;
             callbackOwner.OnBeginDraw -= changeSettings;
             WarmPanelAndBrush();
         }
         boundary.BackgroundBrush = new((IFillBrush)null!);
         Checks["live-begin-callback-rasterizer-provenance-and-recovery"] = true;
+        Checks["rasterizer-context-survives-opacity-copies"] = true;
 
 
 

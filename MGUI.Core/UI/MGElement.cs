@@ -38,11 +38,10 @@ namespace MGUI.Core.UI
         public bool IsSelected => VisualState.IsSelected;
 
         // Normal element clipping may enable scissors; retain an unsupported caller rasterizer through descendants.
-        internal bool HasUnsupportedInheritedRasterizer { get; init; }
+        internal bool HasUnsupportedInheritedRasterizer => BA.HasUnsupportedInheritedRasterizer;
 
         internal ElementDrawArgs ObserveInheritedRasterizer()
-            => DT != null && DT.CurrentSettings.RasterizerType != RasterizerType.SolidScissorTest
-                ? this with { HasUnsupportedInheritedRasterizer = true } : this;
+            => this with { BA = BA.ObserveInheritedRasterizer() };
 
         public ElementDrawArgs SetOpacity(float Value) => this with { BA = BA.SetOpacity(Value) };
         public ElementDrawArgs SetOffset(Point Value) => this with { Offset = Value };

@@ -8,6 +8,7 @@ namespace MGUI.Core.UI
     {
         private IReadOnlyList<MGElement> RetainedRenderPaintChildren = Array.Empty<MGElement>();
         private HashSet<MGElement> RenderPaintParents;
+        private MGElement[] RenderPaintParentSnapshot = Array.Empty<MGElement>();
 
         /// <summary>Maintained, ordered, distinct contributing children. Reading this never discovers a subtree.</summary>
         internal IReadOnlyList<MGElement> RenderPaintChildren => RetainedRenderPaintChildren ?? Array.Empty<MGElement>();
@@ -91,7 +92,10 @@ namespace MGUI.Core.UI
                 {
                     if (!Membership.Contains(Child))
                     {
-                        Child.RenderPaintParents?.Remove(this);
+                        if (Child.RenderPaintParents?.Remove(this) == true)
+                        {
+                            Child.RenderPaintParentSnapshot = Child.RenderPaintParents.ToArray();
+                        }
                     }
                 }
 
@@ -99,7 +103,10 @@ namespace MGUI.Core.UI
                 foreach (MGElement Child in Children)
                 {
                     Child.RenderPaintParents ??= new(ReferenceEqualityComparer.Instance);
-                    Child.RenderPaintParents.Add(this);
+                    if (Child.RenderPaintParents.Add(this))
+                    {
+                        Child.RenderPaintParentSnapshot = Child.RenderPaintParents.ToArray();
+                    }
                     if (!OldMembership.Contains(Child))
                     {
                         Child.ReconcileRenderPaintChildren(Visited ?? new HashSet<MGElement>(ReferenceEqualityComparer.Instance) { this });
@@ -160,7 +167,8 @@ namespace MGUI.Core.UI
                 return;
             }
 
-            foreach (MGElement Owner in RenderPaintParents.ToArray())
+            // Membership edits publish a new snapshot; reentrant mutations cannot alter this iteration.
+            foreach (MGElement Owner in RenderPaintParentSnapshot ?? Array.Empty<MGElement>())
             {
                 Owner.InvalidateRenderState(Kind, Stamp);
             }

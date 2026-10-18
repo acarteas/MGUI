@@ -74,6 +74,10 @@ internal static class Program
             {
                 return LiveSiblingTests.RunAllNative();
             }
+            if (args.Length == 1 && args[0] == "--normal-guards")
+            {
+                return NormalPathTests.RunAllNative();
+            }
             if (args.Length == 1 && args[0] == "--sample")
             {
                 return SampleTests.RunAllNative();
@@ -89,7 +93,7 @@ internal static class Program
             File.WriteAllText(options.Output, JsonSerializer.Serialize(new
             {
                 schemaVersion = 1,
-                mode = "normal",
+                mode = options.Mode,
                 options.Scenario,
                 options.Width,
                 options.Height,
@@ -121,20 +125,20 @@ internal static class Program
     }
 }
 
-internal sealed record Options(string Scenario, int Width, int Height, float Scale, int Seed, int Warmup, int Frames, string Output, string Screenshot)
+internal sealed record Options(string Scenario, int Width, int Height, float Scale, int Seed, int Warmup, int Frames, string Output, string Screenshot, string Mode = "normal")
 {
     public static readonly string[] Scenarios = ["batched", "layered", "hud", "animated-score", "scrolling", "nested-clips"];
 
     public static Options Parse(string[] args)
     {
-        if (args.Length != 9)
+        if (args.Length is not (9 or 10))
         {
-            throw new ArgumentException("Usage: <scenario> <width> <height> <scale> <seed> <warmup> <frames> <output.json> <screenshot.png>");
+            throw new ArgumentException("Usage: <scenario> <width> <height> <scale> <seed> <warmup> <frames> <output.json> <screenshot.png> [normal|disabled]");
         }
 
         Options result = new(args[0], int.Parse(args[1]), int.Parse(args[2]), float.Parse(args[3], System.Globalization.CultureInfo.InvariantCulture),
-            int.Parse(args[4]), int.Parse(args[5]), int.Parse(args[6]), args[7], args[8]);
-        if (!Scenarios.Contains(result.Scenario) || result.Width < 320 || result.Height < 240 || !float.IsFinite(result.Scale) || result.Scale <= 0 || result.Warmup < 0 || result.Frames < 1)
+            int.Parse(args[4]), int.Parse(args[5]), int.Parse(args[6]), args[7], args[8], args.Length == 10 ? args[9] : "normal");
+        if (result.Mode is not ("normal" or "disabled") || !Scenarios.Contains(result.Scenario) || result.Width < 320 || result.Height < 240 || !float.IsFinite(result.Scale) || result.Scale <= 0 || result.Warmup < 0 || result.Frames < 1)
         {
             throw new ArgumentException("Invalid benchmark configuration.");
         }
@@ -153,7 +157,9 @@ internal readonly record struct Counters(long DrawCalls, long Primitives, long S
     public static Counters From(GraphicsMetrics metrics) => new(metrics.DrawCount, metrics.PrimitiveCount, metrics.SpriteCount, metrics.TargetCount);
 }
 
-internal readonly record struct FrameSample(int Frame, WorkloadState State, Phase UpdateLayout, Phase WorldSubmission, Phase UiSubmission, Phase Present, Counters World, Counters Ui, Counters Total);
+internal readonly record struct CacheCounters(long Allocations, long Builds, long TargetSwitches, long RetainedBytes, int Entries, int Pending);
+
+internal readonly record struct FrameSample(int Frame, WorkloadState State, Phase UpdateLayout, Phase Prepare, Phase WorldSubmission, Phase UiSubmission, Phase Present, Counters World, Counters Ui, Counters Total, CacheCounters Cache);
 
 internal sealed class BenchmarkGame : Game
 {
@@ -208,6 +214,10 @@ internal sealed class BenchmarkGame : Game
     {
         long bytes = GC.GetAllocatedBytesForCurrentThread();
         long ticks = Stopwatch.GetTimestamp();
+        Fixture.Desktop.PrepareRenderCaches();
+        Phase prepare = Phase.Since(ticks, bytes);
+        bytes = GC.GetAllocatedBytesForCurrentThread();
+        ticks = Stopwatch.GetTimestamp();
         GraphicsMetrics before = GraphicsDevice.Metrics;
         GraphicsDevice.Clear(new Color(16, 22, 35));
         WorldBatch.Begin(blendState: BlendState.Opaque);
@@ -234,8 +244,8 @@ internal sealed class BenchmarkGame : Game
             throw new InvalidOperationException("Frame did not update and submit native graphics work.");
         }
 
-        PendingSample = new(PresentedFrames, Fixture.State, PendingUpdate, world, ui, default,
-            Counters.From(afterWorld - before), Counters.From(afterUi - afterWorld), Counters.From(afterUi - before));
+        PendingSample = new(PresentedFrames, Fixture.State, PendingUpdate, prepare, world, ui, default,
+            Counters.From(afterWorld - before), Counters.From(afterUi - afterWorld), Counters.From(afterUi - before), Fixture.GetCacheCounters());
         PendingUpdate = default;
         UpdatesForFrame = 0;
 

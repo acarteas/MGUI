@@ -314,6 +314,32 @@ namespace MGUI.Tests.UI
         }
 
         [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public void VisualMutationFromAnOldEpochAdvancesCurrentRevisionAndPublishesCurrentStamp(bool initializeCurrentReceiver)
+        {
+            TestElement element = CreateElement();
+            element.GetRenderRevisionSnapshot();
+            MGRenderMutationStamp stale = MGRenderRevisionClock.NextMutation();
+            MGRenderRevisionClock.RestartEpoch();
+            if (initializeCurrentReceiver)
+            {
+                element.GetRenderRevisionSnapshot();
+            }
+
+            List<MGRenderMutationStamp> notifications = new();
+            element.RenderInvalidated += (_, _, stamp) => notifications.Add(stamp);
+            element.InvalidateRenderState(MGRenderInvalidationKind.Visual, stale);
+
+            Assert.Equal(2UL, element.VisualRevision);
+            Assert.Equal(1UL, element.LayoutRevision);
+            Assert.Equal(1UL, element.StructureRevision);
+            MGRenderMutationStamp published = Assert.Single(notifications);
+            Assert.Same(MGRenderRevisionClock.CurrentEpoch, published.Epoch);
+            Assert.NotSame(stale.Epoch, published.Epoch);
+        }
+
+        [Theory]
         [InlineData("CurrentVisualRevision", 1)]
         [InlineData("CurrentLayoutRevision", 2)]
         [InlineData("CurrentStructureRevision", 4)]

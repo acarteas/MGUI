@@ -87,6 +87,12 @@ namespace MGUI.Shared.Rendering
         public PrimitiveBatch PrimitiveBatch { get; }
         public PrimitiveBatch PB => PrimitiveBatch;
 
+        private DrawTransaction.TransactionCount _TransactionLifetime;
+
+        // Keep the batches' original device identity even if the host changes its device accessor.
+        internal DrawTransaction.TransactionCount TransactionLifetime
+            => _TransactionLifetime ??= DrawTransaction.GetLifetime(SpriteBatch?.GraphicsDevice ?? GraphicsDevice);
+
         public ContentManager Content { get; }
 
         public FontManager FontManager { get; }
@@ -128,6 +134,7 @@ namespace MGUI.Shared.Rendering
         {
             this.Host = Host;
             SpriteBatch = new(GraphicsDevice);
+            _TransactionLifetime = DrawTransaction.GetLifetime(SpriteBatch.GraphicsDevice);
             PrimitiveBatch = new(GraphicsDevice, 1024);
             Content = new(Host, "Content");
             this.FontManager = FontManager ?? throw new ArgumentNullException(nameof(FontManager));

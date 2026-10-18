@@ -107,8 +107,8 @@ def distribution(values):
             "min": ordered[0], "max": ordered[-1], "count": len(ordered)}
 
 
-def validate_capture(capture, scenario, width, height, scale, seed, warmup, frames):
-    if (capture["schemaVersion"], capture["mode"], capture["Scenario"], capture["Width"], capture["Height"], capture["uiScale"]) != (1, "normal", scenario, width, height, scale):
+def validate_capture(capture, scenario, width, height, scale, seed, warmup, frames, mode="normal"):
+    if (capture["schemaVersion"], capture["mode"], capture["Scenario"], capture["Width"], capture["Height"], capture["uiScale"]) != (1, mode, scenario, width, height, scale):
         raise ValueError("Capture metadata differs from requested workload")
     if capture["Seed"] != seed or capture["warmupFrames"] != warmup:
         raise ValueError("Capture seed/warmup differs from requested workload")

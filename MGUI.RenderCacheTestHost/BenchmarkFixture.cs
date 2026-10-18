@@ -62,7 +62,16 @@ internal sealed class BenchmarkFixture : IRenderHost, IDisposable
         };
         Desktop.Windows.Add(window);
         MGStackPanel root = Stack(window, Orientation.Vertical, 8);
-        window.SetContent(root);
+        if (options.Mode == "disabled")
+        {
+            MGRenderCache disabled = new(window) { IsCacheEnabled = false, Padding = new(0) };
+            disabled.SetContent(root);
+            window.SetContent(disabled);
+        }
+        else
+        {
+            window.SetContent(root);
+        }
         Score = Text(window, "SCORE 001200", Color.Gold, 20);
         if (options.Scenario is "hud" or "animated-score")
         {
@@ -188,6 +197,14 @@ internal sealed class BenchmarkFixture : IRenderHost, IDisposable
         State = new(frame, frame % 64, Score.Text, Scroller?.VerticalOffset ?? 0);
     }
 
+    internal CacheCounters GetCacheCounters()
+    {
+        MGRenderCacheManager manager = Desktop.RenderCaches;
+        var statistics = manager.Statistics;
+        return new(statistics.Allocations, statistics.Builds, statistics.TargetSwitches,
+            manager.RetainedBytes, manager.EntryCount, manager.PendingCount);
+    }
+
     public Rectangle GetBounds() => new(0, 0, Options.Width, Options.Height);
     public MouseState GetMouseState() => default;
     public KeyboardState GetKeyboardState() => default;
@@ -195,6 +212,7 @@ internal sealed class BenchmarkFixture : IRenderHost, IDisposable
 
     public void Dispose()
     {
+        Desktop.DisposeRenderCaches();
         LayerEffect.Dispose();
         NineSlice.Dispose();
         Renderer.SpriteBatch.Dispose();
