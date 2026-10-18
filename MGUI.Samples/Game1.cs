@@ -1,4 +1,4 @@
-﻿using FontStashSharp;
+using FontStashSharp;
 using MGUI.Core.UI;
 using MGUI.Core.UI.Brushes.Fill_Brushes;
 using MGUI.Core.UI.XAML;
@@ -168,12 +168,23 @@ namespace MGUI.Samples
 
         protected override void Draw(GameTime gameTime)
         {
+            Desktop.PrepareRenderCaches();
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
             // TODO: Add your drawing code here
 
             Desktop.Draw();
             base.Draw(gameTime);
+        }
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                Desktop?.DisposeRenderCaches();
+                _spriteBatch?.Dispose();
+            }
+
+            base.Dispose(disposing);
         }
     }
 }

@@ -16,7 +16,10 @@ def main():
         raise RuntimeError(f"Build the current native test host first: {host}")
     with open("/tmp/mgui-render-cache-graphics.lock", "a") as lock, tempfile.TemporaryFile() as diagnostics:
         fcntl.flock(lock, fcntl.LOCK_EX)
-        server = subprocess.Popen(["Xvfb", f":{100 + os.getpid() % 30000}", "-displayfd", "1", "-screen", "0", "640x480x24", "-nolisten", "tcp"],
+
+        # The full interactive sample needs its authored window visible; other lanes keep their baseline display.
+        screen = "1280x900x24" if sys.argv[2:] == ["--sample"] else "640x480x24"
+        server = subprocess.Popen(["Xvfb", f":{100 + os.getpid() % 30000}", "-displayfd", "1", "-screen", "0", screen, "-nolisten", "tcp"],
                                   stdout=subprocess.PIPE, stderr=diagnostics, text=True, start_new_session=True)
         try:
             if not select.select([server.stdout], [], [], 15)[0]:

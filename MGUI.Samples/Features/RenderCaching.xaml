@@ -1,0 +1,60 @@
+<Window xmlns="clr-namespace:MGUI.Core.UI.XAML;assembly=MGUI.Core"
+        Left="440" Top="20" Width="750" Height="800" MinHeight="0" TitleText="Selective render caching" Padding="12">
+    <Window.Styles>
+        <Style TargetType="TextBlock"><Setter Property="FontSize" Value="12" /></Style>
+        <Style TargetType="Button"><Setter Property="Padding" Value="8,4" /></Style>
+    </Window.Styles>
+    <ScrollViewer Name="SampleScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+    <StackPanel Orientation="Vertical" Spacing="8">
+        <TextBlock Text="Static art, ordinary live siblings" IsBold="True" FontSize="18" />
+        <TextBlock WrapText="True" Text="Explicit opt-in. Update and input always run. First use paints directly; preparation happens before the next scene. Compare the same UI in all three modes." />
+        <StackPanel Orientation="Horizontal" Spacing="6">
+            <Button Name="NormalButton" Content="Normal" CommandName="CacheNormal" />
+            <Button Name="BackgroundButton" Content="Background" CommandName="CacheBackground" />
+            <Button Name="PanelButton" Content="Panel + background" CommandName="CachePanel" />
+        </StackPanel>
+        <TextBlock Name="ModeStatus" Text="Mode: Normal" />
+        <OverlayPanel Name="Preview" Height="220">
+            <Border Name="Backdrop" BorderThickness="0" IsHitTestVisible="False">
+                <Border.Background>
+                    <CachedFillBrush IsCacheEnabled="False">
+                        <CompositedFillBrush>
+                            <GradientFillBrush TopLeftColor="rgb(22,42,68)" TopRightColor="rgb(48,68,92)" BottomRightColor="rgb(18,28,44)" BottomLeftColor="rgb(30,45,62)" />
+                            <PaddedFillBrush Padding="10"><SolidFillBrush Color="White * 0.08" /></PaddedFillBrush>
+                        </CompositedFillBrush>
+                    </CachedFillBrush>
+                </Border.Background>
+            </Border>
+            <RenderCache Name="StaticPanel" IsCacheEnabled="False" IsHitTestVisible="False" Offset="18,18,18,65">
+                <StackPanel Orientation="Vertical" Spacing="8">
+                    <TextBlock Name="StaticTitle" Text="STATIC NAVIGATION / ART" IsBold="True" Foreground="LightBlue" />
+                    <TextBlock Text="Explore    /    Library    /    Settings" />
+                    <Border Name="CustomSwatch" Height="40" BorderThickness="0">
+                        <Border.Background><CachedFillBrush SourceMode="ExplicitlyStatic" IsCacheEnabled="False"><SolidFillBrush Color="Teal" /></CachedFillBrush></Border.Background>
+                    </Border>
+                    <TextBlock Text="The local-coordinate swatch changes only on explicit invalidation." FontSize="10" />
+                </StackPanel>
+            </RenderCache>
+            <StackPanel Orientation="Horizontal" Spacing="16" Offset="18,155,18,12" VerticalAlignment="Bottom">
+                <TextBlock Name="Score" Text="SCORE 000000" Foreground="Gold" FontSize="20" VerticalAlignment="Center" IsRenderVolatile="True" />
+                <Button Name="ScoreButton" Content="+1 / pulse 400 ms" CommandName="CacheScore" />
+            </StackPanel>
+        </OverlayPanel>
+        <StackPanel Orientation="Horizontal" Spacing="6">
+            <Button Name="VolatilityButton" Content="Toggle static volatility" CommandName="CacheVolatile" />
+            <Button Name="InvalidateButton" Content="Change custom source" CommandName="CacheInvalidate" />
+            <Button Name="TitleButton" Content="Change static title" CommandName="CacheTitle" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="6">
+            <Button Name="ResizeButton" Content="Resize preview" CommandName="CacheResize" />
+            <Button Name="ScaleButton" Content="UI scale 1 / 1.25" CommandName="CacheScale" />
+            <Button Name="DirtyButton" Content="Toggle bad workload" CommandName="CacheDirty" />
+        </StackPanel>
+        <RenderCache Name="DirtyPanel" IsCacheEnabled="False">
+            <TextBlock Name="DirtyText" Text="Bad workload OFF: this panel is stable." Background="rgb(48,38,46)" Padding="8" />
+        </RenderCache>
+        <TextBlock Name="Diagnostics" Text="Cache diagnostics" WrapText="True" />
+        <TextBlock WrapText="True" FontSize="10" Text="Diagnostics and live score sit outside the static boundary. Volatility bypasses caching; the bad workload changes every update and forces direct painting or rebuild cost without lowering refresh rate. UI scale and resize require fresh pixels. This simple UI can be cheaper to draw directly." />
+    </StackPanel>
+    </ScrollViewer>
+</Window>

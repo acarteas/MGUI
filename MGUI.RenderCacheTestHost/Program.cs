@@ -74,6 +74,10 @@ internal static class Program
             {
                 return LiveSiblingTests.RunAllNative();
             }
+            if (args.Length == 1 && args[0] == "--sample")
+            {
+                return SampleTests.RunAllNative();
+            }
             Options options = Options.Parse(args);
             using BenchmarkGame game = new(options);
             game.Run();
