@@ -21,6 +21,11 @@ internal sealed class LiveSiblingFixture : IRenderHost, IDisposable
     private readonly Game Game;
     private readonly FontSystem Font;
     private readonly MainRenderer Renderer;
+    private readonly SpriteBatch? WorldBatch;
+    private readonly Texture2D? WorldPixel;
+    internal int SurfaceWidth { get; }
+    internal int SurfaceHeight { get; }
+    internal bool HasWorld => WorldBatch != null;
     private TimeSpan? PulseStarted;
     internal TimeSpan Clock { get; private set; }
     internal MouseState Mouse { get; set; }
@@ -54,10 +59,18 @@ internal sealed class LiveSiblingFixture : IRenderHost, IDisposable
     public event EventHandler<TimeSpan>? PreviewUpdate;
     public event EventHandler<EventArgs>? EndUpdate;
 
-    internal LiveSiblingFixture(Game game, float scale, int painterOrder, bool cached)
+    internal LiveSiblingFixture(Game game, float scale, int painterOrder, bool cached, int width = Width, int height = Height, bool world = false)
     {
         Game = game;
         Scale = scale;
+        SurfaceWidth = width;
+        SurfaceHeight = height;
+        if (world)
+        {
+            WorldBatch = new(GraphicsDevice);
+            WorldPixel = new(GraphicsDevice, 1, 1);
+            WorldPixel.SetData(new[] { Color.White });
+        }
         byte[] fontBytes = File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "Content", "NotoSans-Regular.ttf"));
         Font = new();
         Font.AddFont(fontBytes);
@@ -66,7 +79,7 @@ internal sealed class LiveSiblingFixture : IRenderHost, IDisposable
         Renderer = new(this, new FontManager("NotoSans")) { TextEngine = textEngine };
         Desktop = new(Renderer);
         Desktop.SetUniformUIScale(scale);
-        Window = new(Desktop, 31, 29, 600, 440)
+        Window = new(Desktop, world ? 81 : 31, world ? 71 : 29, world ? width - 162 : 600, world ? height - 142 : 440)
         {
             WindowStyle = WindowStyle.None, Padding = new(0), BackgroundBrush = new((IFillBrush)null!)
         };
@@ -114,6 +127,10 @@ internal sealed class LiveSiblingFixture : IRenderHost, IDisposable
         Slider.ValueChanged += (_, _) => Events.Add("slider:" + Slider.Value.ToString("F3", System.Globalization.CultureInfo.InvariantCulture));
         AddAt(Root, Slider, 20, 125, 180, 30);
         TextBox = new(Window) { Text = "", Padding = new(3) };
+        if (world)
+        {
+            TextBox.Caret.BlinkRate = TimeSpan.FromDays(1);
+        }
         AddAt(Root, TextBox, 20, 170, 180, 40);
         Scroll = new(Window, ScrollBarVisibility.Visible, ScrollBarVisibility.Disabled);
         MGStackPanel rows = new(Window, Orientation.Vertical) { Spacing = 2 };
@@ -160,13 +177,32 @@ internal sealed class LiveSiblingFixture : IRenderHost, IDisposable
         panel.TryAddChild(element, new(left, top, 0, 0));
     }
 
-    internal Point Center(MGElement element) => element.ConvertCoordinateSpace(CoordinateSpace.Layout, CoordinateSpace.Screen, element.LayoutBounds.Center);
+    internal Point Center(MGElement element)
+    {
+        Rectangle screen = element.ConvertCoordinateSpace(CoordinateSpace.Layout, CoordinateSpace.Screen, element.LayoutBounds);
+        Point cursor = screen.Center;
+        RequireReachable(element, screen, cursor);
+        return cursor;
+    }
+
+    private void RequireReachable(MGElement element, Rectangle screen, Point cursor)
+    {
+        Rectangle clippedScreen = element.ConvertCoordinateSpace(CoordinateSpace.UnscaledScreen,
+            CoordinateSpace.Screen, element.ActualLayoutBounds);
+        if (HasWorld && (screen.Width <= 0 || screen.Height <= 0 || !GetBounds().Contains(screen)
+            || !clippedScreen.Contains(screen) || !clippedScreen.Contains(cursor)))
+        {
+            throw new InvalidOperationException($"Matrix input target {element.GetType().Name} is clipped or outside {GetBounds()}: screen {screen}, clipped screen {clippedScreen}, cursor {cursor}.");
+        }
+    }
     internal Point SliderPosition(float fraction)
     {
         Rectangle bounds = Slider.LayoutBounds;
         int inset = (int)(7 * Scale);
-        return Slider.ConvertCoordinateSpace(CoordinateSpace.Layout, CoordinateSpace.Screen,
+        Point cursor = Slider.ConvertCoordinateSpace(CoordinateSpace.Layout, CoordinateSpace.Screen,
             new Point(bounds.Left + inset + (int)((bounds.Width - 2 * inset) * fraction), bounds.Center.Y));
+        RequireReachable(Slider, Slider.ConvertCoordinateSpace(CoordinateSpace.Layout, CoordinateSpace.Screen, bounds), cursor);
+        return cursor;
     }
 
     internal void TriggerScore()
@@ -199,6 +235,17 @@ internal sealed class LiveSiblingFixture : IRenderHost, IDisposable
         GraphicsDevice.SetRenderTarget(null);
         GraphicsDevice.ScissorRectangle = GraphicsDevice.Viewport.Bounds;
         GraphicsDevice.Clear(new Color(19, 37, 53));
+        if (WorldBatch != null)
+        {
+            WorldBatch.Begin(blendState: BlendState.Opaque, samplerState: SamplerState.PointClamp);
+            for (int corner = 0; corner < 4; corner++)
+            {
+                int left = (corner & 1) == 0 ? 0 : SurfaceWidth - 11;
+                int top = (corner & 2) == 0 ? 0 : SurfaceHeight - 11;
+                WorldBatch.Draw(WorldPixel!, new Rectangle(left, top, 11, 11), SentinelColor(corner));
+            }
+            WorldBatch.End();
+        }
         long switches = GraphicsDevice.Metrics.TargetCount;
         long allocations = Desktop.RenderCaches.Statistics.Allocations;
         Desktop.Draw();
@@ -206,10 +253,36 @@ internal sealed class LiveSiblingFixture : IRenderHost, IDisposable
         {
             throw new InvalidOperationException("Final live-sibling composition allocated or switched targets.");
         }
-        Color[] pixels = new Color[Width * Height];
+        Color[] pixels = new Color[SurfaceWidth * SurfaceHeight];
         GraphicsDevice.GetBackBufferData(pixels);
+        if (WorldBatch != null)
+        {
+            for (int corner = 0; corner < 4; corner++)
+            {
+                int left = (corner & 1) == 0 ? 0 : SurfaceWidth - 11;
+                int top = (corner & 2) == 0 ? 0 : SurfaceHeight - 11;
+                for (int y = top; y < top + 11; y++)
+                {
+                    for (int x = left; x < left + 11; x++)
+                    {
+                        if (pixels[y * SurfaceWidth + x] != SentinelColor(corner))
+                        {
+                            throw new InvalidOperationException($"Submitted world corner {corner} missing at {x},{y}; requested {SurfaceWidth}x{SurfaceHeight}.");
+                        }
+                    }
+                }
+            }
+        }
         return pixels;
     }
+
+    private Color SentinelColor(int corner) => corner switch
+    {
+        0 => new Color(211, (int)(Clock.Ticks / FrameDuration.Ticks) % 89 + 31, 43),
+        1 => new Color(41, 197, (int)(Clock.Ticks / FrameDuration.Ticks) % 89 + 37),
+        2 => new Color((int)(Clock.Ticks / FrameDuration.Ticks) % 89 + 47, 53, 223),
+        _ => new Color(229, 181, (int)(Clock.Ticks / FrameDuration.Ticks) % 89 + 29)
+    };
 
     internal MGRectangle UseSizeDrivenLayout()
     {
@@ -226,7 +299,7 @@ internal sealed class LiveSiblingFixture : IRenderHost, IDisposable
         return leading;
     }
 
-    public Rectangle GetBounds() => new(0, 0, Width, Height);
+    public Rectangle GetBounds() => new(0, 0, SurfaceWidth, SurfaceHeight);
     public MouseState GetMouseState() => Mouse;
     public KeyboardState GetKeyboardState() => Keyboard;
     public object? GetService(Type serviceType) => Game.Services.GetService(serviceType);
@@ -238,6 +311,8 @@ internal sealed class LiveSiblingFixture : IRenderHost, IDisposable
         {
             throw new InvalidOperationException("Live-sibling fixture leaked cache resources.");
         }
+        WorldBatch?.Dispose();
+        WorldPixel?.Dispose();
         Renderer.SpriteBatch.Dispose();
         Renderer.PrimitiveBatch.Dispose();
         Renderer.Content.Dispose();

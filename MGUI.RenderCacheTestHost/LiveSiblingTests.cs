@@ -8,18 +8,25 @@ using Microsoft.Xna.Framework.Input;
 
 namespace MGUI.RenderCacheTestHost;
 
-internal sealed class LiveSiblingTests : Game
+internal sealed partial class LiveSiblingTests : Game
 {
     private readonly Dictionary<string, bool> Checks = new();
     private readonly List<object> Comparisons = new();
     private readonly List<object> Traces = new();
     private string Evidence = "";
     private bool Completed;
+    private int Presented;
+    private readonly int SurfaceWidth;
+    private readonly int SurfaceHeight;
+    private readonly float? MatrixScale;
 
-    private LiveSiblingTests()
+    private LiveSiblingTests(int width = LiveSiblingFixture.Width, int height = LiveSiblingFixture.Height, float? matrixScale = null)
     {
-        _ = new GraphicsDeviceManager(this) { PreferredBackBufferWidth = LiveSiblingFixture.Width,
-            PreferredBackBufferHeight = LiveSiblingFixture.Height, GraphicsProfile = GraphicsProfile.HiDef,
+        SurfaceWidth = width;
+        SurfaceHeight = height;
+        MatrixScale = matrixScale;
+        _ = new GraphicsDeviceManager(this) { PreferredBackBufferWidth = width,
+            PreferredBackBufferHeight = height, GraphicsProfile = GraphicsProfile.HiDef,
             SynchronizeWithVerticalRetrace = false };
         Content.RootDirectory = Path.Combine(AppContext.BaseDirectory, "Content");
         IsFixedTimeStep = false;
@@ -37,9 +44,40 @@ internal sealed class LiveSiblingTests : Game
 
     protected override void LoadContent()
     {
-        Evidence = Path.Combine(Path.GetTempPath(), "mgui-live-siblings-" + Environment.ProcessId);
+        if (!MatrixScale.HasValue)
+        {
+            RunCases();
+        }
+    }
+
+    protected override void Draw(GameTime gameTime)
+    {
+        if (MatrixScale.HasValue && !Completed)
+        {
+            if (Presented < 3)
+            {
+                GraphicsDevice.Clear(Color.CornflowerBlue);
+                return;
+            }
+            Check(GraphicsDevice.PresentationParameters.BackBufferWidth == SurfaceWidth
+                && GraphicsDevice.PresentationParameters.BackBufferHeight == SurfaceHeight
+                && GraphicsDevice.Viewport.Bounds == new Rectangle(0, 0, SurfaceWidth, SurfaceHeight),
+                "Requested matrix surface did not settle after genuine presentations.");
+            RunCases();
+        }
+    }
+
+    protected override void EndDraw()
+    {
+        base.EndDraw();
+        Presented++;
+    }
+
+    private void RunCases()
+    {
+        Evidence = Path.Combine(Path.GetTempPath(), (MatrixScale.HasValue ? "mgui-matrix-" : "mgui-live-siblings-") + Environment.ProcessId);
         Directory.CreateDirectory(Evidence);
-        foreach (float scale in new[] { 1f, 1.5f })
+        foreach (float scale in MatrixScale.HasValue ? new[] { MatrixScale.Value } : new[] { 1f, 1.5f })
         {
             List<string> orderHashes = new();
             for (int order = 0; order < 3; order++)
@@ -51,11 +89,19 @@ internal sealed class LiveSiblingTests : Game
             TestInput(scale);
             TestLayout(scale);
             TestButtonDescendantContext(scale);
+            if (MatrixScale.HasValue)
+            {
+                TestMatrixMutations(scale);
+            }
         }
         File.WriteAllText(Path.Combine(Evidence, "report.json"), JsonSerializer.Serialize(new
         {
             backend = "MonoGame DesktopGL", configuration = "Release", pulseDurationMs = 400, frameDurationMs = 20,
             checks = Checks, comparisons = Comparisons, traces = Traces,
+            width = SurfaceWidth, height = SurfaceHeight, layoutScale = MatrixScale,
+            genuinePresentedWarmups = MatrixScale.HasValue ? Presented : 0,
+            caretClockPolicy = MatrixScale.HasValue ? "Visible for the bounded native run via public one-day BlinkRate; caret uses wall clock, input/update/volatility stay live" : "Unchanged default",
+            drawableProof = MatrixScale.HasValue ? "Every draw verifies 121 submitted pixels at each physical corner; world colors advance with the matched clock" : null,
             hostSha256 = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(typeof(LiveSiblingTests).Assembly.Location))),
             coreSha256 = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(typeof(MGRenderCache).Assembly.Location)))
         }, new JsonSerializerOptions { WriteIndented = true }));
@@ -113,6 +159,14 @@ internal sealed class LiveSiblingTests : Game
             && pair.Cached.LivePaints == livePaints + 24, "Warm static/live sibling Update or live Draw frequency changed.");
         Color[] stable = pair.Cached.Paint();
         Check(middle != null && !middle.SequenceEqual(stable), "Pulse midpoint had no visible pixel effect.");
+        if (MatrixScale.HasValue)
+        {
+            Rectangle ui = pair.Cached.Root.ConvertCoordinateSpace(CoordinateSpace.Layout, CoordinateSpace.Screen,
+                pair.Cached.Root.LayoutBounds);
+            bool changedUi = Enumerable.Range(ui.Top, ui.Height).Any(y =>
+                Enumerable.Range(ui.Left, ui.Width).Any(x => middle![y * SurfaceWidth + x] != stable[y * SurfaceWidth + x]));
+            Check(changedUi, "Pulse omission control changed only the world sentinel, not the UI.");
+        }
         Traces.Add(new { name, pulse, staticCaptures, frontCaptures, builds, staticUpdates = 24, liveUpdates = 24, livePaints = 24 });
         Checks.Add(name + "-400ms-no-static-rebuild-exact-pixels-live-updates", true);
         return PixelHash(middle!);
@@ -390,7 +444,7 @@ internal sealed class LiveSiblingTests : Game
         Checks.Add(name + "-pending-offset-context-and-primary-foreground", true);
     }
 
-    private void Compare(string name, Color[] direct, Color[] cached, bool save)
+    private void Compare(string name, Color[] direct, Color[] cached, bool save, long matchedClockTicks, string matchedState)
     {
         int different = 0;
         int[] maxima = new int[4];
@@ -405,17 +459,46 @@ internal sealed class LiveSiblingTests : Game
                 maxima[3] = Math.Max(maxima[3], Math.Abs(direct[index].A - cached[index].A));
             }
         }
-        if (save || different > 0)
+        string? directImage = null, cachedImage = null, differenceImage = null;
+        if (MatrixScale.HasValue)
         {
-            using Texture2D texture = new(GraphicsDevice, LiveSiblingFixture.Width, LiveSiblingFixture.Height);
-            foreach (var item in new[] { ("direct", direct), ("cached", cached) })
+            directImage = Path.Combine(Evidence, name + "-direct.png");
+            cachedImage = Path.Combine(Evidence, name + "-cached.png");
+            WriteMatrixPng(directImage, direct);
+            if (different == 0)
             {
-                texture.SetData(item.Item2);
-                using FileStream file = File.Create(Path.Combine(Evidence, name + "-" + item.Item1 + ".png"));
-                texture.SaveAsPng(file, LiveSiblingFixture.Width, LiveSiblingFixture.Height);
+                File.Copy(directImage, cachedImage, overwrite: true);
+                differenceImage = Path.Combine(Evidence, $"exact-difference-{SurfaceWidth}x{SurfaceHeight}.png");
+                if (!File.Exists(differenceImage))
+                {
+                    WriteMatrixPng(differenceImage, Enumerable.Repeat(Color.Black, direct.Length).ToArray());
+                }
+            }
+            else
+            {
+                WriteMatrixPng(cachedImage, cached);
+                differenceImage = Path.Combine(Evidence, name + "-difference-x64.png");
+                WriteMatrixPng(differenceImage, direct.Select((pixel, index) => new Color(
+                    Math.Min(255, Math.Abs(pixel.R - cached[index].R) * 64),
+                    Math.Min(255, Math.Abs(pixel.G - cached[index].G) * 64),
+                    Math.Min(255, Math.Abs(pixel.B - cached[index].B) * 64), 255)).ToArray());
             }
         }
-        Comparisons.Add(new { name, different, maxima, sha256 = PixelHash(cached) });
+        else if (save || different > 0)
+        {
+            using Texture2D texture = new(GraphicsDevice, SurfaceWidth, SurfaceHeight);
+            foreach (var item in new[] { ("direct", direct), ("cached", cached) })
+            {
+                string path = Path.Combine(Evidence, name + "-" + item.Item1 + ".png");
+                if (item.Item1 == "direct") { directImage = path; } else { cachedImage = path; }
+                texture.SetData(item.Item2);
+                using FileStream file = File.Create(path);
+                texture.SaveAsPng(file, SurfaceWidth, SurfaceHeight);
+            }
+        }
+        Comparisons.Add(new { name, different, maxima, allowedErrorsRGBA = new[] { 0, 0, 0, 0 },
+            matchedClockTicks, matchedState = JsonSerializer.Deserialize<JsonElement>(matchedState),
+            directImage, cachedImage, differenceImage, directSha256 = PixelHash(direct), sha256 = PixelHash(cached) });
         Check(different == 0, name + " exact RGBA mismatch " + string.Join(",", maxima) + "; evidence " + Evidence);
     }
 
@@ -448,8 +531,8 @@ internal sealed class LiveSiblingTests : Game
         internal Pair(LiveSiblingTests tests, float scale, int order)
         {
             Tests = tests;
-            Cached = new(tests, scale, order, cached: true);
-            Direct = new(tests, scale, order, cached: false);
+            Cached = new(tests, scale, order, cached: true, tests.SurfaceWidth, tests.SurfaceHeight, tests.MatrixScale.HasValue);
+            Direct = new(tests, scale, order, cached: false, tests.SurfaceWidth, tests.SurfaceHeight, tests.MatrixScale.HasValue);
         }
         internal void Warm()
         {
@@ -461,7 +544,7 @@ internal sealed class LiveSiblingTests : Game
                 "Static/interactive native boundaries did not warm: " + string.Join(",", Cached.Boundaries.Select(item => item.LastBypassReason)));
         }
         internal Color[] Step(string name, Point cursor, bool left = false, bool right = false, int wheel = 0,
-            KeyboardState keyboard = default, Action<LiveSiblingFixture>? mutate = null, bool save = false, Action<LiveSiblingFixture>? afterUpdate = null)
+            KeyboardState keyboard = default, Action<LiveSiblingFixture>? mutate = null, bool save = false, Action<LiveSiblingFixture>? afterUpdate = null, bool prepare = true, Action<LiveSiblingFixture>? afterPrepare = null)
         {
             mutate?.Invoke(Cached);
             mutate?.Invoke(Direct);
@@ -473,8 +556,13 @@ internal sealed class LiveSiblingTests : Game
             Direct.Tick(prepare: false);
             afterUpdate?.Invoke(Cached);
             afterUpdate?.Invoke(Direct);
-            Cached.Desktop.PrepareRenderCaches();
-            Direct.Desktop.PrepareRenderCaches();
+            if (prepare)
+            {
+                Cached.Desktop.PrepareRenderCaches();
+                Direct.Desktop.PrepareRenderCaches();
+            }
+            afterPrepare?.Invoke(Cached);
+            afterPrepare?.Invoke(Direct);
             Color[] pixels = Cached.Paint();
             string state = Snapshot(Cached);
             Check(Cached.Clock == Direct.Clock && Cached.Desktop.InputTracker.Mouse.CurrentState == mouse
@@ -483,15 +571,20 @@ internal sealed class LiveSiblingTests : Game
                 && Direct.Desktop.InputTracker.Keyboard.CurrentState == keyboard,
                 name + " did not replay identical host input/time through InputTracker.");
             Check(state == Snapshot(Direct), name + " cached/direct input snapshots diverged: " + state + " / " + Snapshot(Direct));
-            Tests.Compare(name, Direct.Paint(), pixels, save);
+            Tests.Compare(name, Direct.Paint(), pixels, save, Cached.Clock.Ticks, state);
             return pixels;
         }
         private static string Snapshot(LiveSiblingFixture fixture) => JsonSerializer.Serialize(new
         {
-            clockTicks = fixture.Clock.Ticks, button = fixture.Button.VisualState, fixture.Button.IsSelected,
+            clockTicks = fixture.Clock.Ticks,
+            mouse = new { fixture.Mouse.X, fixture.Mouse.Y, fixture.Mouse.ScrollWheelValue,
+                left = fixture.Mouse.LeftButton.ToString(), right = fixture.Mouse.RightButton.ToString() },
+            keyboard = fixture.Keyboard.GetPressedKeys().Select(key => key.ToString()).ToArray(),
+            button = fixture.Button.VisualState, fixture.Button.IsSelected,
             fixture.Button.IsEnabled, fixture.Toggle.IsChecked, slider = fixture.Slider.Value, fixture.Slider.IsDraggingThumb,
             fixture.Slider.IsHoveringThumb, fixture.TextBox.Text, selection = fixture.TextBox.CurrentSelection?.ToString(),
             focused = fixture.Desktop.FocusedKeyboardHandler == fixture.TextBox,
+            caretBlinkRateTicks = fixture.TextBox.Caret.BlinkRate.Ticks,
             tooltip = fixture.Desktop.ActiveToolTip == fixture.Tip, menu = fixture.Desktop.ActiveContextMenu == fixture.Menu,
             scroll = fixture.Scroll.VerticalOffset, inside = fixture.InsideButton.VisualState, fixture.Events,
             scoreBounds = fixture.Score.LayoutBounds, buttonBounds = fixture.Button.LayoutBounds,

@@ -83,6 +83,11 @@ internal static class Program
             {
                 return SampleTests.RunAllNative();
             }
+            if (args.Length == 4 && args[0] == "--matrix")
+            {
+                return LiveSiblingTests.RunMatrix(int.Parse(args[1]), int.Parse(args[2]),
+                    float.Parse(args[3], System.Globalization.CultureInfo.InvariantCulture));
+            }
             Options options = Options.Parse(args);
             using BenchmarkGame game = new(options);
             game.Run();
