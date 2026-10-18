@@ -23,7 +23,7 @@ namespace MGUI.Shared.Rendering
         Primitives
     }
 
-    public class DrawTransaction : IDisposable
+    public partial class DrawTransaction : IDisposable
     {
         public MainRenderer Renderer { get; }
         [Obsolete("Access fonts through MainRenderer.TextEngine / ITextEngine instead.")]
@@ -63,6 +63,7 @@ namespace MGUI.Shared.Rendering
             {
                 BeginDraw(DefaultContext);
             }
+            RegisterLifetime();
         }
 
         /// <summary>Should only be invoked if you intend to make a draw-related call that isn't already funneled through <see cref="DrawTransaction"/>.<para/>
@@ -848,7 +849,14 @@ namespace MGUI.Shared.Rendering
 
         public void Dispose()
         {
-            EndDraw(CurrentContext);
+            try
+            {
+                EndDraw(CurrentContext);
+            }
+            finally
+            {
+                ReleaseLifetime();
+            }
         }
     }
 }

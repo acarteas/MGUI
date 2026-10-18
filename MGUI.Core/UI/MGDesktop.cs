@@ -590,6 +590,7 @@ namespace MGUI.Core.UI
 
             ActiveToolTip = QueuedToolTip;
             FocusedKeyboardHandler = QueuedFocusedKeyboardHandler;
+            CompleteRenderCacheUpdate();
         }
 
         /// <summary>Traverses up the visual tree, starting from the given <paramref name="Element"/>, looking for an <see cref="MGElement"/> that is fully opaque (<see cref="MGElement.Opacity"/> >= 1.0f)</summary>

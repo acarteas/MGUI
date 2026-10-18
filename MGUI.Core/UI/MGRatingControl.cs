@@ -569,7 +569,7 @@ namespace MGUI.Core.UI
 
                         Rectangle UnscaledClipTarget = new(Destination.Left, Destination.Top, (int)Width, Destination.Height);
                         Rectangle ClipTarget = ConvertCoordinateSpace(CoordinateSpace.UnscaledScreen, CoordinateSpace.Screen, UnscaledClipTarget);
-                        using (DA.DT.SetClipTargetTemporary(ClipTarget, true))
+                        using (DA.DT.SetClipTargetTemporary(DA.DT.MapScreenClip(ClipTarget), true))
                         {
                             DA.DT.StrokeAndFillPolygon(Origin, Vertices, StrokeColor, FillColor, StrokeThickness);
                         }
@@ -593,7 +593,7 @@ namespace MGUI.Core.UI
 
                         Rectangle UnscaledClipTarget = new(Destination.Left, Destination.Top, (int)Width, Destination.Height);
                         Rectangle ClipTarget = ConvertCoordinateSpace(CoordinateSpace.UnscaledScreen, CoordinateSpace.Screen, UnscaledClipTarget);
-                        using (DA.DT.SetClipTargetTemporary(ClipTarget, true))
+                        using (DA.DT.SetClipTargetTemporary(DA.DT.MapScreenClip(ClipTarget), true))
                         {
                             DA.DT.FillCircle(Center, FillColor, Radius - StrokeThickness);
                             DA.DT.StrokeCircle(Center, StrokeColor, Radius, StrokeThickness);
@@ -610,7 +610,7 @@ namespace MGUI.Core.UI
                     {
                         Rectangle UnscaledClipTarget = new(Destination.Left, Destination.Top, (int)(Destination.Width * FilledPercent), Destination.Height);
                         Rectangle ClipTarget = ConvertCoordinateSpace(CoordinateSpace.UnscaledScreen, CoordinateSpace.Screen, UnscaledClipTarget);
-                        using (DA.DT.SetClipTargetTemporary(ClipTarget, true))
+                        using (DA.DT.SetClipTargetTemporary(DA.DT.MapScreenClip(ClipTarget), true))
                         {
                             DA.DT.StrokeAndFillRectangle(Offset, Destination, StrokeColor, FillColor, StrokeThickness);
                         }
@@ -639,7 +639,7 @@ namespace MGUI.Core.UI
 
                         Rectangle UnscaledClipTarget = new(Destination.Left, Destination.Top, (int)Width, Destination.Height);
                         Rectangle ClipTarget = ConvertCoordinateSpace(CoordinateSpace.UnscaledScreen, CoordinateSpace.Screen, UnscaledClipTarget);
-                        using (DA.DT.SetClipTargetTemporary(ClipTarget, true))
+                        using (DA.DT.SetClipTargetTemporary(DA.DT.MapScreenClip(ClipTarget), true))
                         {
                             DA.DT.FillTriangle(Origin, TriangleVertices[0], FillColor, TriangleVertices[1], FillColor, TriangleVertices[2], FillColor);
                             if (StrokeThickness > 0)

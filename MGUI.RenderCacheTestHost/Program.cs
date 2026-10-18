@@ -18,6 +18,10 @@ internal static class Program
             {
                 return ResourceTests.RunAllNative();
             }
+            if (args.Length == 1 && args[0] == "--preparation")
+            {
+                return PreparationTests.RunAllNative();
+            }
             Options options = Options.Parse(args);
             using BenchmarkGame game = new(options);
             game.Run();

@@ -1976,16 +1976,16 @@ namespace MGUI.Core.UI
 
         public virtual void Draw(ElementDrawArgs DA)
 		{
-			RecentDrawWasClipped = false;
+			if (DA.DT?.IsCacheCapture != true) { RecentDrawWasClipped = false; }
 
             DA = DA.SetOpacity(DA.Opacity * Opacity) with { VisualState = VisualState };
             MGElementDrawEventArgs DrawEventArgs = new(DA);
 
-			OnBeginDraw?.Invoke(this, DrawEventArgs);
+			if (DA.DT?.IsCacheCapture != true) { OnBeginDraw?.Invoke(this, DrawEventArgs); }
 
             if (Visibility != Visibility.Visible || LayoutBounds.Width <= 0 || LayoutBounds.Height <= 0)
 			{
-				RecentDrawWasClipped = true;
+				if (DA.DT?.IsCacheCapture != true) { RecentDrawWasClipped = true; }
 				return;
 			}
 
@@ -2033,18 +2033,18 @@ namespace MGUI.Core.UI
 
                     OverlayBrush?.Draw(DA, this, GetBackgroundBounds(LayoutBounds));
 
-                    OnEndingDraw?.Invoke(this, DrawEventArgs);
+                    if (DA.DT?.IsCacheCapture != true) { OnEndingDraw?.Invoke(this, DrawEventArgs); }
                 }
             }
             else
 			{
-				RecentDrawWasClipped = true;
+				if (DA.DT?.IsCacheCapture != true) { RecentDrawWasClipped = true; }
 			}
 
             TempTransform?.Dispose();
             TempScissorRect?.Dispose();
 
-            OnEndDraw?.Invoke(this, DrawEventArgs);
+            if (DA.DT?.IsCacheCapture != true) { OnEndDraw?.Invoke(this, DrawEventArgs); }
 			}
 
         internal Rectangle GetDrawTargetBounds(ElementDrawArgs DA)

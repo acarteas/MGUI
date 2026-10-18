@@ -755,7 +755,7 @@ namespace MGUI.Core.UI
         protected override void DrawContents(ElementDrawArgs DA)
         {
             Rectangle ScreenBounds = ConvertCoordinateSpace(CoordinateSpace.UnscaledScreen, CoordinateSpace.Screen, ContentViewport.GetTranslated(DA.Offset));
-            using (DA.DT.SetClipTargetTemporary(ScreenBounds, true))
+            using (DA.DT.SetClipTargetTemporary(DA.DT.MapScreenClip(ScreenBounds), true))
             {
                 Point NewOffset = DA.Offset - new Point((int)HorizontalOffset, (int)VerticalOffset);
                 base.DrawContents(DA with { Offset = NewOffset });
