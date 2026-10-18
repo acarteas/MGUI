@@ -18,6 +18,12 @@ namespace MGUI.Core.UI
 {
     public class MGProgressBar : MGElement
     {
+        protected override IEnumerable<object> EnumerateControlRenderSources()
+        {
+            yield return CompletedBrush;
+            yield return IncompleteBrush;
+        }
+
         #region Border
         /// <summary>Provides direct access to this element's border.</summary>
         public MGComponent<MGBorder> BorderComponent { get; }
@@ -89,6 +95,7 @@ namespace MGUI.Core.UI
                 {
                     _ValueDisplayFormat = value;
                     UpdateDisplayedValue(true);
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(ValueDisplayFormat));
                 }
             }
@@ -109,6 +116,7 @@ namespace MGUI.Core.UI
                 {
                     _NumberFormat = value;
                     UpdateDisplayedValue(true);
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(NumberFormat));
                 }
             }
@@ -157,6 +165,7 @@ namespace MGUI.Core.UI
                 {
                     _Minimum = value;
                     UpdateDisplayedValue(true);
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(Minimum));
                     NPC(nameof(ActualValue));
                     NPC(nameof(ValuePercent));
@@ -175,6 +184,7 @@ namespace MGUI.Core.UI
                 {
                     _Maximum = value;
                     UpdateDisplayedValue(true);
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(Maximum));
                     NPC(nameof(ActualValue));
                     NPC(nameof(ValuePercent));
@@ -193,6 +203,7 @@ namespace MGUI.Core.UI
                 {
                     _Value = value;
                     UpdateDisplayedValue(false);
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(Value));
                     NPC(nameof(ActualValue));
                     NPC(nameof(ValuePercent));
@@ -238,6 +249,8 @@ namespace MGUI.Core.UI
                 if (_CompletedBrush != value)
                 {
                     _CompletedBrush = value;
+                    RefreshBaseRenderSources();
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
                     NPC(nameof(CompletedBrush));
                 }
             }
@@ -254,6 +267,8 @@ namespace MGUI.Core.UI
                 if (_IncompleteBrush != value)
                 {
                     _IncompleteBrush = value;
+                    RefreshBaseRenderSources();
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
                     NPC(nameof(IncompleteBrush));
                 }
             }
@@ -301,6 +316,7 @@ namespace MGUI.Core.UI
                 if (_IsReversed != value)
                 {
                     _IsReversed = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(IsReversed));
                 }
             }

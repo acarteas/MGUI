@@ -2033,6 +2033,7 @@ namespace MGUI.Core.UI
 
                     DrawFillBrushAtSite(OverlayBrush, DA, GetBackgroundBounds(LayoutBounds), MGFillBrushPaintSite.Overlay);
 
+                    OnEndingDrawBuiltIn?.Invoke(this, DrawEventArgs);
                     if (DA.DT?.IsCacheCapture != true) { OnEndingDraw?.Invoke(this, DrawEventArgs); }
                 }
             }
@@ -2068,6 +2069,9 @@ namespace MGUI.Core.UI
         /// but while the <see cref="GraphicsDevice.ScissorRectangle"/> is still set to the desired screen-space bounds of this element.<para/>
         /// See also: <see cref="OnEndDraw"/></summary>
         public event EventHandler<MGElementDrawEventArgs> OnEndingDraw;
+
+        // Trusted built-in paint stage retains the public ending stage order and active clip during capture.
+        internal event EventHandler<MGElementDrawEventArgs> OnEndingDrawBuiltIn;
         /// <summary>Invoked at the very end of <see cref="MGElement.Draw(ElementDrawArgs)"/>.<br/>
         /// Unlike <see cref="OnEndingDraw"/>, this event is invoked AFTER the <see cref="GraphicsDevice.ScissorRectangle"/> has been reverted to its prior value.<para/>
         /// See also: <see cref="OnEndingDraw"/></summary>

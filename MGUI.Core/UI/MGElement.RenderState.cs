@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MGUI.Core.UI
 {
@@ -60,11 +61,14 @@ namespace MGUI.Core.UI
             }
         }
 
+        /// <summary>Additional local paint inputs, discovered only on first observation, replacement or explicit invalidation.</summary>
+        protected virtual IEnumerable<object> EnumerateControlRenderSources() => Enumerable.Empty<object>();
+
         internal void RefreshBaseRenderSources()
         {
             if (BaseRenderSources != null)
             {
-                BaseRenderSources.ReplaceSources(new object[] { BackgroundBrush, OverlayBrush, DefaultTextForeground, (this as MGBorder)?.BorderBrush, (this as MGWindow)?.Theme });
+                BaseRenderSources.ReplaceSources(new object[] { BackgroundBrush, OverlayBrush, DefaultTextForeground, (this as MGBorder)?.BorderBrush, (this as MGWindow)?.Theme }.Concat(EnumerateControlRenderSources()));
             }
         }
 

@@ -453,6 +453,7 @@ namespace MGUI.Core.UI
                 {
                     MGWindow Previous = ModalWindow;
                     _ModalWindow = value;
+                    InvalidateRenderContextSubtree(MGRenderInvalidationKind.Visual);
                     Desktop.ReconcileRenderRootAttachments();
                     NPC(nameof(ModalWindow));
                     NPC(nameof(HasModalWindow));

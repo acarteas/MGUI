@@ -45,6 +45,7 @@ namespace MGUI.Core.UI
                 if (_PressedContentOffset != value)
                 {
                     _PressedContentOffset = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(PressedContentOffset));
                 }
             }

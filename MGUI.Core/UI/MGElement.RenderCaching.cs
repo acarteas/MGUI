@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace MGUI.Core.UI
 {
@@ -88,9 +89,27 @@ namespace MGUI.Core.UI
         public void InvalidateVisual()
         {
             ReconcileRenderPaintChildren(true);
-            BaseRenderSources?.Reconcile();
-            InvalidateRenderState(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
+            ReconcileExplicitRenderSources(new(ReferenceEqualityComparer.Instance), MGRenderRevisionClock.NextMutation());
         }
+
+        private void ReconcileExplicitRenderSources(HashSet<MGElement> Visited, MGRenderMutationStamp Stamp)
+        {
+            if (!Visited.Add(this))
+            {
+                return;
+            }
+
+            OnVisualInvalidated();
+            RefreshBaseRenderSources();
+            Stamp = InvalidateRenderState(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies, Stamp);
+            foreach (MGElement Child in RenderPaintChildren)
+            {
+                Child.ReconcileExplicitRenderSources(Visited, Stamp);
+            }
+        }
+
+        /// <summary>Refreshes derived paint data after explicit opaque mutations, without invalidating measurement.</summary>
+        protected virtual void OnVisualInvalidated() { }
 
         /// <summary>Semantic invalidation hook for maintained paint ownership and dependency registrations.
         /// Dependencies requests reconciliation even when no observable resource event was available.</summary>

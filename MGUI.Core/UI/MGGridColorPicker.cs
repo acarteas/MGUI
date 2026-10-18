@@ -255,6 +255,14 @@ namespace MGUI.Core.UI
     /// <summary>Displays a grid of colors to choose from.</summary>
     public class MGGridColorPicker : MGElement
     {
+        protected override IEnumerable<object> EnumerateControlRenderSources()
+        {
+            yield return SelectedColorBorderBrush;
+            yield return UnselectedColorBorderBrush;
+            yield return HoveredColorOverlay;
+            yield return SelectedColorOverlay;
+        }
+
         #region Border
         /// <summary>Provides direct access to this element's border.</summary>
         public MGComponent<MGBorder> BorderComponent { get; }
@@ -398,6 +406,8 @@ namespace MGUI.Core.UI
                 if (_SelectedColorBorderBrush != value)
                 {
                     _SelectedColorBorderBrush = value;
+                    RefreshBaseRenderSources();
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
                     NPC(nameof(SelectedColorBorderBrush));
                 }
             }
@@ -415,6 +425,7 @@ namespace MGUI.Core.UI
                 if (!_SelectedColorBorderThickness.Equals(value))
                 {
                     _SelectedColorBorderThickness = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(SelectedColorBorderThickness));
                 }
             }
@@ -432,6 +443,8 @@ namespace MGUI.Core.UI
                 if (_UnselectedColorBorderBrush != value)
                 {
                     _UnselectedColorBorderBrush = value;
+                    RefreshBaseRenderSources();
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
                     NPC(nameof(UnselectedColorBorderBrush));
                 }
             }
@@ -449,6 +462,7 @@ namespace MGUI.Core.UI
                 if (!_UnselectedColorBorderThickness.Equals(value))
                 {
                     _UnselectedColorBorderThickness = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(UnselectedColorBorderThickness));
                 }
             }
@@ -477,6 +491,7 @@ namespace MGUI.Core.UI
                 if (_HoveredColorIndex != value)
                 {
                     _HoveredColorIndex = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(HoveredColorIndex));
                     NPC(nameof(HoveredColor));
                 }
@@ -496,6 +511,8 @@ namespace MGUI.Core.UI
                 if (_HoveredColorOverlay != value)
                 {
                     _HoveredColorOverlay = value;
+                    RefreshBaseRenderSources();
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
                     NPC(nameof(HoveredColorOverlay));
                 }
             }
@@ -514,6 +531,8 @@ namespace MGUI.Core.UI
                 if (_SelectedColorOverlay != value)
                 {
                     _SelectedColorOverlay = value;
+                    RefreshBaseRenderSources();
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
                     NPC(nameof(SelectedColorOverlay));
                 }
             }
@@ -531,19 +550,17 @@ namespace MGUI.Core.UI
             get => _SelectedColorIndexes;
             set
             {
-                if (_SelectedColorIndexes != value)
+                IReadOnlyList<int> NextIndexes = value == null ? Array.Empty<int>() : AllowMultiSelect ? value : value.Take(1).ToList();
+                if (_SelectedColorIndexes == null || !_SelectedColorIndexes.SequenceEqual(NextIndexes))
                 {
-                    if (!AllowMultiSelect)
-                        _SelectedColorIndexes = value?.Take(1).ToList() ?? new List<int>();
-                    else
-                        _SelectedColorIndexes = value ?? new List<int>();
+                    _SelectedColorIndexes = NextIndexes;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(SelectedColorIndexes));
                     NPC(nameof(SelectedColor));
                     NPC(nameof(SelectedColors));
 
                     RefreshSelectedColorLabelVisibility();
-                    if (IsSelectedColorLabelVisible)
-                        SelectedColorValue.Fill = SelectedColor.Value.AsFillBrush();
+                    RefreshSelectedColorPreview();
                 }
             }
         }
@@ -614,6 +631,24 @@ namespace MGUI.Core.UI
 
         private void RefreshSelectedColorLabelVisibility() =>
             SelectedColorPresenter.Visibility = IsSelectedColorLabelVisible ? Visibility.Visible : Visibility.Collapsed;
+
+        private void RefreshSelectedColorPreview()
+        {
+            if (SelectedColorIndexes?.Count == 1 && Colors != null && SelectedColorIndexes[0] >= 0 && SelectedColorIndexes[0] < Colors.Count)
+            {
+                Color PreviewColor = Colors[SelectedColorIndexes[0]];
+                if (!(SelectedColorValue.Fill is MGSolidFillBrush Fill) || Fill.Color != PreviewColor)
+                {
+                    SelectedColorValue.Fill = PreviewColor.AsFillBrush();
+                }
+            }
+        }
+
+        protected override void OnVisualInvalidated()
+        {
+            base.OnVisualInvalidated();
+            RefreshSelectedColorPreview();
+        }
 
         public MGGridColorPicker(MGWindow Window, int Columns, params Color[] Colors)
             : this(Window, Columns, new Size(16, 16), Colors) { }

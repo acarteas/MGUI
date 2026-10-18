@@ -26,6 +26,10 @@ internal static class Program
             {
                 return CachedBrushTests.RunAllNative();
             }
+            if (args.Length == 1 && args[0] == "--interactive")
+            {
+                return InteractiveTests.RunAllNative();
+            }
             Options options = Options.Parse(args);
             using BenchmarkGame game = new(options);
             game.Run();

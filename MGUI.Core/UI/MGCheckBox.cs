@@ -77,6 +77,7 @@ namespace MGUI.Core.UI
                 if (_CheckMarkColor != value)
                 {
                     _CheckMarkColor = value;
+                    InvalidateCheckMarkVisual();
                     NPC(nameof(CheckMarkColor));
                 }
             }
@@ -95,6 +96,7 @@ namespace MGUI.Core.UI
                 if (_IsCheckMarkShadowed != value)
                 {
                     _IsCheckMarkShadowed = value;
+                    InvalidateCheckMarkVisual();
                     NPC(nameof(IsCheckMarkShadowed));
                 }
             }
@@ -110,6 +112,7 @@ namespace MGUI.Core.UI
                 if (_CheckMarkShadowColor != value)
                 {
                     _CheckMarkShadowColor = value;
+                    InvalidateCheckMarkVisual();
                     NPC(nameof(CheckMarkShadowColor));
                 }
             }
@@ -125,6 +128,7 @@ namespace MGUI.Core.UI
                 if (_CheckMarkShadowOffset != value)
                 {
                     _CheckMarkShadowOffset = value;
+                    InvalidateCheckMarkVisual();
                     NPC(nameof(CheckMarkShadowOffset));
                 }
             }
@@ -164,6 +168,7 @@ namespace MGUI.Core.UI
 
                     bool? Previous = IsChecked;
                     _IsChecked = value;
+                    InvalidateCheckMarkVisual();
                     NPC(nameof(IsChecked));
                     OnCheckStateChanged?.Invoke(this, new(Previous, IsChecked));
 
@@ -223,7 +228,7 @@ namespace MGUI.Core.UI
                 ButtonElement.MinHeight = 12;
                 ButtonElement.Padding = new(0);
 
-                ButtonElement.OnEndingDraw += (sender, e) =>
+                ButtonElement.OnEndingDrawBuiltIn += (sender, e) =>
                 {
                     if (!this.IsChecked.HasValue)
                     {
@@ -268,6 +273,13 @@ namespace MGUI.Core.UI
                 this.IsChecked = IsChecked;
                 IsReadonly = false;
             }
+        }
+
+        private void InvalidateCheckMarkVisual()
+        {
+            MGRenderMutationStamp Stamp = MGRenderRevisionClock.NextMutation();
+            ButtonElement?.InvalidateRenderState(MGRenderInvalidationKind.Visual, Stamp);
+            InvalidateRenderState(MGRenderInvalidationKind.Visual, Stamp);
         }
 
         public static void DrawCheckMark(MGDesktop Desktop, Rectangle Bounds, DrawTransaction DT, float Opacity, Point Offset, Color Color, MGScaleSettings ScaleSettings = null)

@@ -14,6 +14,8 @@ namespace MGUI.Core.UI
 {
     public class MGTimer : MGElement
     {
+        protected internal override bool IsBuiltInRenderVolatile => !IsPaused;
+
         #region Border
         /// <summary>Provides direct access to this element's border.</summary>
         public MGComponent<MGBorder> BorderComponent { get; }
@@ -39,7 +41,7 @@ namespace MGUI.Core.UI
 
         public bool TrySetFont(string FontFamily, int FontSize) => ValueElement.TrySetFont(FontFamily, FontSize);
 
-        private void UpdateDisplayedValue(bool ForceLayoutRefresh)
+        private void UpdateDisplayedValue(bool ForceLayoutRefresh, bool PreserveLayout = false)
         {
             if (ValueElement == null || ValueDisplayFormat == null || RemainingDurationToString == null)
                 return;
@@ -49,7 +51,7 @@ namespace MGUI.Core.UI
 
             //  Assume the required size of this element hasn't changed if the text length stayed the same
             //  This assumption may be incorrect for non-monospaced font
-            ValueElement.SetText(ValueDisplayString, !ForceLayoutRefresh && (ValueElement.Text?.Length ?? 0) == ValueDisplayString.Length);
+            ValueElement.SetText(ValueDisplayString, PreserveLayout || (!ForceLayoutRefresh && (ValueElement.Text?.Length ?? 0) == ValueDisplayString.Length));
         }
 
         public const string DefaultValueDisplayFormat = $"[b][shadow=Black 1 1]{{{{{nameof(RemainingDuration)}}}}}[/shadow][/b]";
@@ -69,6 +71,7 @@ namespace MGUI.Core.UI
                 {
                     _ValueDisplayFormat = value;
                     UpdateDisplayedValue(true);
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(ValueDisplayFormat));
                 }
             }
@@ -87,6 +90,7 @@ namespace MGUI.Core.UI
                     TimeSpan Previous = RemainingDuration;
                     _RemainingDuration = ActualValue;
                     UpdateDisplayedValue(false);
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(RemainingDuration));
                     RemainingDurationChanged?.Invoke(this, new(Previous, RemainingDuration));
 
@@ -139,6 +143,7 @@ namespace MGUI.Core.UI
                 {
                     _RemainingDurationToString = value;
                     UpdateDisplayedValue(true);
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(RemainingDurationToString));
                 }
             }
@@ -155,6 +160,7 @@ namespace MGUI.Core.UI
                 if (_IsPaused != value)
                 {
                     _IsPaused = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
                     NPC(nameof(IsPaused));
                     if (IsPaused)
                         Paused?.Invoke(this, EventArgs.Empty);
@@ -209,6 +215,12 @@ namespace MGUI.Core.UI
                 RemainingDurationToString = (TimeSpan Elapsed) => Elapsed.ToString(@"m\:ss\.%f");
                 ValueDisplayFormat = DefaultValueDisplayFormat;
             }
+        }
+
+        protected override void OnVisualInvalidated()
+        {
+            base.OnVisualInvalidated();
+            UpdateDisplayedValue(false, true);
         }
 
         public override void UpdateSelf(ElementUpdateArgs UA)
