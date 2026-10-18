@@ -1,4 +1,5 @@
 using Microsoft.Xna.Framework;
+using MGUI.Core.UI.Data_Binding;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -17,7 +18,8 @@ namespace MGUI.Core.UI.Brushes.Fill_Brushes
     /// <remarks>ExplicitlyStatic asserts bounded premultiplied local/UV-only painting without time, screen-position,
     /// interaction or untracked external dependencies, side effects or target switches. Notify opaque effect writes,
     /// texture uploads and raw list edits with InvalidateVisual before drawing. Known volatility still bypasses.</remarks>
-    public sealed class MGCachedFillBrush : IFillBrush, IMGRenderCacheSource, IMGRenderCacheSourceContainer
+    public sealed class MGCachedFillBrush : XAMLBindableBase, IFillBrush, IMGRenderCacheSource, IMGRenderCacheSourceContainer,
+        IElementNameResolver, IResourcesResolver, IDesktopResolver
     {
         private IFillBrush _Brush;
         private bool _IsCacheEnabled = true;
@@ -26,6 +28,30 @@ namespace MGUI.Core.UI.Brushes.Fill_Brushes
         private MGRenderCacheSourceDependencies Sources;
         private readonly ConditionalWeakTable<MGElement, SiteOperations> Owners = new();
         private readonly List<WeakReference<BrushOperation>> Operations = new();
+
+        private WeakReference<MGElement> BindingSourceElement;
+
+        /// <summary>Only used to resolve XAML binding sources; does not retain the owning element.</summary>
+        internal MGElement SourceElement
+        {
+            get => BindingSourceElement != null && BindingSourceElement.TryGetTarget(out var owner) ? owner : null;
+            set => BindingSourceElement = value == null ? null : new(value);
+        }
+
+        public bool TryGetElementByName(string Name, out MGElement NamedElement)
+        {
+            MGElement owner = SourceElement;
+            if (owner != null)
+            {
+                return owner.TryGetElementByName(Name, out NamedElement);
+            }
+
+            NamedElement = null;
+            return false;
+        }
+
+        public MGResources GetResources() => SourceElement?.GetResources();
+        public MGDesktop GetDesktop() => SourceElement?.GetDesktop();
 
         public MGCachedFillBrush(IFillBrush Brush)
         {
@@ -43,6 +69,7 @@ namespace MGUI.Core.UI.Brushes.Fill_Brushes
                     _Brush = value;
                     Sources?.ReplaceSources(new object[] { _Brush });
                     Changed(MGRenderRevisionClock.NextMutation());
+                    NPC(nameof(Brush));
                 }
             }
         }
@@ -56,6 +83,7 @@ namespace MGUI.Core.UI.Brushes.Fill_Brushes
                 {
                     _IsCacheEnabled = value;
                     Changed(MGRenderRevisionClock.NextMutation());
+                    NPC(nameof(IsCacheEnabled));
                 }
             }
         }
@@ -74,6 +102,7 @@ namespace MGUI.Core.UI.Brushes.Fill_Brushes
                     _SourceMode = value;
                     Sources?.Reconcile();
                     Changed(MGRenderRevisionClock.NextMutation());
+                    NPC(nameof(SourceMode));
                 }
             }
         }

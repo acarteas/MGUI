@@ -481,6 +481,57 @@ namespace MGUI.Core.UI.XAML
         }
     }
 
+    /// <summary>Opt-in cached painting of a required source brush. ExplicitlyStatic asserts that the
+    /// entire source graph is static; opaque resource changes require runtime InvalidateVisual.</summary>
+    /// <remarks>Bindings on this wrapper use the normal brush binding lifecycle. Nested source brushes retain
+    /// their existing binding capabilities; nested static color resources are resolved recursively.</remarks>
+    [ContentProperty(nameof(Brush))]
+    public class CachedFillBrush : FillBrush, ISupportInitialize
+    {
+        public FillBrush Brush { get; set; }
+        public bool? IsCacheEnabled { get; set; }
+        public MGRenderCacheSourceMode? SourceMode { get; set; }
+
+        public void BeginInit() { }
+
+        public void EndInit() => ValidateBrush();
+
+        private void ValidateBrush()
+        {
+            if (Brush == null)
+            {
+                throw new InvalidOperationException($"{nameof(CachedFillBrush)}.{nameof(Brush)} is required. " +
+                    "Specify a source brush as child content or with the Brush property. " +
+                    "A Brush binding requires initial source brush content before bindings are activated.");
+            }
+        }
+
+        public override IFillBrush ToFillBrush(MGDesktop Desktop, MGElement Element)
+        {
+            ValidateBrush();
+            MGCachedFillBrush result = new(Brush.ToFillBrush(Desktop, Element)) { SourceElement = Element };
+            if (IsCacheEnabled.HasValue)
+            {
+                result.IsCacheEnabled = IsCacheEnabled.Value;
+            }
+            if (SourceMode.HasValue)
+            {
+                result.SourceMode = SourceMode.Value;
+            }
+            return result;
+        }
+
+        protected internal override IEnumerable<(XAMLBindableBase, string)> GetNestedBindableObjects()
+        {
+            foreach (var item in base.GetNestedBindableObjects())
+            {
+                yield return item;
+            }
+
+            yield return (Brush, nameof(Brush));
+        }
+    }
+
     [ContentProperty(nameof(FillBrush))]
     public class BorderedFillBrush : FillBrush
     {
