@@ -27,6 +27,14 @@ namespace MGUI.Core.UI
                 yield return OuterHeaderPresenter;
         }
 
+        internal override IEnumerable<MGElement> GetAdditionalRenderPaintChildren()
+        {
+            if (OuterHeaderPresenter != null)
+            {
+                yield return OuterHeaderPresenter;
+            }
+        }
+
         #region Border
         private MGBorder BorderElement { get; }
         public override MGBorder GetBorder() => BorderElement;

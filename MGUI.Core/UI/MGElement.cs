@@ -258,6 +258,8 @@ namespace MGUI.Core.UI
             {
                 MGElement Previous = Parent;
                 _Parent = Value;
+                ReconcileRenderParentAliases(Previous, Parent);
+                InvalidateRenderState(MGRenderInvalidationKind.Structure);
                 NPC(nameof(Parent));
                 NPC(nameof(DerivedUIScaleMode));
                 NPC(nameof(IsUIScaleEffectivelyEnabled));
@@ -280,7 +282,9 @@ namespace MGUI.Core.UI
             {
                 if (_ManagedParent != value)
                 {
+                    MGElement Previous = _ManagedParent;
                     _ManagedParent = value;
+                    ReconcileRenderParentAliases(Previous, ManagedParent);
                     NPC(nameof(ManagedParent));
                     NPC(nameof(IsManagedElement));
                 }
@@ -301,7 +305,9 @@ namespace MGUI.Core.UI
             {
                 if (_ComponentParent != value)
                 {
+                    MGElement Previous = _ComponentParent;
                     _ComponentParent = value;
+                    ReconcileRenderParentAliases(Previous, ComponentParent);
                     NPC(nameof(ComponentParent));
                     NPC(nameof(IsComponent));
                 }
@@ -317,6 +323,14 @@ namespace MGUI.Core.UI
 			Component.BaseElement.SetParent(this);
             Component.BaseElement.ComponentParent = this;
 			Components.Add(Component);
+            IReadOnlyList<MGElement> PreviousPaintChildren = RenderPaintChildren;
+            ReconcileRenderPaintChildren();
+
+            // Another paint operation can reuse a child that already contributes to this owner.
+            if (ReferenceEquals(PreviousPaintChildren, RenderPaintChildren))
+            {
+                InvalidateRenderState(MGRenderInvalidationKind.Structure);
+            }
 		}
 
         internal MGNameScope ActiveNameScope { get; set; }
@@ -2038,7 +2052,13 @@ namespace MGUI.Core.UI
         /// <summary>Invoked when a property that affects this <see cref="MGElement"/>'s layout has changed, such as <see cref="Padding"/>, <see cref="Margin"/>, or its content.</summary>
         protected virtual void LayoutChanged(MGElement Source, bool NotifyParent)
         {
-            MGRenderMutationStamp Stamp = InvalidateRenderState(MGRenderInvalidationKind.Layout, TakeLayoutMutation(Source));
+            var (Stamp, Forwarded) = TakeLayoutMutation(Source);
+
+            // Logical parents still invalidate measurement; only actual paint owners summarize revisions.
+            if (!Forwarded)
+            {
+                Stamp = InvalidateRenderState(MGRenderInvalidationKind.Layout, Stamp);
+            }
             if (InitializationManager.IsDeferringEvents)
             {
                 return;

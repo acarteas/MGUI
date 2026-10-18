@@ -82,8 +82,13 @@ namespace MGUI.Core.UI
         }
 
         /// <summary>Notifies rendering that custom drawing or an externally mutated resource changed.
+        /// Reconciles the receiver's contributing subtree, including explicitly changed raw component lists.
         /// Does not invalidate layout or cached measurements.</summary>
-        public void InvalidateVisual() => InvalidateRenderState(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
+        public void InvalidateVisual()
+        {
+            ReconcileRenderPaintChildren(true);
+            InvalidateRenderState(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
+        }
 
         /// <summary>Semantic invalidation hook for maintained paint ownership and dependency registrations.
         /// Dependencies requests reconciliation even when no observable resource event was available.</summary>
@@ -115,15 +120,15 @@ namespace MGUI.Core.UI
             }
         }
 
-        private MGRenderMutationStamp TakeLayoutMutation(MGElement Source)
+        private (MGRenderMutationStamp Stamp, bool Forwarded) TakeLayoutMutation(MGElement Source)
         {
             if (ForwardedLayoutMutation is { } Forwarded && ReferenceEquals(Forwarded.Source, Source))
             {
                 ForwardedLayoutMutation = null;
-                return Forwarded.Stamp;
+                return (Forwarded.Stamp, true);
             }
 
-            return MGRenderRevisionClock.NextMutation();
+            return (MGRenderRevisionClock.NextMutation(), false);
         }
 
         private void ForwardLayoutChangeToParent(MGElement Source, bool NotifyParent, MGRenderMutationStamp Stamp)
@@ -229,6 +234,7 @@ namespace MGUI.Core.UI
 
             if (Changed != MGRenderInvalidationKind.None)
             {
+                PropagateRenderInvalidation(Changed, Stamp);
                 RenderInvalidated?.Invoke(this, Changed, Stamp);
             }
 

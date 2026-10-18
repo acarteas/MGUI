@@ -32,7 +32,7 @@ namespace MGUI.Core.UI
         }
     }
 
-    public class MGWindow : MGSingleContentHost
+    public partial class MGWindow : MGSingleContentHost
     {
         public MGDesktop Desktop { get; }
 
@@ -450,6 +450,7 @@ namespace MGUI.Core.UI
                 {
                     MGWindow Previous = ModalWindow;
                     _ModalWindow = value;
+                    Desktop.ReconcileRenderRootAttachments();
                     NPC(nameof(ModalWindow));
                     NPC(nameof(HasModalWindow));
                     Previous?.NPC(nameof(IsModalWindow));
@@ -478,8 +479,18 @@ namespace MGUI.Core.UI
             if (NestedWindow == this)
                 throw new ArgumentException("Cannot add a window as a nested window to itself as this would create an infinite recursive dependency.");
             _NestedWindows.Add(NestedWindow);
+            Desktop.ReconcileRenderRootAttachments();
         }
-        public bool RemoveNestedWindow(MGWindow NestedWindow) => _NestedWindows.Remove(NestedWindow);
+        public bool RemoveNestedWindow(MGWindow NestedWindow)
+        {
+            if (!_NestedWindows.Remove(NestedWindow))
+            {
+                return false;
+            }
+
+            Desktop.ReconcileRenderRootAttachments();
+            return true;
+        }
 
         /// <summary>Moves the given <paramref name="NestedWindow"/> to the end of <see cref="NestedWindows"/> list.<br/>
         /// It will typically be rendered overtop of all other <see cref="NestedWindows"/>, unless another nested window is Topmost (See: <see cref="IsTopmost"/>).<para/>

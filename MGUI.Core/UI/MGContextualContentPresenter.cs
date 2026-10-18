@@ -92,6 +92,7 @@ namespace MGUI.Core.UI
             {
                 MGElement PreviousContent = Content;
                 _Content = DesiredContent;
+                ReconcileRenderPaintChildren();
 
                 if (PreviousContent != null)
                     PreviousContent.IsHitTestVisible = false;

@@ -23,7 +23,7 @@ namespace MGUI.Core.UI
 {
     /// <summary>Represents a Rectanglular screen bounds that you can add or remove <see cref="MGWindow"/>s to/from, 
     /// and handles mutual exclusion with things like input handling or ensuring there is only 1 <see cref="MGToolTip"/> or <see cref="MGContextMenu"/> on the user interface at a time.</summary>
-    public class MGDesktop : ViewModelBase, IMouseHandlerHost, IKeyboardHandlerHost, IContextMenuHost
+    public partial class MGDesktop : ViewModelBase, IMouseHandlerHost, IKeyboardHandlerHost, IContextMenuHost
     {
         public MainRenderer Renderer { get; }
         public InputTracker InputTracker => Renderer.Input;
@@ -530,6 +530,7 @@ namespace MGUI.Core.UI
 
         public void Update()
         {
+            ReconcileRenderRootAttachments();
             //  Revalidate the size/position of the OverlayWindow
             if (ValidScreenBounds != new Rectangle(OverlayWindow.Left, OverlayWindow.Top, OverlayWindow.WindowWidth, OverlayWindow.WindowHeight))
             {
@@ -607,6 +608,7 @@ namespace MGUI.Core.UI
 
         public void Draw(DrawTransaction DT, float Opacity = 1.0f)
         {
+            ReconcileRenderRootAttachments();
             DrawBaseArgs BA = new(Renderer.UpdateArgs.TotalElapsed, DT, Opacity);
             ElementDrawArgs DA = new(BA, new VisualState(PrimaryVisualState.Normal, SecondaryVisualState.None), Point.Zero);
 
