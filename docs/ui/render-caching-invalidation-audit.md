@@ -4,12 +4,13 @@ T09 (`mgui-jpa.3.6`) audits the approved [contract](render-caching-design.md) af
 
 ## Complete runtime inventory
 
-There are **61 types: 6 abstract and 55 concrete**, including the three open generic definitions. In the table, “candidate” means that the built-in has audited semantic setter, resource and ownership integration; all base clip, transform, incoming opacity, layout, resource lifetime/support, public-hook and volatility requirements still apply. An eligible custom descendant or source requires its own explicit contract. Factory templates are evaluated when creating actual content; generated content is classified by its actual runtime type and sources.
+With the T15 boundary addition there are **62 types: 6 abstract and 56 concrete**, including the three open generic definitions. In the table, “candidate” means that the built-in has audited semantic setter, resource and ownership integration; all base clip, transform, incoming opacity, layout, resource lifetime/support, public-hook and volatility requirements still apply. An eligible custom descendant or source requires its own explicit contract. Factory templates are evaluated when creating actual content; generated content is classified by its actual runtime type and sources.
 
 | Runtime types (all names are exact) | Classification and paint/revision evidence |
 | --- | --- |
 | `MGElement`, `MGContentHost`, `MGSingleContentHost`, `MGMultiContentHost` | Abstract infrastructure; never exact runtime admission entries. Base visual/layout revisions, retained ordered paint ownership, source and inherited-context integration: `MGElementRenderRevisionTests`, `MGElementRenderOwnershipTests`, `MGElementBaseVisualStateTests`. |
 | `MGContextMenuItem`, `MGWrappedContextMenuItem` | Abstract menu infrastructure. Nonnull visibility delegates are unsupported; wrapped submenu arrow remains a public child callback with out-of-child-bound paint. See [decorations](render-caching-decoration-coverage.md). |
+| `MGRenderCache` | T15 candidate. Explicit single-content boundary replaces only DrawContents; own decorations/hooks remain live. Capture bypass paints Content directly. Native boundary tests and weak-observer tests cover revisions, zero-size content, lifecycle and alternate-draw bookkeeping. |
 | `MGContentPresenter`, `MGHeaderedContentPresenter` | Candidates; the latter is concrete. Content/header/spacing/position use maintained component/content ownership. ContentPresenter has an empty DrawSelf; HeaderedContentPresenter inherits the ordinary paint stages. Ownership/revision suites cover replacement, aliases and inactive content. |
 | `MGStackPanel`, `MGDockPanel`, `MGOverlayPanel` | Candidates. Border components, layout/spacing/dock/offset metadata and painter order: decoration native matrix, including exact Z/offset/no-op revision categories. |
 | `MGGrid`, `MGUniformGrid`, `MGGridSplitter` | Candidates. Grid selections/lines/empty-cell fill and splitter geometry/feedback/source setters are tracked. UniformGrid public OnRenderCell handlers reject capture using maintained callback count; removal restores the local fact. Decoration native matrix and T30 row-reorder tests. |
@@ -40,7 +41,7 @@ The reflection guard `EveryRuntimeElementTypeAndDeclaredPaintMethodIsInTheReview
 | --- | --- |
 | Draw | MGElement; MGWindow (unsupported window protocol); MGTreeViewItem (unsupported post-base arrow). |
 | DrawBackground | MGElement; MGSpacer (empty); MGListView<> (header/data regions); MGTabControl (content region); MGGroupBox (header gap); MGOverlayHost (unsupported cross-owner tint). |
-| DrawContents | MGElement (empty); MGContentHost (ordinary current children); MGButton (pressed offset); MGScrollViewer (integer offset and mapped screen clip); MGSpacer (empty). |
+| DrawContents | MGElement (empty); MGContentHost (ordinary current children); MGButton (pressed offset); MGScrollViewer (integer offset and mapped screen clip); MGSpacer (empty); MGRenderCache (explicit content-only cache/direct fallback). |
 | DrawSelf | MGElement; MGBorder; MGCheckBox; MGContentPresenter (empty); MGGrid; MGGridColorPicker; MGGridSplitter; MGGroupBox; MGImage; MGListBox<> (base); MGProgressBar; MGProgressButton; MGRadioButton; MGRatingControl; MGRectangle; MGResizeGrip; MGScrollViewer; MGSlider; MGTabControl (empty); MGTabItem (empty); MGTextBlock; MGTextBox; MGUniformGrid. |
 
 Public callback painters and bounded internal ending-stage painters are accounted for in the family coverage docs; reflection of overrides alone would miss them. In particular, wrapped menu arrows, external resize grips and OverlayHost keep honest bypasses rather than hiding their public subscriptions.

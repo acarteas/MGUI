@@ -92,6 +92,7 @@ namespace MGUI.Core.UI
         Custom_4,
         Custom_5,
         UserControl,
+        RenderCache,
     }
 
     public enum NameScopeMode

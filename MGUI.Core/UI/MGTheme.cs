@@ -537,6 +537,7 @@ namespace MGUI.Core.UI
                 MGElementType.Border,
                 MGElementType.CheckBox,
                 MGElementType.ContentPresenter,
+                MGElementType.RenderCache,
                 MGElementType.ContextMenuItem,
                 MGElementType.Custom,
                 MGElementType.Custom_2,

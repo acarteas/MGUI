@@ -4,7 +4,7 @@ T18 (`mgui-ch5.2.1`) implements the participation and volatility portion of the 
 
 ## Participation
 
-`MGElement.SupportsRenderCaching` is a protected virtual getter. Its default uses an exact runtime-type allowlist of 49 audited concrete built-ins, including only the three known generic definitions (`MGListBox<>`, `MGListView<>`, `MGComboBox<>`). Deriving from an admitted built-in does not inherit admission. Unknown custom subclasses default unsupported.
+`MGElement.SupportsRenderCaching` is a protected virtual getter. Its default uses an exact runtime-type allowlist of 50 audited concrete built-ins (including the T15 MGRenderCache addition), including only the three known generic definitions (`MGListBox<>`, `MGListView<>`, `MGComboBox<>`). Deriving from an admitted built-in does not inherit admission. Unknown custom subclasses default unsupported.
 
 A custom renderer may override the getter to return true. This asserts deterministic, bounded, translation-safe painting without draw side effects, framebuffer dependencies, target switching or arbitrary untracked external state. Call `InvalidateVisual()` before drawing after an opaque external-state change, or after changing the result of the support getter. Continuously changing paint should remain ordinary rendering or declare `IsRenderVolatile=true`. Support never overrides user, intrinsic or source volatility, public draw hooks, resource lifetime, clipping, transform or unresolved-layout restrictions.
 
@@ -32,7 +32,7 @@ Background-only cached brushes continue to use their own inner source graph and 
 
 ## Validation
 
-`MGElementRenderEligibilityTests` covers all 55 current concrete built-ins, custom subclasses and explicit participation, user/intrinsic volatility, content/component alias removal and reparenting, exact multicast hook counts, nested observable and raw source changes, control/transform/clip facts, deferred layout and independently arranged child completion. A 1,000-element tree verifies zero idle child/source discovery, custom support getter reads and thread allocations after registration.
+`MGElementRenderEligibilityTests` covers all 56 current concrete built-ins, custom subclasses and explicit participation, user/intrinsic volatility, content/component alias removal and reparenting, exact multicast hook counts, nested observable and raw source changes, control/transform/clip facts, deferred layout and independently arranged child completion. A 1,000-element tree verifies zero idle child/source discovery, custom support getter reads and thread allocations after registration.
 
 `MGUI.RenderCacheTestHost --eligibility` adds seven native groups: custom static/manual-invalidation capture RGBA parity; public callback normal frequency/capture suppression and live updates; running timer updates with intrinsic/user volatility and removal recovery; inactive exceptional content and independent popup descendants; control-specific callback/opaque state; parse-time interactive text recovery; and an independently warm background-only brush despite unknown/live subtree content. These tests do not claim a panel hit protocol before the panel exists.
 
@@ -43,3 +43,5 @@ flock --close /tmp/mgui-render-cache-dotnet.lock dotnet test MGUI.Tests/MGUI.Tes
 ```
 
 The native wrapper invokes `tools/render-cache/test-native.py`, which owns a private Xvfb display and the graphics lock. Recorded environment: MonoGame DesktopGL Release, Mesa 26.2.3 llvmpipe (LLVM 23.1.1) software rendering and native RGBA readback. This is correctness evidence, not a hardware performance claim.
+
+T15 adds the exact runtime `MGRenderCache` type to admission for nested content boundaries. Its own operation reads only `Content.GetRenderEligibilitySnapshot()` plus owner visibility, positive owner/content geometry, clip, resolved layout and volatility. Live wrapper decorations and callbacks are outside that capture. See [content boundaries](render-cache-boundary.md).

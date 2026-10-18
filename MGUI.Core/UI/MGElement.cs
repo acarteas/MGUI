@@ -1,4 +1,4 @@
-﻿using MGUI.Shared.Helpers;
+using MGUI.Shared.Helpers;
 using MGUI.Shared.Text.Engines;
 using System;
 using System.Collections.Generic;
@@ -1975,19 +1975,39 @@ namespace MGUI.Core.UI
         }
 
         public virtual void Draw(ElementDrawArgs DA)
-		{
-			if (DA.DT?.IsCacheCapture != true) { RecentDrawWasClipped = false; }
+        {
+            bool ObserveDraw = DA.DT?.IsCacheCapture != true;
+            if (ObserveDraw)
+            {
+                NotifyRenderContentDraw();
+            }
+            MGRenderContentObservation Boundary = ObserveDraw ? RenderContentBoundary : null;
+            bool PreviousContentCompletion = Boundary?.BeginOwnerDraw() ?? false;
+            bool DrawCompleted = false;
+            try
+            {
+                DrawCompleted = DrawBody(DA);
+            }
+            finally
+            {
+                Boundary?.EndOwnerDraw(PreviousContentCompletion, DrawCompleted);
+            }
+        }
+
+        private bool DrawBody(ElementDrawArgs DA)
+        {
+            if (DA.DT?.IsCacheCapture != true) { RecentDrawWasClipped = false; }
 
             DA = DA.SetOpacity(DA.Opacity * Opacity) with { VisualState = VisualState };
             MGElementDrawEventArgs DrawEventArgs = new(DA);
 
-			if (DA.DT?.IsCacheCapture != true) { BeginDrawHandlers?.Invoke(this, DrawEventArgs); }
+            if (DA.DT?.IsCacheCapture != true) { BeginDrawHandlers?.Invoke(this, DrawEventArgs); }
 
             if (Visibility != Visibility.Visible || LayoutBounds.Width <= 0 || LayoutBounds.Height <= 0)
-			{
-				if (DA.DT?.IsCacheCapture != true) { RecentDrawWasClipped = true; }
-				return;
-			}
+            {
+                if (DA.DT?.IsCacheCapture != true) { RecentDrawWasClipped = true; }
+                return false;
+            }
 
             Rectangle TargetBounds = GetDrawTargetBounds(DA);
 
@@ -2010,9 +2030,9 @@ namespace MGUI.Core.UI
             }
 
             if (!ClipToBounds || !DA.DT.CurrentSettings.RasterizerState.ScissorTestEnable || TargetBounds.Intersects(DA.DT.GD.ScissorRectangle))
-			{
-				using (ClipToBounds ? DA.DT.SetClipTargetTemporary(TargetBounds, true) : null)
-				{
+            {
+                using (ClipToBounds ? DA.DT.SetClipTargetTemporary(TargetBounds, true) : null)
+                {
                     foreach (MGElement Component in Components.Where(x => x.DrawBeforeBackground).Select(x => x.BaseElement))
                         Component.Draw(DA);
 
@@ -2023,8 +2043,8 @@ namespace MGUI.Core.UI
 
                     DrawSelf(DA, LayoutBounds);
 
-					foreach (MGElement Component in Components.Where(x => x.DrawBeforeContents).Select(x => x.BaseElement))
-						Component.Draw(DA);
+                    foreach (MGElement Component in Components.Where(x => x.DrawBeforeContents).Select(x => x.BaseElement))
+                        Component.Draw(DA);
 
                     DrawContents(DA);
 
@@ -2038,15 +2058,16 @@ namespace MGUI.Core.UI
                 }
             }
             else
-			{
-				if (DA.DT?.IsCacheCapture != true) { RecentDrawWasClipped = true; }
-			}
+            {
+                if (DA.DT?.IsCacheCapture != true) { RecentDrawWasClipped = true; }
+            }
 
             TempTransform?.Dispose();
             TempScissorRect?.Dispose();
 
             if (DA.DT?.IsCacheCapture != true) { EndDrawHandlers?.Invoke(this, DrawEventArgs); }
-			}
+            return true;
+        }
 
         internal Rectangle GetDrawTargetBounds(ElementDrawArgs DA)
             => LayoutBounds.GetTranslated(DA.Offset).CreateTransformedF(DA.DT.CurrentSettings.Transform).RoundUp();

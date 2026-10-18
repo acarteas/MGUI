@@ -27,7 +27,7 @@ namespace MGUI.Core.UI
             typeof(MGGroupBox), typeof(MGHeaderedContentPresenter), typeof(MGImage), typeof(MGInputConsumer),
             typeof(MGListBox<>), typeof(MGListView<>), typeof(MGMenuBar), typeof(MGMenuBarItem), typeof(MGOverlay),
             typeof(MGOverlayPanel), typeof(MGPasswordBox), typeof(MGProgressBar), typeof(MGProgressButton),
-            typeof(MGRadioButton), typeof(MGRatingControl), typeof(MGRectangle), typeof(MGResizeGrip),
+            typeof(MGRadioButton), typeof(MGRatingControl), typeof(MGRectangle), typeof(MGRenderCache), typeof(MGResizeGrip),
             typeof(MGScrollViewer), typeof(MGSeparator), typeof(MGSlider), typeof(MGSpacer), typeof(MGSpoiler),
             typeof(MGStackPanel), typeof(MGStopwatch), typeof(MGTabControl), typeof(MGTabItem), typeof(MGTextBlock),
             typeof(MGTextBox), typeof(MGTimer), typeof(MGToggleButton), typeof(MGTreeView), typeof(MGUniformGrid)

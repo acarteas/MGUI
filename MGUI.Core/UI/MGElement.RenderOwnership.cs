@@ -108,13 +108,14 @@ namespace MGUI.Core.UI
 
                 RetainedRenderPaintChildren = Children.AsReadOnly();
                 ReconcileRenderEligibilityChildren(Previous, RetainedRenderPaintChildren);
+                NotifyRenderContentMembershipChanged();
                 MGRenderMutationStamp Stamp = MGRenderRevisionClock.NextMutation();
                 Stamp = InvalidateRenderState(MGRenderInvalidationKind.Structure, Stamp);
                 foreach (MGElement Child in Previous)
                 {
                     if (!Membership.Contains(Child))
                     {
-                        Child.InvalidateRenderContextSubtree(MGRenderInvalidationKind.Visual, Stamp);
+                        Child.InvalidateRemovedRenderSubtree(Stamp);
                     }
                 }
                 foreach (MGElement Child in Children)

@@ -20,7 +20,7 @@ public sealed class MGElementRenderEligibilityTests
             typeof(MGXAMLDesigner), typeof(MGTreeViewItem)];
         Type[] concrete = typeof(MGElement).Assembly.GetTypes()
             .Where(type => typeof(MGElement).IsAssignableFrom(type) && !type.IsAbstract).ToArray();
-        Assert.Equal(55, concrete.Length);
+        Assert.Equal(56, concrete.Length);
         foreach (Type type in concrete)
         {
             Assert.Equal(!excluded.Contains(type), MGElement.IsBuiltInRenderCacheType(type));

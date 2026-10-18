@@ -32,7 +32,7 @@ public sealed class MGRenderInvalidationAuditTests
         typeof(MGImage), typeof(MGInputConsumer), typeof(MGListBox<>), typeof(MGListView<>), typeof(MGMenuBar),
         typeof(MGMenuBarItem), typeof(MGOverlay), typeof(MGOverlayHost), typeof(MGOverlayPanel), typeof(MGPasswordBox),
         typeof(MGProgressBar), typeof(MGProgressButton), typeof(MGRadioButton), typeof(MGRatingControl),
-        typeof(MGRectangle), typeof(MGResizeGrip), typeof(MGScrollViewer), typeof(MGSeparator), typeof(MGSlider),
+        typeof(MGRectangle), typeof(MGRenderCache), typeof(MGResizeGrip), typeof(MGScrollViewer), typeof(MGSeparator), typeof(MGSlider),
         typeof(MGSpacer), typeof(MGSpoiler), typeof(MGStackPanel), typeof(MGStopwatch), typeof(MGTabControl),
         typeof(MGTabItem), typeof(MGTextBlock), typeof(MGTextBox), typeof(MGTimer), typeof(MGToggleButton),
         typeof(MGToolTip), typeof(MGTreeView), typeof(MGTreeViewItem), typeof(MGUniformGrid), typeof(MGWindow),
@@ -56,7 +56,7 @@ public sealed class MGRenderInvalidationAuditTests
             "MGGroupBox.DrawBackground", "MGGroupBox.DrawSelf", "MGImage.DrawSelf", "MGListBox`1.DrawSelf",
             "MGListView`1.DrawBackground", "MGOverlayHost.DrawBackground", "MGProgressBar.DrawSelf",
             "MGProgressButton.DrawSelf", "MGRadioButton.DrawSelf", "MGRatingControl.DrawSelf", "MGRectangle.DrawSelf",
-            "MGResizeGrip.DrawSelf", "MGScrollViewer.DrawContents", "MGScrollViewer.DrawSelf", "MGSlider.DrawSelf",
+            "MGRenderCache.DrawContents", "MGResizeGrip.DrawSelf", "MGScrollViewer.DrawContents", "MGScrollViewer.DrawSelf", "MGSlider.DrawSelf",
             "MGSpacer.DrawBackground", "MGSpacer.DrawContents", "MGTabControl.DrawBackground", "MGTabControl.DrawSelf",
             "MGTabItem.DrawSelf", "MGTextBlock.DrawSelf", "MGTextBox.DrawSelf", "MGTreeViewItem.Draw",
             "MGUniformGrid.DrawSelf", "MGWindow.Draw"

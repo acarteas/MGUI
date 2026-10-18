@@ -35,6 +35,7 @@ namespace MGUI.Core.UI
         /// <summary>Must be constant-time, and check maintained source state, support, layout and lifetimes.</summary>
         protected abstract bool IsSourceCurrent(MGElement owner, MGRenderCacheKey key);
         protected abstract void Paint(MGElement owner, ElementDrawArgs args, Rectangle bounds);
+        protected virtual void OnRootDetached() { }
 
         internal void Invalidate()
         {
@@ -172,6 +173,7 @@ namespace MGUI.Core.UI
                     else if (ReferenceEquals(operation.Attachment, attachment))
                     {
                         operation.Invalidate();
+                        operation.OnRootDetached();
                     }
                 }
             }

@@ -115,17 +115,26 @@ namespace MGUI.Core.UI
             InvalidateRenderContextSubtree(Kind, Stamp, new(ReferenceEqualityComparer.Instance));
         }
 
-        private void InvalidateRenderContextSubtree(MGRenderInvalidationKind Kind, MGRenderMutationStamp Stamp, HashSet<MGElement> Visited)
+        internal void InvalidateRemovedRenderSubtree(MGRenderMutationStamp Stamp)
+            => InvalidateRenderContextSubtree(MGRenderInvalidationKind.Visual, Stamp,
+                new(ReferenceEqualityComparer.Instance), true);
+
+        private void InvalidateRenderContextSubtree(MGRenderInvalidationKind Kind, MGRenderMutationStamp Stamp,
+            HashSet<MGElement> Visited, bool RetireContentObservations = false)
         {
             if (!Visited.Add(this))
             {
                 return;
             }
 
+            if (RetireContentObservations)
+            {
+                RenderContentBoundary?.MembershipChanged();
+            }
             Stamp = InvalidateRenderState(Kind, Stamp);
             foreach (MGElement Child in RenderPaintChildren)
             {
-                Child.InvalidateRenderContextSubtree(Kind, Stamp, Visited);
+                Child.InvalidateRenderContextSubtree(Kind, Stamp, Visited, RetireContentObservations);
             }
         }
     }
