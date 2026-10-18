@@ -1191,11 +1191,30 @@ namespace MGUI.Core.UI
                 {
                     VisualState Previous = VisualState;
                     _VisualState = value;
-                    InvalidateRenderContextSubtree(MGRenderInvalidationKind.Visual);
+                    if (DoesVisualStateChangeDescendantRenderContext(Previous, VisualState))
+                    {
+                        InvalidateRenderContextSubtree(MGRenderInvalidationKind.Visual);
+                    }
+                    else
+                    {
+                        InvalidateRenderState(MGRenderInvalidationKind.Visual);
+                    }
                     NPC(nameof(VisualState));
                     VisualStateChanged?.Invoke(this, new(Previous, VisualState));
                 }
             }
+        }
+
+        /// <summary>Whether a visual-state transition changes inherited paint inputs. Override when state changes a content offset or other descendant context, and preserve a true result from the base implementation.</summary>
+        protected virtual bool DoesVisualStateChangeDescendantRenderContext(VisualState Previous, VisualState Current)
+        {
+            float PreviousScale = 1;
+            float CurrentScale = 1;
+            RenderScale?.TryGetScale(Previous, out PreviousScale);
+            RenderScale?.TryGetScale(Current, out CurrentScale);
+
+            // Primary state selects inherited foreground; active scale transforms descendant painting.
+            return Previous.Primary != Current.Primary || PreviousScale != CurrentScale;
         }
 
         /// <summary>Invoked when <see cref="VisualState"/> changes.</summary>

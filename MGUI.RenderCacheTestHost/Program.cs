@@ -70,6 +70,10 @@ internal static class Program
             {
                 return LifetimeTests.RunAllNative();
             }
+            if (args.Length == 1 && args[0] == "--live-siblings")
+            {
+                return LiveSiblingTests.RunAllNative();
+            }
             Options options = Options.Parse(args);
             using BenchmarkGame game = new(options);
             game.Run();
