@@ -190,12 +190,28 @@ namespace MGUI.Core.UI
         public bool TryGetElementByName(string Name, out MGElement NamedElement)
             => SelfOrParentWindow.TryResolveElementByName(this, Name, out NamedElement);
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private ITextEngine _TextEngineOverride;
+
         /// <summary>
         /// Optional per-element <see cref="ITextEngine"/> override.
         /// When set, this element (and any children that call <see cref="GetTextEngine"/>) will use this engine
         /// instead of the desktop-level one.
         /// </summary>
-        public ITextEngine TextEngineOverride { get; set; }
+        public ITextEngine TextEngineOverride
+        {
+            get => _TextEngineOverride;
+            set
+            {
+                if (_TextEngineOverride != value)
+                {
+                    _TextEngineOverride = value;
+                    InvalidateRenderContextSubtree(MGRenderInvalidationKind.Visual);
+                    NPC(nameof(TextEngineOverride));
+                    RefreshScaleAffectedSubtree();
+                }
+            }
+        }
 
         /// <summary>
         /// Returns the <see cref="ITextEngine"/> to use for this element.
@@ -259,7 +275,7 @@ namespace MGUI.Core.UI
                 MGElement Previous = Parent;
                 _Parent = Value;
                 ReconcileRenderParentAliases(Previous, Parent);
-                InvalidateRenderState(MGRenderInvalidationKind.Structure);
+                InvalidateRenderOwnershipContext();
                 NPC(nameof(Parent));
                 NPC(nameof(DerivedUIScaleMode));
                 NPC(nameof(IsUIScaleEffectivelyEnabled));
@@ -397,6 +413,7 @@ namespace MGUI.Core.UI
                 if (_UIScaleMode != value)
                 {
                     _UIScaleMode = value;
+                    InvalidateRenderContextSubtree(MGRenderInvalidationKind.Visual);
                     NPC(nameof(UIScaleMode));
                     NPC(nameof(DerivedUIScaleMode));
                     NPC(nameof(IsUIScaleEffectivelyEnabled));
@@ -1122,10 +1139,38 @@ namespace MGUI.Core.UI
         /// This property is only true if both this <see cref="MGElement"/> and every parent along the visual tree have <see cref="IsHitTestVisible"/>==true.</summary>
         public bool DerivedIsHitTestVisible => IsHitTestVisible && (Parent?.IsHitTestVisible ?? IsHitTestVisible);
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private bool _SpoofIsPressedWhileDrawingBackground;
+
         /// <summary>If true, <see cref="IsLMBPressed"/> will be evaluated as true while drawing this element's background, regardless of the real MouseState.</summary>
-        internal protected bool SpoofIsPressedWhileDrawingBackground { get; set; } = false;
+        internal protected bool SpoofIsPressedWhileDrawingBackground
+        {
+            get => _SpoofIsPressedWhileDrawingBackground;
+            set
+            {
+                if (_SpoofIsPressedWhileDrawingBackground != value)
+                {
+                    _SpoofIsPressedWhileDrawingBackground = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
+                }
+            }
+        }
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private bool _SpoofIsHoveredWhileDrawingBackground;
+
         /// <summary>If true, <see cref="IsHovered"/> will be evaluated as true while drawing this element's background, regardless of the real MouseState.</summary>
-        internal protected bool SpoofIsHoveredWhileDrawingBackground { get; set; } = false;
+        internal protected bool SpoofIsHoveredWhileDrawingBackground
+        {
+            get => _SpoofIsHoveredWhileDrawingBackground;
+            set
+            {
+                if (_SpoofIsHoveredWhileDrawingBackground != value)
+                {
+                    _SpoofIsHoveredWhileDrawingBackground = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
+                }
+            }
+        }
         #endregion Input
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -1139,6 +1184,7 @@ namespace MGUI.Core.UI
                 {
                     VisualState Previous = VisualState;
                     _VisualState = value;
+                    InvalidateRenderContextSubtree(MGRenderInvalidationKind.Visual);
                     NPC(nameof(VisualState));
                     VisualStateChanged?.Invoke(this, new(Previous, VisualState));
                 }
@@ -1159,6 +1205,7 @@ namespace MGUI.Core.UI
                 if (_IsSelected != value)
                 {
                     _IsSelected = value;
+                    InvalidateRenderContextSubtree(MGRenderInvalidationKind.Visual);
                     NPC(nameof(IsSelected));
                 }
             }
@@ -1177,6 +1224,7 @@ namespace MGUI.Core.UI
                 if (_IsEnabled != value)
                 {
                     _IsEnabled = value;
+                    InvalidateRenderContextSubtree(MGRenderInvalidationKind.Visual);
                     NPC(nameof(IsEnabled));
                 }
             }
@@ -1198,6 +1246,7 @@ namespace MGUI.Core.UI
                 if (!BackgroundRenderPadding.Equals(value))
                 {
                     _BackgroundRenderPadding = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
                     NPC(nameof(BackgroundRenderPadding));
                 }
             }
@@ -1217,6 +1266,8 @@ namespace MGUI.Core.UI
                 if (_BackgroundBrush != value)
                 {
                     _BackgroundBrush = value;
+                    RefreshBaseRenderSources();
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
                     NPC(nameof(BackgroundBrush));
                     NPC(nameof(BackgroundUnderlay));
                     NPC(nameof(BackgroundOverlay));
@@ -1243,6 +1294,8 @@ namespace MGUI.Core.UI
                 if (_DefaultTextForeground != value)
                 {
                     _DefaultTextForeground = value;
+                    RefreshBaseRenderSources();
+                    InvalidateRenderContextSubtree(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
                     NPC(nameof(DefaultTextForeground));
                     NPC(nameof(CurrentDefaultTextForeground));
                 }
@@ -1268,6 +1321,8 @@ namespace MGUI.Core.UI
                 if (_OverlayBrush != value)
                 {
                     _OverlayBrush = value;
+                    RefreshBaseRenderSources();
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
                     NPC(nameof(OverlayBrush));
                 }
             }
@@ -1285,7 +1340,13 @@ namespace MGUI.Core.UI
                     Visibility Previous = Visibility;
                     _Visibility = value;
                     if (Previous == Visibility.Collapsed || Visibility == Visibility.Collapsed)
-                        LayoutChanged(this, true);
+                    {
+                        InvalidateRenderContextAndLayout();
+                    }
+                    else
+                    {
+                        InvalidateRenderContextSubtree(MGRenderInvalidationKind.Visual);
+                    }
                     NPC(nameof(Visibility));
                     NPC(nameof(IsVisibilityCollapsed));
                 }
@@ -1306,6 +1367,7 @@ namespace MGUI.Core.UI
                 if (_Opacity != value)
                 {
                     _Opacity = value;
+                    InvalidateRenderContextSubtree(MGRenderInvalidationKind.Visual);
                     NPC(nameof(Opacity));
                 }
             }
@@ -1580,6 +1642,7 @@ namespace MGUI.Core.UI
                 if (_ClipToBounds != value)
                 {
                     _ClipToBounds = value;
+                    InvalidateRenderContextSubtree(MGRenderInvalidationKind.Visual);
                     NPC(nameof(ClipToBounds));
                 }
             }
@@ -1597,6 +1660,7 @@ namespace MGUI.Core.UI
                 if (_Origin != value)
                 {
                     _Origin = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(Origin));
                 }
             }
@@ -1885,6 +1949,7 @@ namespace MGUI.Core.UI
                 if (_RenderScale != value)
                 {
                     _RenderScale = value;
+                    InvalidateRenderContextSubtree(MGRenderInvalidationKind.Visual);
                     NPC(nameof(RenderScale));
                 }
             }

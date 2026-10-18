@@ -56,6 +56,7 @@ namespace MGUI.Core.UI
         {
             get
             {
+                EnableRenderSourceTracking();
                 EnsureRenderRevisionEpoch();
                 return CurrentVisualRevision;
             }
@@ -87,6 +88,7 @@ namespace MGUI.Core.UI
         public void InvalidateVisual()
         {
             ReconcileRenderPaintChildren(true);
+            BaseRenderSources?.Reconcile();
             InvalidateRenderState(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
         }
 
@@ -96,6 +98,7 @@ namespace MGUI.Core.UI
 
         internal MGRenderRevisionSnapshot GetRenderRevisionSnapshot()
         {
+            EnableRenderSourceTracking();
             EnsureRenderRevisionEpoch();
             return new(RenderRevisionEpoch, CurrentVisualRevision, CurrentLayoutRevision, CurrentStructureRevision);
         }

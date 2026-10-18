@@ -301,6 +301,7 @@ namespace MGUI.Tests.UI
         public void IdleUpdateAndGeometryFreeDrawDoNotAdvanceRevisions()
         {
             TestElement element = CreateElement();
+            element.Update(new(default, false, false, false, Point.Zero, Rectangle.Empty));
             MGRenderRevisionSnapshot before = element.GetRenderRevisionSnapshot();
             for (int index = 0; index < 3; ++index)
             {

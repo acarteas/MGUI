@@ -109,6 +109,17 @@ namespace MGUI.Core.UI
                 RetainedRenderPaintChildren = Children.AsReadOnly();
                 MGRenderMutationStamp Stamp = MGRenderRevisionClock.NextMutation();
                 Stamp = InvalidateRenderState(MGRenderInvalidationKind.Structure, Stamp);
+                foreach (MGElement Child in Children)
+                {
+                    if (!OldMembership.Contains(Child))
+                    {
+                        if (IsRenderSourceSubtreeTrackingEnabled)
+                        {
+                            Child.EnableRenderSourceTracking();
+                        }
+                        Child.InvalidateRenderContextSubtree(MGRenderInvalidationKind.Visual, Stamp);
+                    }
+                }
                 RenderPaintChildrenChanged?.Invoke(this, Previous, RetainedRenderPaintChildren, Stamp);
             }
 

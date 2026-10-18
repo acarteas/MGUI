@@ -14,7 +14,7 @@ using MonoGame.Extended;
 
 namespace MGUI.Tests.UI;
 
-[Collection("Render revision clock")]
+[Collection("Render cache clock")]
 public sealed class MGElementRenderOwnershipTests
 {
     [Fact]

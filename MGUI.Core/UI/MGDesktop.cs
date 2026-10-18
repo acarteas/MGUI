@@ -403,6 +403,7 @@ namespace MGUI.Core.UI
 
                     _UIScale = value;
                     _UIScale.ScaleChanged += UIScale_ScaleChanged;
+                    InvalidateResourcePaintContext(MGRenderRevisionClock.NextMutation());
                     NPC(nameof(UIScale));
                     RefreshTextLayoutCaches();
                     InvalidateAllLayouts();
@@ -417,6 +418,7 @@ namespace MGUI.Core.UI
 
         private void UIScale_ScaleChanged(object sender, EventArgs e)
         {
+            InvalidateResourcePaintContext(MGRenderRevisionClock.NextMutation());
             RefreshTextLayoutCaches();
             InvalidateAllLayouts();
         }
@@ -524,15 +526,7 @@ namespace MGUI.Core.UI
             HighPriorityMouseHandler.PressedInside += (sender, e) => { QueuedFocusedKeyboardHandler = null; };
             HighPriorityMouseHandler.PressedOutside += (sender, e) => { QueuedFocusedKeyboardHandler = null; };
 
-            //  Recalculate the layout of text-based elements when the text-rendering backend changes
-            Renderer.TextEngineChanged += (sender, e) =>
-            {
-                RefreshTextLayoutCaches();
-
-                //  Note: We don't need to call InvalidateAllLayouts() because the parent elements of MGTextBlocks will already receive LayoutChanged notifications.
-                //  The only reason InvalidateAllLayouts would be needed is if an MGElement instance other than MGTextBlock rendered text in its DrawSelf method
-                //  (currently, all text-drawing is funnelled through MGTextBlocks, even for things like MGTimer/MGStopWatch/MGTextBox)
-            };
+            InitializeRenderResourceNotifications();
         }
 
         public void Update()

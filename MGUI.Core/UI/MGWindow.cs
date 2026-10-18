@@ -58,6 +58,7 @@ namespace MGUI.Core.UI
                 if (_Left != value)
                 {
                     _Left = value;
+                    InvalidateRenderContextSubtree(MGRenderInvalidationKind.Visual);
                     NPC(nameof(Left));
                     NPC(nameof(TopLeft));
                 }
@@ -74,6 +75,7 @@ namespace MGUI.Core.UI
                 if (_Top != value)
                 {
                     _Top = value;
+                    InvalidateRenderContextSubtree(MGRenderInvalidationKind.Visual);
                     NPC(nameof(Top));
                     NPC(nameof(TopLeft));
                 }
@@ -255,6 +257,7 @@ namespace MGUI.Core.UI
                 {
                     float Previous = Scale;
                     _Scale = value;
+                    InvalidateRenderContextSubtree(MGRenderInvalidationKind.Visual);
                     UpdateScaleTransforms();
 #if NEVER
                     UpdateRenderTarget();
@@ -778,6 +781,8 @@ namespace MGUI.Core.UI
                 if (_Theme != value)
                 {
                     _Theme = value;
+                    RefreshBaseRenderSources();
+                    InvalidateRenderContextSubtree(MGRenderInvalidationKind.Visual);
                     NPC(nameof(Theme));
                 }
             }
