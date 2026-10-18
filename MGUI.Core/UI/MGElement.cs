@@ -178,7 +178,7 @@ namespace MGUI.Core.UI
     //		This would specifically be for elements where the parent doesn't normally have a reference to the child, such as MGResizeGrip when using MGResizeGrip.Host to attach to
     //		The Visual Tree traversal logic should have an additional parameter, IncludeAttached
     /// <summary>Base class for all UI elements.</summary>
-    public abstract class MGElement : XAMLBindableBase, IMouseHandlerHost, IKeyboardHandlerHost, 
+    public abstract partial class MGElement : XAMLBindableBase, IMouseHandlerHost, IKeyboardHandlerHost,
         IElementNameResolver, IResourcesResolver, IDesktopResolver
     {
         public string UniqueId { get; }
@@ -1617,6 +1617,7 @@ namespace MGUI.Core.UI
                 {
                     Rectangle Previous = ActualLayoutBounds;
                     _ActualLayoutBounds = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(ActualLayoutBounds));
                     OnActualLayoutBoundsChanged?.Invoke(this, new(Previous, ActualLayoutBounds));
                 }
@@ -1655,6 +1656,7 @@ namespace MGUI.Core.UI
                 if (_LayoutBounds != value)
                 {
                     _LayoutBounds = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Layout);
                     NPC(nameof(LayoutBounds));
                     NPC(nameof(ActualWidth));
                     NPC(nameof(ActualHeight));
@@ -2022,6 +2024,12 @@ namespace MGUI.Core.UI
         #region Layout
 		internal protected void InvalidateLayout()
 		{
+            InvalidateRenderState(MGRenderInvalidationKind.Layout);
+            InvalidateLayoutMeasurements();
+        }
+
+        private void InvalidateLayoutMeasurements()
+        {
             IsLayoutValid = false;
             RecentMeasurementsSelfOnly.Clear();
             RecentMeasurementsFull.Clear();
@@ -2030,15 +2038,22 @@ namespace MGUI.Core.UI
         /// <summary>Invoked when a property that affects this <see cref="MGElement"/>'s layout has changed, such as <see cref="Padding"/>, <see cref="Margin"/>, or its content.</summary>
         protected virtual void LayoutChanged(MGElement Source, bool NotifyParent)
         {
-			if (InitializationManager.IsDeferringEvents)
-				return;
+            MGRenderMutationStamp Stamp = InvalidateRenderState(MGRenderInvalidationKind.Layout, TakeLayoutMutation(Source));
+            if (InitializationManager.IsDeferringEvents)
+            {
+                return;
+            }
 
             if (IsUpdatingLayout)
+            {
                 SelfOrParentWindow.QueueLayoutRefresh = true;
+            }
 
-            InvalidateLayout();
+            InvalidateLayoutMeasurements();
             if (NotifyParent)
-                Parent?.LayoutChanged(Source, NotifyParent);
+            {
+                ForwardLayoutChangeToParent(Source, NotifyParent, Stamp);
+            }
         }
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -2200,6 +2215,11 @@ namespace MGUI.Core.UI
                             UpdateContentLayout(AlignedContentBounds);
                         }
                     }
+                }
+
+                if (!IsLayoutValid)
+                {
+                    InvalidateRenderState(MGRenderInvalidationKind.Layout);
                 }
 
                 IsLayoutValid = true;
