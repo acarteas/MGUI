@@ -78,6 +78,8 @@ namespace MGUI.Shared.Rendering
 
     public class MainRenderer
     {
+        private readonly int DrawingThread = Environment.CurrentManagedThreadId;
+        private bool DrawingResourcesDisposed;
         public IRenderHost Host { get; }
 
         public GraphicsDevice GraphicsDevice => Host.GraphicsDevice;
@@ -131,18 +133,23 @@ namespace MGUI.Shared.Rendering
         /// <param name="Host">Consider using an instance of <see cref="GameRenderHost{TObservableGame}"/> to quickly create an implementation of <see cref="IRenderHost"/></param>
         /// <param name="FontManager">Font registry used by the default <see cref="SpriteFontTextEngine"/>. At least one font family must be registered before constructing the renderer.</param>
         public MainRenderer(IRenderHost Host, FontManager FontManager)
+            : this(Host, FontManager, null) { }
+
+        /// <summary>Uses caller-owned content when supplied. The caller retains responsibility for its lifetime;
+        /// this renderer does not dispose the supplied manager. Null preserves the default Content manager.</summary>
+        public MainRenderer(IRenderHost Host, FontManager FontManager, ContentManager Content)
         {
             this.Host = Host;
             SpriteBatch = new(GraphicsDevice);
             _TransactionLifetime = DrawTransaction.GetLifetime(SpriteBatch.GraphicsDevice);
             PrimitiveBatch = new(GraphicsDevice, 1024);
-            Content = new(Host, "Content");
+            this.Content = Content ?? new(Host, "Content");
             this.FontManager = FontManager ?? throw new ArgumentNullException(nameof(FontManager));
 
             TextEngine = new SpriteFontTextEngine(this.FontManager);
             Input = new();
 
-            ScrollMarker = Content.Load<Texture2D>(Path.Combine("Icons", "ScrollMarker"));
+            ScrollMarker = this.Content.Load<Texture2D>(Path.Combine("Icons", "ScrollMarker"));
 
             Host.PreviewUpdate += (sender, e) =>
             {
@@ -158,6 +165,39 @@ namespace MGUI.Shared.Rendering
             };
         }
 
+        /// <summary>Terminal cleanup of renderer-owned drawing resources only. Call on the owning graphics
+        /// thread outside all transactions and batches. Content, ScrollMarker, fonts and the text engine
+        /// remain caller-managed. Raw external batches cannot be detected through the public graphics API.</summary>
+        public void DisposeDrawingResources()
+        {
+            if (Environment.CurrentManagedThreadId != DrawingThread)
+            {
+                throw new InvalidOperationException("Drawing resources require their owning graphics thread.");
+            }
+            if (DrawingResourcesDisposed) { return; }
+            if (DrawTransaction.HasActiveTransactions(GraphicsDevice))
+            {
+                throw new InvalidOperationException("Finish drawing transactions before terminal cleanup.");
+            }
+            DrawingResourcesDisposed = true;
+            List<Exception> errors = new();
+            void Release(IDisposable resource)
+            {
+                try { resource.Dispose(); }
+                catch (Exception error) { errors.Add(error); }
+            }
+            foreach (SolidColorTexture texture in SolidColorTextures.Values) { Release(texture); }
+            foreach (Texture2D texture in CircleTextures.Values) { Release(texture); }
+            SolidColorTextures.Clear(); CircleTextures.Clear();
+            Release(SpriteBatch); Release(PrimitiveBatch);
+            if (errors.Count != 0) { throw new AggregateException(errors); }
+        }
+
+        private void RequireDrawingResources()
+        {
+            if (DrawingResourcesDisposed) { throw new ObjectDisposedException(nameof(MainRenderer)); }
+        }
+
         #region Textures
         public readonly Texture2D ScrollMarker;
 
@@ -166,6 +206,7 @@ namespace MGUI.Shared.Rendering
 
         public SolidColorTexture GetOrCreateSolidColorTexture(Color Color)
         {
+            RequireDrawingResources();
             if (!SolidColorTextures.TryGetValue(Color, out SolidColorTexture Result))
             {
                 Result = new(GD, Color);
@@ -190,6 +231,7 @@ namespace MGUI.Shared.Rendering
         /// The absolute maximum radius used is <see cref="MaximumCircleTextureRadius"/></param>
         public Texture2D GetOrCreateWhiteCircleTexture(float DesiredRadius, int? MinimumRadius = null, int? MaximumRadius = null)
         {
+            RequireDrawingResources();
             MaximumRadius = Math.Clamp(MaximumRadius ?? GeneralUtils.NextPowerOf2(DesiredRadius), MinimumCircleTextureRadius, MaximumCircleTextureRadius);
             MinimumRadius = Math.Clamp(MinimumRadius ?? (int)Math.Floor(DesiredRadius), MinimumCircleTextureRadius, MaximumRadius.Value);
 
