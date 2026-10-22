@@ -49,6 +49,11 @@ namespace MGUI.Core.UI
         public MGXAMLDesigner(MGWindow ParentWindow)
             : base(ParentWindow, MGElementType.XAMLDesigner)
         {
+            if (OperatingSystem.IsAndroid())
+            {
+                throw new PlatformNotSupportedException("The XAML designer requires desktop file watching and file picker services.");
+            }
+
             using (BeginInitializing())
             {
                 //  Detect when the selected file is saved, and auto-refresh the parsed content if necessary
