@@ -54,6 +54,69 @@ public class SchemaValidationTests
             """);
     }
 
+    [Theory]
+    [InlineData(null)]
+    [InlineData("ResourceDictionary.Entries")]
+    [InlineData("ResourceDictionary.Styles")]
+    public void ResourceDictionaryStylesAreAccepted(string? wrapperName)
+    {
+        XElement style = XElement.Parse($$"""
+            <Style xmlns="{{XAMLParser.XMLLocalNameSpaceUri}}" Name="PrimaryButton" TargetType="Button">
+                <Setter Property="Opacity" Value="0.5" />
+            </Style>
+            """);
+        XElement dictionary = new(XName.Get("ResourceDictionary", XAMLParser.XMLLocalNameSpaceUri));
+        dictionary.Add(wrapperName == null
+            ? style
+            : new XElement(XName.Get(wrapperName, XAMLParser.XMLLocalNameSpaceUri), style));
+
+        AssertValid(dictionary.ToString());
+    }
+
+    [Fact]
+    public void ResourceDictionaryMixedContentMatchesXamlRuntime()
+    {
+        string xaml = $$"""
+            <ResourceDictionary xmlns="{{XAMLParser.XMLLocalNameSpaceUri}}">
+                <ColorResource Key="Accent" Value="Red" />
+                <Style Name="PrimaryButton" TargetType="Button">
+                    <Setter Property="Opacity" Value="0.5" />
+                </Style>
+                <ColorResource Key="Warning" Value="Blue" />
+            </ResourceDictionary>
+            """;
+
+        AssertValid(xaml);
+        ResourceDictionary dictionary = XAMLParser.LoadStyleDictionary(xaml);
+        Assert.Equal(new[] { "ColorResource", "Style", "ColorResource" },
+            dictionary.Entries.Select(x => x.GetType().Name));
+        Assert.Equal("PrimaryButton", Assert.Single(dictionary.Styles).Name);
+        Assert.Equal(2, dictionary.ColorResources.Count);
+    }
+
+    [Theory]
+    [InlineData("ListBox")]
+    [InlineData("ComboBox")]
+    public void ObjectCollectionContentAcceptsDirectSchemaElements(string elementName)
+    {
+        AssertValid($$"""
+            <{{elementName}} xmlns="{{XAMLParser.XMLLocalNameSpaceUri}}">
+                <TextBlock Text="One" />
+                <TextBlock Text="Two" />
+            </{{elementName}}>
+            """);
+    }
+
+    [Fact]
+    public void ObjectCollectionContentRejectsUnknownSchemaElements()
+    {
+        Assert.NotEmpty(Validate($$"""
+            <ResourceDictionary xmlns="{{XAMLParser.XMLLocalNameSpaceUri}}">
+                <UnknownElement />
+            </ResourceDictionary>
+            """));
+    }
+
     [Fact]
     public void XamlRuntimeAcceptsTypeAndNullCollectionAttributes()
     {

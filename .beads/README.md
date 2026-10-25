@@ -38,6 +38,26 @@ Issues in Beads are:
 - **Branch-aware**: Issues can follow your branch workflow
 - **Sync-ready**: Uses Dolt remotes for backup and team sharing
 
+## Bootstrap and recovery
+
+Use Beads **1.3.1 or later** for this repository. Beads 1.2.2 attempts to clone
+`sync.remote` before checking for an existing local database, causing
+`Error 1007: can't create database mgui; database exists` on repeated bootstrap
+runs. The newer release includes the fix for
+[upstream issue #5037](https://github.com/gastownhall/beads/issues/5037).
+
+```bash
+bd version
+bd bootstrap --yes
+```
+
+An incomplete local database may also need recovery even after upgrading. Before
+moving any local state, verify that the configured Git remote contains
+`refs/dolt/data` and that any local issues are backed up. Preserve the old
+`.beads/embeddeddolt/` directory under `.beads/backup/`, then run bootstrap with
+the original database directory absent. Do not use `bd init --force` for recovery.
+Use `bd dolt pull` to update an existing, healthy database from its remote.
+
 ## Why Beads?
 
 ✨ **AI-Native Design**

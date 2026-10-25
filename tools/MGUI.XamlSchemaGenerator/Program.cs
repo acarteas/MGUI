@@ -430,7 +430,7 @@ internal sealed class XamlSchemaGenerator
 
         Type acceptedType = GetCollectionItemType(contentProperty.PropertyType)
             ?? NormalizePropertyType(contentProperty.PropertyType);
-        if (!IsSchemaModelType(acceptedType))
+        if (acceptedType != typeof(object) && !IsSchemaModelType(acceptedType))
         {
             return Array.Empty<string>();
         }
