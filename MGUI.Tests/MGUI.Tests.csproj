@@ -30,6 +30,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MGUI.EffectTestHost\MGUI.EffectTestHost.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\MGUI.RenderCacheTestHost\MGUI.RenderCacheTestHost.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
   <Target Name="CopyEffectTestHost" AfterTargets="Build">
@@ -39,6 +40,18 @@
     </ItemGroup>
     <Copy SourceFiles="@(EffectTestHostFiles)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(EffectTestHostContentFiles)" DestinationFolder="$(OutDir)Content\%(RecursiveDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="CopyRenderCacheTestHost" AfterTargets="Build">
+    <ItemGroup>
+      <RenderCacheHostFiles Include="..\MGUI.RenderCacheTestHost\bin\$(Configuration)\net8.0\MGUI.RenderCacheTestHost*" />
+      <RenderCacheSampleContent Include="..\MGUI.RenderCacheTestHost\bin\$(Configuration)\net8.0\Sample\**\*" />
+      <RenderCacheHostContent Include="..\MGUI.RenderCacheTestHost\bin\$(Configuration)\net8.0\Content\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(RenderCacheHostFiles)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(RenderCacheSampleContent)" DestinationFolder="$(OutDir)Sample\%(RecursiveDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(RenderCacheHostContent)" DestinationFolder="$(OutDir)Content\%(RecursiveDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="..\tools\render-cache\test-native.py" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
   </Target>
 
   <ItemGroup Condition="'$(IsWindowsOS)'=='true'">
@@ -66,6 +79,7 @@
     <Content Include="..\MGUI.Samples\Content\Fonts\ttf\NotoSans-Regular.ttf" Link="Fonts\NotoSans-Regular.ttf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="..\MGUI.Samples\Features\RenderCaching.xaml" LogicalName="MGUI.Tests.Fixtures.RenderCaching.xaml" />
     <EmbeddedResource Include="..\MGUI.Samples\Features\ShaderEffects.xaml" Link="Fixtures\ShaderEffects.xaml" />
     <EmbeddedResource Include="..\MGUI.Samples\Features\ShaderEffects.xaml.cs" Link="Fixtures\ShaderEffects.xaml.cs" />
     <EmbeddedResource Include="..\MGUI.Samples\Content\Shaders\UiEffects.fx" Link="Fixtures\UiEffects.fx" />

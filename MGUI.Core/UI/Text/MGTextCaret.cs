@@ -27,16 +27,45 @@ namespace MGUI.Core.UI.Text
             get => _Position;
             set
             {
-                _Position = value;
+                if (_Position != value)
+                {
+                    _Position = value;
+                    TextBox.InvalidateRenderState(MGRenderInvalidationKind.Visual);
+                }
+
                 //Debug.WriteLine($"{nameof(MGTextCaret)}: Position={(Position == null ? "null" : $"({Position.Value.IndexInOriginalText}|{Position.Value.IndexInParsedText})")}");
             }
         }
         public bool HasPosition => Position.HasValue;
 
-        public Color Color { get; set; }
+        private Color _Color;
+        public Color Color
+        {
+            get => _Color;
+            set
+            {
+                if (_Color != value)
+                {
+                    _Color = value;
+                    TextBox.InvalidateRenderState(MGRenderInvalidationKind.Visual);
+                }
+            }
+        }
 
         /// <summary>The <see cref="Position"/> cycles between showing the cursor for this amount of time, then hiding the cursor for this amount of time. Repeat.</summary>
-        public TimeSpan BlinkRate { get; set; } = TimeSpan.FromSeconds(0.5);
+        private TimeSpan _BlinkRate = TimeSpan.FromSeconds(0.5);
+        public TimeSpan BlinkRate
+        {
+            get => _BlinkRate;
+            set
+            {
+                if (_BlinkRate != value)
+                {
+                    _BlinkRate = value;
+                    TextBox.InvalidateRenderState(MGRenderInvalidationKind.Visual);
+                }
+            }
+        }
 
         internal MGTextCaret(MGTextBox TextBox, MGTextBlock TextBlockElement)
         {

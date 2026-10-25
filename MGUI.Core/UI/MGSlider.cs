@@ -17,6 +17,18 @@ namespace MGUI.Core.UI
 {
     public class MGSlider : MGElement
     {
+        protected override IEnumerable<object> EnumerateControlRenderSources()
+        {
+            yield return NumberLineBorderBrush;
+            yield return NumberLineFillBrush;
+            yield return TickBorderBrush;
+            yield return TickFillBrush;
+            yield return ThumbBorderBrush;
+            yield return ThumbFillBrush;
+            yield return FocusBrush;
+            yield return Foreground;
+        }
+
         #region Value
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private float _Minimum;
@@ -71,6 +83,7 @@ namespace MGUI.Core.UI
                 if (MaximumChanged)
                     NPC(nameof(Maximum));
 
+                InvalidateRenderState(MGRenderInvalidationKind.Visual);
                 NPC(nameof(Interval));
                 NPC(nameof(CanDrawTickMarks));
 
@@ -97,6 +110,7 @@ namespace MGUI.Core.UI
             {
                 float Previous = Value;
                 _Value = ActualValue;
+                InvalidateRenderState(MGRenderInvalidationKind.Visual);
                 NPC(nameof(Value));
                 ValueChanged?.Invoke(this, new(Previous, Value));
             }
@@ -209,6 +223,7 @@ namespace MGUI.Core.UI
                 if (!_NumberLineBorderThickness.Equals(value))
                 {
                     _NumberLineBorderThickness = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(NumberLineBorderThickness));
                 }
             }
@@ -224,6 +239,8 @@ namespace MGUI.Core.UI
                 if (_NumberLineBorderBrush != value)
                 {
                     _NumberLineBorderBrush = value;
+                    RefreshBaseRenderSources();
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
                     NPC(nameof(NumberLineBorderBrush));
                 }
             }
@@ -239,6 +256,8 @@ namespace MGUI.Core.UI
                 if (_NumberLineFillBrush != value)
                 {
                     _NumberLineFillBrush = value;
+                    RefreshBaseRenderSources();
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
                     NPC(nameof(NumberLineFillBrush));
                     NPC(nameof(ActualNumberLineFillBrush));
                 }
@@ -266,6 +285,7 @@ namespace MGUI.Core.UI
                 if (_TickFrequency != value)
                 {
                     _TickFrequency = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(TickFrequency));
                     NPC(nameof(CanDrawTickMarks));
                 }
@@ -357,6 +377,7 @@ namespace MGUI.Core.UI
                 if (!_TickBorderThickness.Equals(value))
                 {
                     _TickBorderThickness = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(TickBorderThickness));
                 }
             }
@@ -372,6 +393,8 @@ namespace MGUI.Core.UI
                 if (_TickBorderBrush != value)
                 {
                     _TickBorderBrush = value;
+                    RefreshBaseRenderSources();
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
                     NPC(nameof(TickBorderBrush));
                 }
             }
@@ -387,6 +410,8 @@ namespace MGUI.Core.UI
                 if (_TickFillBrush != value)
                 {
                     _TickFillBrush = value;
+                    RefreshBaseRenderSources();
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
                     NPC(nameof(TickFillBrush));
                     NPC(nameof(ActualTickFillBrush));
                 }
@@ -405,8 +430,34 @@ namespace MGUI.Core.UI
         /// (Represents the Height if <see cref="Orientation"/>==<see cref="Orientation.Vertical"/>. Else represents the Width)</summary>
         private const int DefaultThumbSecondarySize = 24;
 
-        public bool IsHoveringThumb { get; private set; } = false;
-        public bool IsDraggingThumb { get; private set; } = false;
+        private bool _IsHoveringThumb;
+        public bool IsHoveringThumb
+        {
+            get => _IsHoveringThumb;
+            private set
+            {
+                if (_IsHoveringThumb != value)
+                {
+                    _IsHoveringThumb = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
+                    NPC(nameof(IsHoveringThumb));
+                }
+            }
+        }
+        private bool _IsDraggingThumb;
+        public bool IsDraggingThumb
+        {
+            get => _IsDraggingThumb;
+            private set
+            {
+                if (_IsDraggingThumb != value)
+                {
+                    _IsDraggingThumb = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
+                    NPC(nameof(IsDraggingThumb));
+                }
+            }
+        }
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private int? _ThumbWidth;
@@ -463,6 +514,7 @@ namespace MGUI.Core.UI
                 if (!_ThumbBorderThickness.Equals(value))
                 {
                     _ThumbBorderThickness = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(ThumbBorderThickness));
                 }
             }
@@ -478,6 +530,8 @@ namespace MGUI.Core.UI
                 if (_ThumbBorderBrush != value)
                 {
                     _ThumbBorderBrush = value;
+                    RefreshBaseRenderSources();
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
                     NPC(nameof(ThumbBorderBrush));
                 }
             }
@@ -493,6 +547,8 @@ namespace MGUI.Core.UI
                 if (_ThumbFillBrush != value)
                 {
                     _ThumbFillBrush = value;
+                    RefreshBaseRenderSources();
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
                     NPC(nameof(ThumbFillBrush));
                     NPC(nameof(ActualThumbFillBrush));
                 }
@@ -544,6 +600,8 @@ namespace MGUI.Core.UI
                 if (_FocusBrush != value)
                 {
                     _FocusBrush = value;
+                    RefreshBaseRenderSources();
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
                     NPC(nameof(FocusBrush));
                 }
             }
@@ -561,6 +619,8 @@ namespace MGUI.Core.UI
                 if (_Foreground != value)
                 {
                     _Foreground = value;
+                    RefreshBaseRenderSources();
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
                     NPC(nameof(Foreground));
                     NPC(nameof(ActualNumberLineFillBrush));
                     NPC(nameof(ActualTickFillBrush));

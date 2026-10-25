@@ -132,7 +132,7 @@ namespace MGUI.Core.UI
                     _IsBold = value;
                     if (!string.IsNullOrEmpty(Text))
                     {
-                        UpdateRuns();
+                        UpdateRuns(false);
                         InvokeLayoutChanged();
                     }
                     NPC(nameof(IsBold));
@@ -152,7 +152,7 @@ namespace MGUI.Core.UI
                     _IsItalic = value;
                     if (!string.IsNullOrEmpty(Text))
                     {
-                        UpdateRuns();
+                        UpdateRuns(false);
                         InvokeLayoutChanged();
                     }
                     NPC(nameof(IsItalic));
@@ -280,6 +280,8 @@ namespace MGUI.Core.UI
                 if (_Foreground != value)
                 {
                     _Foreground = value;
+                    RefreshBaseRenderSources();
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(Foreground));
                     NPC(nameof(ActualForeground));
                 }
@@ -303,6 +305,7 @@ namespace MGUI.Core.UI
                 if (_TextProgress != value)
                 {
                     _TextProgress = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(TextProgress));
                 }
             }
@@ -323,8 +326,13 @@ namespace MGUI.Core.UI
                 if (_TextCharactersPerSecond != value)
                 {
                     _TextCharactersPerSecond = value;
-                    NPC(nameof(TextCharactersPerSecond));
+                    double? PreviousProgress = TextProgress;
                     TextProgress = TextCharactersPerSecond.HasValue ? 0.0 : null;
+                    if (PreviousProgress == TextProgress)
+                    {
+                        InvalidateRenderState(MGRenderInvalidationKind.Visual);
+                    }
+                    NPC(nameof(TextCharactersPerSecond));
                 }
             }
         }
@@ -342,7 +350,7 @@ namespace MGUI.Core.UI
                 if (_AllowsInlineFormatting != value)
                 {
                     _AllowsInlineFormatting = value;
-                    UpdateRuns();
+                    UpdateRuns(false);
                     InvokeLayoutChanged();
                     NPC(nameof(AllowsInlineFormatting));
                 }
@@ -365,11 +373,15 @@ namespace MGUI.Core.UI
             if (_Text != Value)
             {
                 _Text = Value;
-                UpdateRuns();
+                UpdateRuns(SuppressLayoutChanged);
                 if (!SuppressLayoutChanged)
+                {
                     InvokeLayoutChanged();
+                }
                 else
+                {
                     UpdateLines();
+                }
                 NPC(nameof(Text));
             }
         }
@@ -423,7 +435,7 @@ namespace MGUI.Core.UI
             }
         }
 
-        private void UpdateRuns()
+        private void UpdateRuns(bool InvalidatePaint = true)
         {
             if (AllowsInlineFormatting)
             {
@@ -458,10 +470,82 @@ namespace MGUI.Core.UI
                 Runs = MGTextRun.ParseRuns(Tokens, DefaultTextRunSettings).ToList().AsReadOnly();
             }
 
+            HasInteractiveTextRuns = Runs.Any(x => x.HasAction || x.HasToolTip);
+            NumCharacters = Runs.OfType<MGTextRunText>().Sum(x => x.Text.Length);
             IsTrackingMouseClicks = AllowsInlineFormatting && Runs.Any(x => x.HasAction);
+            RefreshBaseRenderSources();
+            if (InvalidatePaint)
+            {
+                InvalidateRenderState(MGRenderInvalidationKind.Visual);
+            }
 
             NPC(nameof(Runs));
-            NumCharacters = Runs.Where(x => x is MGTextRunText).Cast<MGTextRunText>().Sum(x => x.Text.Length);
+        }
+
+        /// <summary>Draw-built input bounds are consumed during Update and cannot be replayed by a cached boundary.</summary>
+        internal bool HasInteractiveTextRuns { get; private set; }
+
+        protected internal override bool IsBuiltInRenderVolatile => base.IsBuiltInRenderVolatile ||
+            (TextCharactersPerSecond.HasValue && TextCharactersPerSecond.Value != 0 && NumCharacters > 0 &&
+                (!TextProgress.HasValue || TextProgress.Value < 1.0));
+
+        protected override IEnumerable<object> EnumerateControlRenderSources()
+        {
+            foreach (object Source in base.EnumerateControlRenderSources())
+            {
+                yield return Source;
+            }
+            yield return Foreground;
+            if (Runs != null)
+            {
+                foreach (MGTextRun Run in Runs)
+                {
+                    if (Run is MGTextRunText TextRun)
+                    {
+                        yield return TextRun.Settings.Background.Brush;
+                        yield return TextRun.Settings.Underline.Brush;
+                    }
+                }
+                string[] ImageNames = Runs.OfType<MGTextRunImage>().Select(Run => Run.SourceName).Distinct().ToArray();
+                if (ImageNames.Length > 0)
+                {
+                    yield return new InlineImageSources(GetResources(), ImageNames);
+                }
+            }
+        }
+
+        private sealed class InlineImageSources : IMGRenderCacheSourceContainer
+        {
+            private readonly MGResources Resources;
+            private readonly string[] Names;
+            internal InlineImageSources(MGResources Resources, string[] Names)
+            {
+                this.Resources = Resources;
+                this.Names = Names;
+            }
+            public IEnumerable<object> RenderCacheSources
+            {
+                get
+                {
+                    yield return Resources;
+                    foreach (string Name in Names)
+                    {
+                        if (Resources.TryGetTexture(Name, out MGTextureData Texture))
+                        {
+                            yield return Texture;
+                        }
+                    }
+                }
+            }
+            public bool LocalSupportsRenderCaching => true;
+            public bool LocalIsRenderVolatile => false;
+            public void ReconcileRenderCacheSources() { }
+        }
+
+        protected override void OnVisualInvalidated()
+        {
+            base.OnVisualInvalidated();
+            UpdateLines();
         }
 
         public ReadOnlyCollection<MGTextRun> Runs { get; private set; }
@@ -558,6 +642,7 @@ namespace MGUI.Core.UI
                 if (_TextAlignment != value)
                 {
                     _TextAlignment = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(TextAlignment));
                 }
             }

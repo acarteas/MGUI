@@ -1,4 +1,4 @@
-using System.Diagnostics;
+using MGUI.Tests.Rendering;
 using System.Text.Json;
 
 namespace MGUI.Tests.UI;
@@ -39,22 +39,11 @@ public class MGEffectFillBrushRealEffectTests
 
     private static IReadOnlyDictionary<string, bool> RunHost()
     {
-        string HostPath = Path.Combine(AppContext.BaseDirectory, "MGUI.EffectTestHost.dll");
-        ProcessStartInfo StartInfo = new("dotnet", $"\"{HostPath}\"")
-        {
-            WorkingDirectory = AppContext.BaseDirectory,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false
-        };
-        using Process Process = Process.Start(StartInfo)!;
-        string Output = Process.StandardOutput.ReadToEnd();
-        string Error = Process.StandardError.ReadToEnd();
-        Process.WaitForExit();
+        var (ExitCode, Output, Error) = NativeGraphicsHost.Run("MGUI.EffectTestHost.dll");
 
         string? ResultLine = Output.Split('\n').LastOrDefault(x => x.StartsWith("RESULT:", StringComparison.Ordinal));
-        Assert.True(Process.ExitCode == 0 && ResultLine != null,
-            $"Live effect host failed with exit code {Process.ExitCode}.\nSTDOUT:\n{Output}\nSTDERR:\n{Error}");
+        Assert.True(ExitCode == 0 && ResultLine != null,
+            $"Live effect host failed with exit code {ExitCode}.\nSTDOUT:\n{Output}\nSTDERR:\n{Error}");
         return JsonSerializer.Deserialize<Dictionary<string, bool>>(ResultLine!["RESULT:".Length..])!;
     }
 }

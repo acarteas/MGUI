@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../MGUI.Core/MGUI.Core.csproj" />
+    <ProjectReference Include="../MGUI.FontStashSharp/MGUI.FontStashSharp.csproj" />
+    <ProjectReference Include="../MGUI.EffectTestHost/MGUI.EffectTestHost.csproj" ReferenceOutputAssembly="false" />
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" />
+    <Content Include="../MGUI.Samples/Content/Fonts/ttf/NotoSans-Regular.ttf" Link="Content/NotoSans-Regular.ttf" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="../MGUI.Samples/Features/RenderCaching.xaml.cs" Link="Sample/RenderCaching.xaml.cs" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../MGUI.Samples/Features/RenderCaching.xaml" Link="Sample/RenderCaching.xaml" CopyToOutputDirectory="PreserveNewest" />
+    <Compile Include="../MGUI.Samples/SampleBase.cs" Link="Sample/SampleBase.cs" />
+    <Compile Include="../MGUI.Samples/Features/RenderCaching.xaml.cs" Link="Sample/RenderCaching.xaml.cs" />
+    <EmbeddedResource Include="../MGUI.Samples/Features/RenderCaching.xaml" LogicalName="MGUI.Samples.Features.RenderCaching.xaml" />
+  </ItemGroup>
+  <Target Name="CopyBenchmarkEffect" AfterTargets="Build">
+    <Copy SourceFiles="../MGUI.EffectTestHost/bin/$(Configuration)/net8.0/Content/EffectParameters.xnb" DestinationFolder="$(OutDir)Content" />
+  </Target>
+</Project>

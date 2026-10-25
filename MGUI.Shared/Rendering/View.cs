@@ -16,8 +16,14 @@ namespace MGUI.Shared.Rendering
     [DebuggerStepThrough]
     public readonly record struct DrawBaseArgs(TimeSpan TS, DrawTransaction DT, float Opacity)
     {
-        public DrawBaseArgs SetOpacity(float Value) => new(TS, DT, Value);
-        public DrawBaseArgs MultiplyOpacity(float Scalar) => new(TS, DT, Opacity * Scalar);
+        internal bool HasUnsupportedInheritedRasterizer { get; init; }
+
+        public DrawBaseArgs SetOpacity(float Value) => this with { Opacity = Value };
+        public DrawBaseArgs MultiplyOpacity(float Scalar) => this with { Opacity = Opacity * Scalar };
+
+        internal DrawBaseArgs ObserveInheritedRasterizer()
+            => DT != null && DT.CurrentSettings.RasterizerType != RasterizerType.SolidScissorTest
+                ? this with { HasUnsupportedInheritedRasterizer = true } : this;
     }
 
     [DebuggerStepThrough]

@@ -1,0 +1,9 @@
+<Project>
+  <PropertyGroup>
+    <MGUIUseMonoGameNative Condition="'$(MGUIUseMonoGameNative)' == ''">false</MGUIUseMonoGameNative>
+    <MGUIMonoGameNativeProject Condition="'$(MGUIMonoGameNativeProject)' == ''">$(MSBuildThisFileDirectory)../MonoGame/MonoGame.Framework/MonoGame.Framework.Native.csproj</MGUIMonoGameNativeProject>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(MGUIUseMonoGameNative)' == 'true'">
+    <ProjectReference Include="$(MGUIMonoGameNativeProject)" />
+  </ItemGroup>
+</Project>

@@ -27,6 +27,14 @@ namespace MGUI.Core.UI
                 yield return OuterHeaderPresenter;
         }
 
+        internal override IEnumerable<MGElement> GetAdditionalRenderPaintChildren()
+        {
+            if (OuterHeaderPresenter != null)
+            {
+                yield return OuterHeaderPresenter;
+            }
+        }
+
         #region Border
         private MGBorder BorderElement { get; }
         public override MGBorder GetBorder() => BorderElement;
@@ -34,7 +42,13 @@ namespace MGUI.Core.UI
         public MGUniformBorderBrush BorderBrush
         {
             get => (MGUniformBorderBrush)BorderElement.BorderBrush;
-            set => BorderElement.BorderBrush = value;
+            set
+            {
+                if (!Equals(BorderElement.BorderBrush, value))
+                {
+                    BorderElement.BorderBrush = value;
+                }
+            }
         }
 
         public Thickness BorderThickness
@@ -45,7 +59,6 @@ namespace MGUI.Core.UI
                 if (!BorderElement.BorderThickness.Equals(value))
                 {
                     BorderElement.BorderThickness = value;
-                    LayoutChanged(this, true);
                 }
             }
         }
@@ -140,8 +153,17 @@ namespace MGUI.Core.UI
                 BorderElement = new(Window, new Thickness(2), MGUniformBorderBrush.Black);
                 BorderElement.SetParent(this);
                 BorderElement.ManagedParent = this;
-                BorderElement.OnBorderBrushChanged += (sender, e) => { NPC(nameof(BorderBrush)); };
-                BorderElement.OnBorderThicknessChanged += (sender, e) => { NPC(nameof(BorderThickness)); };
+                BorderElement.OnBorderBrushChanged += (sender, e) =>
+                {
+                    RefreshBaseRenderSources();
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
+                    NPC(nameof(BorderBrush));
+                };
+                BorderElement.OnBorderThicknessChanged += (sender, e) =>
+                {
+                    LayoutChanged(this, true);
+                    NPC(nameof(BorderThickness));
+                };
 
                 Expander = new(Window);
                 Expander.Margin = new(0, 0, 5, 0);
@@ -179,6 +201,11 @@ namespace MGUI.Core.UI
             int Width = BorderThickness.Width + HeaderHorizontalMargin * 2 + HeaderHorizontalPadding * 2;
             int Height = BorderThickness.Height;
             return new(Width, Height);
+        }
+
+        protected override IEnumerable<object> EnumerateControlRenderSources()
+        {
+            yield return BorderElement?.BorderBrush;
         }
 
         public override Thickness MeasureSelfOverride(Size AvailableSize, out Thickness SharedSize)

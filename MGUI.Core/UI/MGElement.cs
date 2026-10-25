@@ -1,4 +1,4 @@
-﻿using MGUI.Shared.Helpers;
+using MGUI.Shared.Helpers;
 using MGUI.Shared.Text.Engines;
 using System;
 using System.Collections.Generic;
@@ -36,6 +36,12 @@ namespace MGUI.Core.UI
         public float Opacity => BA.Opacity;
         public bool IsEnabled => !VisualState.IsDisabled;
         public bool IsSelected => VisualState.IsSelected;
+
+        // Normal element clipping may enable scissors; retain an unsupported caller rasterizer through descendants.
+        internal bool HasUnsupportedInheritedRasterizer => BA.HasUnsupportedInheritedRasterizer;
+
+        internal ElementDrawArgs ObserveInheritedRasterizer()
+            => this with { BA = BA.ObserveInheritedRasterizer() };
 
         public ElementDrawArgs SetOpacity(float Value) => this with { BA = BA.SetOpacity(Value) };
         public ElementDrawArgs SetOffset(Point Value) => this with { Offset = Value };
@@ -178,7 +184,7 @@ namespace MGUI.Core.UI
     //		This would specifically be for elements where the parent doesn't normally have a reference to the child, such as MGResizeGrip when using MGResizeGrip.Host to attach to
     //		The Visual Tree traversal logic should have an additional parameter, IncludeAttached
     /// <summary>Base class for all UI elements.</summary>
-    public abstract class MGElement : XAMLBindableBase, IMouseHandlerHost, IKeyboardHandlerHost, 
+    public abstract partial class MGElement : XAMLBindableBase, IMouseHandlerHost, IKeyboardHandlerHost,
         IElementNameResolver, IResourcesResolver, IDesktopResolver
     {
         public string UniqueId { get; }
@@ -190,12 +196,28 @@ namespace MGUI.Core.UI
         public bool TryGetElementByName(string Name, out MGElement NamedElement)
             => SelfOrParentWindow.TryResolveElementByName(this, Name, out NamedElement);
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private ITextEngine _TextEngineOverride;
+
         /// <summary>
         /// Optional per-element <see cref="ITextEngine"/> override.
         /// When set, this element (and any children that call <see cref="GetTextEngine"/>) will use this engine
         /// instead of the desktop-level one.
         /// </summary>
-        public ITextEngine TextEngineOverride { get; set; }
+        public ITextEngine TextEngineOverride
+        {
+            get => _TextEngineOverride;
+            set
+            {
+                if (_TextEngineOverride != value)
+                {
+                    _TextEngineOverride = value;
+                    InvalidateRenderContextSubtree(MGRenderInvalidationKind.Visual);
+                    NPC(nameof(TextEngineOverride));
+                    RefreshScaleAffectedSubtree();
+                }
+            }
+        }
 
         /// <summary>
         /// Returns the <see cref="ITextEngine"/> to use for this element.
@@ -258,6 +280,8 @@ namespace MGUI.Core.UI
             {
                 MGElement Previous = Parent;
                 _Parent = Value;
+                ReconcileRenderParentAliases(Previous, Parent);
+                InvalidateRenderOwnershipContext();
                 NPC(nameof(Parent));
                 NPC(nameof(DerivedUIScaleMode));
                 NPC(nameof(IsUIScaleEffectivelyEnabled));
@@ -280,7 +304,9 @@ namespace MGUI.Core.UI
             {
                 if (_ManagedParent != value)
                 {
+                    MGElement Previous = _ManagedParent;
                     _ManagedParent = value;
+                    ReconcileRenderParentAliases(Previous, ManagedParent);
                     NPC(nameof(ManagedParent));
                     NPC(nameof(IsManagedElement));
                 }
@@ -301,7 +327,9 @@ namespace MGUI.Core.UI
             {
                 if (_ComponentParent != value)
                 {
+                    MGElement Previous = _ComponentParent;
                     _ComponentParent = value;
+                    ReconcileRenderParentAliases(Previous, ComponentParent);
                     NPC(nameof(ComponentParent));
                     NPC(nameof(IsComponent));
                 }
@@ -317,6 +345,14 @@ namespace MGUI.Core.UI
 			Component.BaseElement.SetParent(this);
             Component.BaseElement.ComponentParent = this;
 			Components.Add(Component);
+            IReadOnlyList<MGElement> PreviousPaintChildren = RenderPaintChildren;
+            ReconcileRenderPaintChildren();
+
+            // Another paint operation can reuse a child that already contributes to this owner.
+            if (ReferenceEquals(PreviousPaintChildren, RenderPaintChildren))
+            {
+                InvalidateRenderState(MGRenderInvalidationKind.Structure);
+            }
 		}
 
         internal MGNameScope ActiveNameScope { get; set; }
@@ -383,6 +419,7 @@ namespace MGUI.Core.UI
                 if (_UIScaleMode != value)
                 {
                     _UIScaleMode = value;
+                    InvalidateRenderContextSubtree(MGRenderInvalidationKind.Visual);
                     NPC(nameof(UIScaleMode));
                     NPC(nameof(DerivedUIScaleMode));
                     NPC(nameof(IsUIScaleEffectivelyEnabled));
@@ -1108,10 +1145,38 @@ namespace MGUI.Core.UI
         /// This property is only true if both this <see cref="MGElement"/> and every parent along the visual tree have <see cref="IsHitTestVisible"/>==true.</summary>
         public bool DerivedIsHitTestVisible => IsHitTestVisible && (Parent?.IsHitTestVisible ?? IsHitTestVisible);
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private bool _SpoofIsPressedWhileDrawingBackground;
+
         /// <summary>If true, <see cref="IsLMBPressed"/> will be evaluated as true while drawing this element's background, regardless of the real MouseState.</summary>
-        internal protected bool SpoofIsPressedWhileDrawingBackground { get; set; } = false;
+        internal protected bool SpoofIsPressedWhileDrawingBackground
+        {
+            get => _SpoofIsPressedWhileDrawingBackground;
+            set
+            {
+                if (_SpoofIsPressedWhileDrawingBackground != value)
+                {
+                    _SpoofIsPressedWhileDrawingBackground = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
+                }
+            }
+        }
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private bool _SpoofIsHoveredWhileDrawingBackground;
+
         /// <summary>If true, <see cref="IsHovered"/> will be evaluated as true while drawing this element's background, regardless of the real MouseState.</summary>
-        internal protected bool SpoofIsHoveredWhileDrawingBackground { get; set; } = false;
+        internal protected bool SpoofIsHoveredWhileDrawingBackground
+        {
+            get => _SpoofIsHoveredWhileDrawingBackground;
+            set
+            {
+                if (_SpoofIsHoveredWhileDrawingBackground != value)
+                {
+                    _SpoofIsHoveredWhileDrawingBackground = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
+                }
+            }
+        }
         #endregion Input
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -1125,10 +1190,30 @@ namespace MGUI.Core.UI
                 {
                     VisualState Previous = VisualState;
                     _VisualState = value;
+                    if (DoesVisualStateChangeDescendantRenderContext(Previous, VisualState))
+                    {
+                        InvalidateRenderContextSubtree(MGRenderInvalidationKind.Visual);
+                    }
+                    else
+                    {
+                        InvalidateRenderState(MGRenderInvalidationKind.Visual);
+                    }
                     NPC(nameof(VisualState));
                     VisualStateChanged?.Invoke(this, new(Previous, VisualState));
                 }
             }
+        }
+
+        /// <summary>Whether a visual-state transition changes inherited paint inputs. Override when state changes a content offset or other descendant context, and preserve a true result from the base implementation.</summary>
+        protected virtual bool DoesVisualStateChangeDescendantRenderContext(VisualState Previous, VisualState Current)
+        {
+            float PreviousScale = 1;
+            float CurrentScale = 1;
+            RenderScale?.TryGetScale(Previous, out PreviousScale);
+            RenderScale?.TryGetScale(Current, out CurrentScale);
+
+            // Primary state selects inherited foreground; active scale transforms descendant painting.
+            return Previous.Primary != Current.Primary || PreviousScale != CurrentScale;
         }
 
         /// <summary>Invoked when <see cref="VisualState"/> changes.</summary>
@@ -1145,6 +1230,7 @@ namespace MGUI.Core.UI
                 if (_IsSelected != value)
                 {
                     _IsSelected = value;
+                    InvalidateRenderContextSubtree(MGRenderInvalidationKind.Visual);
                     NPC(nameof(IsSelected));
                 }
             }
@@ -1163,6 +1249,7 @@ namespace MGUI.Core.UI
                 if (_IsEnabled != value)
                 {
                     _IsEnabled = value;
+                    InvalidateRenderContextSubtree(MGRenderInvalidationKind.Visual);
                     NPC(nameof(IsEnabled));
                 }
             }
@@ -1184,6 +1271,7 @@ namespace MGUI.Core.UI
                 if (!BackgroundRenderPadding.Equals(value))
                 {
                     _BackgroundRenderPadding = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
                     NPC(nameof(BackgroundRenderPadding));
                 }
             }
@@ -1203,6 +1291,8 @@ namespace MGUI.Core.UI
                 if (_BackgroundBrush != value)
                 {
                     _BackgroundBrush = value;
+                    RefreshBaseRenderSources();
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
                     NPC(nameof(BackgroundBrush));
                     NPC(nameof(BackgroundUnderlay));
                     NPC(nameof(BackgroundOverlay));
@@ -1229,6 +1319,8 @@ namespace MGUI.Core.UI
                 if (_DefaultTextForeground != value)
                 {
                     _DefaultTextForeground = value;
+                    RefreshBaseRenderSources();
+                    InvalidateRenderContextSubtree(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
                     NPC(nameof(DefaultTextForeground));
                     NPC(nameof(CurrentDefaultTextForeground));
                 }
@@ -1254,6 +1346,8 @@ namespace MGUI.Core.UI
                 if (_OverlayBrush != value)
                 {
                     _OverlayBrush = value;
+                    RefreshBaseRenderSources();
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
                     NPC(nameof(OverlayBrush));
                 }
             }
@@ -1271,7 +1365,13 @@ namespace MGUI.Core.UI
                     Visibility Previous = Visibility;
                     _Visibility = value;
                     if (Previous == Visibility.Collapsed || Visibility == Visibility.Collapsed)
-                        LayoutChanged(this, true);
+                    {
+                        InvalidateRenderContextAndLayout();
+                    }
+                    else
+                    {
+                        InvalidateRenderContextSubtree(MGRenderInvalidationKind.Visual);
+                    }
                     NPC(nameof(Visibility));
                     NPC(nameof(IsVisibilityCollapsed));
                 }
@@ -1292,6 +1392,7 @@ namespace MGUI.Core.UI
                 if (_Opacity != value)
                 {
                     _Opacity = value;
+                    InvalidateRenderContextSubtree(MGRenderInvalidationKind.Visual);
                     NPC(nameof(Opacity));
                 }
             }
@@ -1566,6 +1667,7 @@ namespace MGUI.Core.UI
                 if (_ClipToBounds != value)
                 {
                     _ClipToBounds = value;
+                    InvalidateRenderContextSubtree(MGRenderInvalidationKind.Visual);
                     NPC(nameof(ClipToBounds));
                 }
             }
@@ -1583,6 +1685,7 @@ namespace MGUI.Core.UI
                 if (_Origin != value)
                 {
                     _Origin = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(Origin));
                 }
             }
@@ -1617,6 +1720,7 @@ namespace MGUI.Core.UI
                 {
                     Rectangle Previous = ActualLayoutBounds;
                     _ActualLayoutBounds = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(ActualLayoutBounds));
                     OnActualLayoutBoundsChanged?.Invoke(this, new(Previous, ActualLayoutBounds));
                 }
@@ -1655,6 +1759,7 @@ namespace MGUI.Core.UI
                 if (_LayoutBounds != value)
                 {
                     _LayoutBounds = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Layout);
                     NPC(nameof(LayoutBounds));
                     NPC(nameof(ActualWidth));
                     NPC(nameof(ActualHeight));
@@ -1718,22 +1823,42 @@ namespace MGUI.Core.UI
                 && (!RecentDrawWasClipped || (Visibility == Visibility.Hidden && CanHandleInputsWhileHidden));
             bool CanReceiveMouseInput = BaseCanReceiveInput && CanParentReceiveMouseInput;
 
-            foreach (MGElement Component in Components.Where(x => x.DrawBeforeBackground).Select(x => x.BaseElement))
-                Component.ComputeTopmostHoveredElement(ComputedIsEnabled, ComputedIsHitTestVisible, CanReceiveMouseInput, ref Result);
-            foreach (MGElement Component in Components.Where(x => x.DrawBeforeSelf).Select(x => x.BaseElement))
-                Component.ComputeTopmostHoveredElement(ComputedIsEnabled, ComputedIsHitTestVisible, CanReceiveMouseInput, ref Result);
+            foreach (MGComponentBase Component in Components)
+            {
+                if (Component.DrawBeforeBackground)
+                {
+                    Component.BaseElement.ComputeTopmostHoveredElement(ComputedIsEnabled, ComputedIsHitTestVisible, CanReceiveMouseInput, ref Result);
+                }
+            }
+            foreach (MGComponentBase Component in Components)
+            {
+                if (Component.DrawBeforeSelf)
+                {
+                    Component.BaseElement.ComputeTopmostHoveredElement(ComputedIsEnabled, ComputedIsHitTestVisible, CanReceiveMouseInput, ref Result);
+                }
+            }
 
             if (CanReceiveMouseInput && ComputedIsHitTestVisible && !SelfOrParentWindow.HasModalWindow && IsHovered)
             {
                 Result = this;
             }
 
-            foreach (MGElement Component in Components.Where(x => x.DrawBeforeContents).Select(x => x.BaseElement))
-                Component.ComputeTopmostHoveredElement(ComputedIsEnabled, ComputedIsHitTestVisible, CanReceiveMouseInput, ref Result);
+            foreach (MGComponentBase Component in Components)
+            {
+                if (Component.DrawBeforeContents)
+                {
+                    Component.BaseElement.ComputeTopmostHoveredElement(ComputedIsEnabled, ComputedIsHitTestVisible, CanReceiveMouseInput, ref Result);
+                }
+            }
             foreach (MGElement Child in GetVisualTreeChildren(false, true))
                 Child.ComputeTopmostHoveredElement(ComputedIsEnabled, ComputedIsHitTestVisible, CanReceiveMouseInput, ref Result);
-            foreach (MGElement Component in Components.Where(x => x.DrawAfterContents).Select(x => x.BaseElement))
-                Component.ComputeTopmostHoveredElement(ComputedIsEnabled, ComputedIsHitTestVisible, CanReceiveMouseInput, ref Result);
+            foreach (MGComponentBase Component in Components)
+            {
+                if (Component.DrawAfterContents)
+                {
+                    Component.BaseElement.ComputeTopmostHoveredElement(ComputedIsEnabled, ComputedIsHitTestVisible, CanReceiveMouseInput, ref Result);
+                }
+            }
         }
 
         public void Update(ElementUpdateArgs UA)
@@ -1810,11 +1935,21 @@ namespace MGUI.Core.UI
             _CanReceiveKeyboardInput = BaseCanReceiveInput && (Parent?._CanReceiveKeyboardInput ?? true);
 
             OnBeginUpdateContents?.Invoke(this, UpdateEventArgs);
-			foreach (MGElement Component in Components.Where(x => x.UpdateBeforeContents).Select(x => x.BaseElement))
-				Component.Update(UA);
+            foreach (MGComponentBase Component in Components)
+            {
+                if (Component.UpdateBeforeContents)
+                {
+                    Component.BaseElement.Update(UA);
+                }
+            }
 			UpdateContents(UA);
-            foreach (MGElement Component in Components.Where(x => x.UpdateAfterContents).Select(x => x.BaseElement))
-                Component.Update(UA);
+            foreach (MGComponentBase Component in Components)
+            {
+                if (Component.UpdateAfterContents)
+                {
+                    Component.BaseElement.Update(UA);
+                }
+            }
             OnEndUpdateContents?.Invoke(this, UpdateEventArgs);
 
             if (ComputedIsHitTestVisible)
@@ -1869,6 +2004,7 @@ namespace MGUI.Core.UI
                 if (_RenderScale != value)
                 {
                     _RenderScale = value;
+                    InvalidateRenderContextSubtree(MGRenderInvalidationKind.Visual);
                     NPC(nameof(RenderScale));
                 }
             }
@@ -1894,19 +2030,42 @@ namespace MGUI.Core.UI
         }
 
         public virtual void Draw(ElementDrawArgs DA)
-		{
-			RecentDrawWasClipped = false;
+        {
+            bool ObserveDraw = DA.DT?.IsCacheCapture != true;
+            if (ObserveDraw)
+            {
+                NotifyRenderContentDraw();
+            }
+            MGRenderContentObservation Boundary = ObserveDraw ? RenderContentBoundary : null;
+            bool PreviousContentCompletion = Boundary?.BeginOwnerDraw() ?? false;
+            bool DrawCompleted = false;
+            try
+            {
+                DrawCompleted = DrawBody(DA.ObserveInheritedRasterizer());
+            }
+            finally
+            {
+                Boundary?.EndOwnerDraw(PreviousContentCompletion, DrawCompleted);
+            }
+        }
+
+        private bool DrawBody(ElementDrawArgs DA)
+        {
+            if (DA.DT?.IsCacheCapture != true) { RecentDrawWasClipped = false; }
 
             DA = DA.SetOpacity(DA.Opacity * Opacity) with { VisualState = VisualState };
             MGElementDrawEventArgs DrawEventArgs = new(DA);
 
-			OnBeginDraw?.Invoke(this, DrawEventArgs);
+            if (DA.DT?.IsCacheCapture != true) { BeginDrawHandlers?.Invoke(this, DrawEventArgs); }
+
+            // Live begin callbacks can change settings before normal clipping enables the scissor test.
+            DA = DA.ObserveInheritedRasterizer();
 
             if (Visibility != Visibility.Visible || LayoutBounds.Width <= 0 || LayoutBounds.Height <= 0)
-			{
-				RecentDrawWasClipped = true;
-				return;
-			}
+            {
+                if (DA.DT?.IsCacheCapture != true) { RecentDrawWasClipped = true; }
+                return false;
+            }
 
             Rectangle TargetBounds = GetDrawTargetBounds(DA);
 
@@ -1929,9 +2088,9 @@ namespace MGUI.Core.UI
             }
 
             if (!ClipToBounds || !DA.DT.CurrentSettings.RasterizerState.ScissorTestEnable || TargetBounds.Intersects(DA.DT.GD.ScissorRectangle))
-			{
-				using (ClipToBounds ? DA.DT.SetClipTargetTemporary(TargetBounds, true) : null)
-				{
+            {
+                using (ClipToBounds ? DA.DT.SetClipTargetTemporary(TargetBounds, true) : null)
+                {
                     foreach (MGElement Component in Components.Where(x => x.DrawBeforeBackground).Select(x => x.BaseElement))
                         Component.Draw(DA);
 
@@ -1942,29 +2101,31 @@ namespace MGUI.Core.UI
 
                     DrawSelf(DA, LayoutBounds);
 
-					foreach (MGElement Component in Components.Where(x => x.DrawBeforeContents).Select(x => x.BaseElement))
-						Component.Draw(DA);
+                    foreach (MGElement Component in Components.Where(x => x.DrawBeforeContents).Select(x => x.BaseElement))
+                        Component.Draw(DA);
 
                     DrawContents(DA);
 
                     foreach (MGElement Component in Components.Where(x => x.DrawAfterContents).Select(x => x.BaseElement))
                         Component.Draw(DA);
 
-                    OverlayBrush?.Draw(DA, this, GetBackgroundBounds(LayoutBounds));
+                    DrawFillBrushAtSite(OverlayBrush, DA, GetBackgroundBounds(LayoutBounds), MGFillBrushPaintSite.Overlay);
 
-                    OnEndingDraw?.Invoke(this, DrawEventArgs);
+                    OnEndingDrawBuiltIn?.Invoke(this, DrawEventArgs);
+                    if (DA.DT?.IsCacheCapture != true) { EndingDrawHandlers?.Invoke(this, DrawEventArgs); }
                 }
             }
             else
-			{
-				RecentDrawWasClipped = true;
-			}
+            {
+                if (DA.DT?.IsCacheCapture != true) { RecentDrawWasClipped = true; }
+            }
 
             TempTransform?.Dispose();
             TempScissorRect?.Dispose();
 
-            OnEndDraw?.Invoke(this, DrawEventArgs);
-			}
+            if (DA.DT?.IsCacheCapture != true) { EndDrawHandlers?.Invoke(this, DrawEventArgs); }
+            return true;
+        }
 
         internal Rectangle GetDrawTargetBounds(ElementDrawArgs DA)
             => LayoutBounds.GetTranslated(DA.Offset).CreateTransformedF(DA.DT.CurrentSettings.Transform).RoundUp();
@@ -1982,15 +2143,30 @@ namespace MGUI.Core.UI
 			}
 		}
 
-		public event EventHandler<MGElementDrawEventArgs> OnBeginDraw;
+		public event EventHandler<MGElementDrawEventArgs> OnBeginDraw
+        {
+            add => ChangePublicDrawHandlers(ref BeginDrawHandlers, value, true);
+            remove => ChangePublicDrawHandlers(ref BeginDrawHandlers, value, false);
+        }
         /// <summary>Invoked after drawing the <see cref="BackgroundBrush"/>, self, all components, and the <see cref="OverlayBrush"/>,
         /// but while the <see cref="GraphicsDevice.ScissorRectangle"/> is still set to the desired screen-space bounds of this element.<para/>
         /// See also: <see cref="OnEndDraw"/></summary>
-        public event EventHandler<MGElementDrawEventArgs> OnEndingDraw;
+        public event EventHandler<MGElementDrawEventArgs> OnEndingDraw
+        {
+            add => ChangePublicDrawHandlers(ref EndingDrawHandlers, value, true);
+            remove => ChangePublicDrawHandlers(ref EndingDrawHandlers, value, false);
+        }
+
+        // Trusted built-in paint stage retains the public ending stage order and active clip during capture.
+        internal event EventHandler<MGElementDrawEventArgs> OnEndingDrawBuiltIn;
         /// <summary>Invoked at the very end of <see cref="MGElement.Draw(ElementDrawArgs)"/>.<br/>
         /// Unlike <see cref="OnEndingDraw"/>, this event is invoked AFTER the <see cref="GraphicsDevice.ScissorRectangle"/> has been reverted to its prior value.<para/>
         /// See also: <see cref="OnEndingDraw"/></summary>
-		public event EventHandler<MGElementDrawEventArgs> OnEndDraw;
+		public event EventHandler<MGElementDrawEventArgs> OnEndDraw
+        {
+            add => ChangePublicDrawHandlers(ref EndDrawHandlers, value, true);
+            remove => ChangePublicDrawHandlers(ref EndDrawHandlers, value, false);
+        }
 
         protected void DrawBackground(ElementDrawArgs DA) => DrawBackground(DA, LayoutBounds);
 
@@ -2004,9 +2180,9 @@ namespace MGUI.Core.UI
         public virtual void DrawBackground(ElementDrawArgs DA, Rectangle LayoutBounds)
 		{
             Rectangle BackgroundBounds = GetBackgroundBounds(LayoutBounds);
-            BackgroundBrush.GetUnderlay(DA.VisualState.Primary)?.Draw(DA, this, BackgroundBounds);
+            DrawFillBrushAtSite(BackgroundBrush.GetUnderlay(DA.VisualState.Primary), DA, BackgroundBounds, MGFillBrushPaintSite.BackgroundUnderlay);
             SecondaryVisualState SecondaryState = DA.VisualState.GetSecondaryState(SpoofIsPressedWhileDrawingBackground, SpoofIsHoveredWhileDrawingBackground);
-            BackgroundBrush.GetFillOverlay(SecondaryState)?.Draw(DA, this, BackgroundBounds);
+            DrawFillBrushAtSite(BackgroundBrush.GetFillOverlay(SecondaryState), DA, BackgroundBounds, MGFillBrushPaintSite.BackgroundOverlay);
         }
 
         public virtual void DrawSelf(ElementDrawArgs DA, Rectangle LayoutBounds) 
@@ -2022,6 +2198,13 @@ namespace MGUI.Core.UI
         #region Layout
 		internal protected void InvalidateLayout()
 		{
+            RenderEligibilityLayoutPending = true;
+            InvalidateRenderState(MGRenderInvalidationKind.Layout);
+            InvalidateLayoutMeasurements();
+        }
+
+        private void InvalidateLayoutMeasurements()
+        {
             IsLayoutValid = false;
             RecentMeasurementsSelfOnly.Clear();
             RecentMeasurementsFull.Clear();
@@ -2030,15 +2213,30 @@ namespace MGUI.Core.UI
         /// <summary>Invoked when a property that affects this <see cref="MGElement"/>'s layout has changed, such as <see cref="Padding"/>, <see cref="Margin"/>, or its content.</summary>
         protected virtual void LayoutChanged(MGElement Source, bool NotifyParent)
         {
-			if (InitializationManager.IsDeferringEvents)
-				return;
+            RenderEligibilityLayoutPending = true;
+            RefreshLocalRenderEligibility();
+            var (Stamp, Forwarded) = TakeLayoutMutation(Source);
+
+            // Logical parents still invalidate measurement; only actual paint owners summarize revisions.
+            if (!Forwarded)
+            {
+                Stamp = InvalidateRenderState(MGRenderInvalidationKind.Layout, Stamp);
+            }
+            if (InitializationManager.IsDeferringEvents)
+            {
+                return;
+            }
 
             if (IsUpdatingLayout)
+            {
                 SelfOrParentWindow.QueueLayoutRefresh = true;
+            }
 
-            InvalidateLayout();
+            InvalidateLayoutMeasurements();
             if (NotifyParent)
-                Parent?.LayoutChanged(Source, NotifyParent);
+            {
+                ForwardLayoutChangeToParent(Source, NotifyParent, Stamp);
+            }
         }
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -2052,6 +2250,8 @@ namespace MGUI.Core.UI
                 if (_IsLayoutValid != value)
                 {
                     _IsLayoutValid = value;
+                    RenderEligibilityLayoutPending = !value;
+                    RefreshLocalRenderEligibility();
                     NPC(nameof(IsLayoutValid));
                 }
             }
@@ -2065,6 +2265,7 @@ namespace MGUI.Core.UI
             try
             {
                 IsUpdatingLayout = true;
+                RefreshLocalRenderEligibility();
 
                 if (!IsLayoutValid)
                 {
@@ -2202,11 +2403,22 @@ namespace MGUI.Core.UI
                     }
                 }
 
+                if (!IsLayoutValid)
+                {
+                    InvalidateRenderState(MGRenderInvalidationKind.Layout);
+                }
+
+                RenderEligibilityLayoutPending = false;
                 IsLayoutValid = true;
+                RefreshLocalRenderEligibility();
                 OnLayoutUpdated?.Invoke(this, EventArgs.Empty);
                 OnLayoutBoundsChanged?.Invoke(this, new(PreviousLayoutBounds, LayoutBounds));
             }
-            finally { IsUpdatingLayout = false; }
+            finally
+            {
+                IsUpdatingLayout = false;
+                RefreshLocalRenderEligibility();
+            }
         }
 
 		public event EventHandler<EventArgs> OnLayoutUpdated;

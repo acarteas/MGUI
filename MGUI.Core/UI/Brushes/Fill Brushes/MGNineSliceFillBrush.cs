@@ -52,6 +52,7 @@ namespace MGUI.Core.UI.Brushes.Fill_Brushes
         }
 
         internal bool HasEffectBinding => Binding != null;
+        internal MGEffectBinding RenderCacheEffectBinding => Binding;
 
         /// <summary>The unscaled UI thickness used for destination slices. Rendering scales this through <see cref="MGScaleCategory.Border"/> on the owning element.</summary>
         public readonly Thickness TargetMargin;

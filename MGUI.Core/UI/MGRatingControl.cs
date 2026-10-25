@@ -62,7 +62,20 @@ namespace MGUI.Core.UI
             }
         };
 
-        public RatingItemShape ItemShape { get; set; }
+        private RatingItemShape _ItemShape;
+        public RatingItemShape ItemShape
+        {
+            get => _ItemShape;
+            set
+            {
+                if (_ItemShape != value)
+                {
+                    _ItemShape = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
+                    NPC(nameof(ItemShape));
+                }
+            }
+        }
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private int _ItemSize;
@@ -139,6 +152,7 @@ namespace MGUI.Core.UI
 
                 NPC(nameof(Minimum));
                 NPC(nameof(Maximum));
+                InvalidateRenderState(MGRenderInvalidationKind.Visual);
                 NPC(nameof(Interval));
             }
         }
@@ -158,6 +172,7 @@ namespace MGUI.Core.UI
             if (Value != ActualValue)
             {
                 _Value = ActualValue;
+                InvalidateRenderState(MGRenderInvalidationKind.Visual);
                 NPC(nameof(Value));
             }
             return ActualValue;
@@ -232,6 +247,7 @@ namespace MGUI.Core.UI
                 if (_UnfilledShapeStrokeThickness != value)
                 {
                     _UnfilledShapeStrokeThickness = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(UnfilledShapeStrokeThickness));
                 }
             }
@@ -247,6 +263,7 @@ namespace MGUI.Core.UI
                 if (_UnfilledShapeStrokeColor != value)
                 {
                     _UnfilledShapeStrokeColor = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(UnfilledShapeStrokeColor));
                 }
             }
@@ -262,6 +279,7 @@ namespace MGUI.Core.UI
                 if (_UnfilledShapeFillColor != value)
                 {
                     _UnfilledShapeFillColor = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(UnfilledShapeFillColor));
                 }
             }
@@ -277,6 +295,7 @@ namespace MGUI.Core.UI
                 if (_FilledShapeStrokeThickness != value)
                 {
                     _FilledShapeStrokeThickness = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(FilledShapeStrokeThickness));
                 }
             }
@@ -292,6 +311,7 @@ namespace MGUI.Core.UI
                 if (_FilledShapeStrokeColor != value)
                 {
                     _FilledShapeStrokeColor = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(FilledShapeStrokeColor));
                 }
             }
@@ -307,6 +327,7 @@ namespace MGUI.Core.UI
                 if (_FilledShapeFillColor != value)
                 {
                     _FilledShapeFillColor = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(FilledShapeFillColor));
                 }
             }
@@ -322,6 +343,7 @@ namespace MGUI.Core.UI
                 if (_PreviewShapeStrokeThickness != value)
                 {
                     _PreviewShapeStrokeThickness = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(PreviewShapeStrokeThickness));
                 }
             }
@@ -337,6 +359,7 @@ namespace MGUI.Core.UI
                 if (_PreviewShapeStrokeColor != value)
                 {
                     _PreviewShapeStrokeColor = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(PreviewShapeStrokeColor));
                 }
             }
@@ -354,6 +377,7 @@ namespace MGUI.Core.UI
                 if (_PreviewShapeFillColor != value)
                 {
                     _PreviewShapeFillColor = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(PreviewShapeFillColor));
                 }
             }
@@ -372,6 +396,7 @@ namespace MGUI.Core.UI
                 if (PreviewValue != ActualValue)
                 {
                     _PreviewValue = ActualValue;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(PreviewValue));
                 }
             }
@@ -569,7 +594,7 @@ namespace MGUI.Core.UI
 
                         Rectangle UnscaledClipTarget = new(Destination.Left, Destination.Top, (int)Width, Destination.Height);
                         Rectangle ClipTarget = ConvertCoordinateSpace(CoordinateSpace.UnscaledScreen, CoordinateSpace.Screen, UnscaledClipTarget);
-                        using (DA.DT.SetClipTargetTemporary(ClipTarget, true))
+                        using (DA.DT.SetClipTargetTemporary(DA.DT.MapScreenClip(ClipTarget), true))
                         {
                             DA.DT.StrokeAndFillPolygon(Origin, Vertices, StrokeColor, FillColor, StrokeThickness);
                         }
@@ -593,7 +618,7 @@ namespace MGUI.Core.UI
 
                         Rectangle UnscaledClipTarget = new(Destination.Left, Destination.Top, (int)Width, Destination.Height);
                         Rectangle ClipTarget = ConvertCoordinateSpace(CoordinateSpace.UnscaledScreen, CoordinateSpace.Screen, UnscaledClipTarget);
-                        using (DA.DT.SetClipTargetTemporary(ClipTarget, true))
+                        using (DA.DT.SetClipTargetTemporary(DA.DT.MapScreenClip(ClipTarget), true))
                         {
                             DA.DT.FillCircle(Center, FillColor, Radius - StrokeThickness);
                             DA.DT.StrokeCircle(Center, StrokeColor, Radius, StrokeThickness);
@@ -610,7 +635,7 @@ namespace MGUI.Core.UI
                     {
                         Rectangle UnscaledClipTarget = new(Destination.Left, Destination.Top, (int)(Destination.Width * FilledPercent), Destination.Height);
                         Rectangle ClipTarget = ConvertCoordinateSpace(CoordinateSpace.UnscaledScreen, CoordinateSpace.Screen, UnscaledClipTarget);
-                        using (DA.DT.SetClipTargetTemporary(ClipTarget, true))
+                        using (DA.DT.SetClipTargetTemporary(DA.DT.MapScreenClip(ClipTarget), true))
                         {
                             DA.DT.StrokeAndFillRectangle(Offset, Destination, StrokeColor, FillColor, StrokeThickness);
                         }
@@ -639,7 +664,7 @@ namespace MGUI.Core.UI
 
                         Rectangle UnscaledClipTarget = new(Destination.Left, Destination.Top, (int)Width, Destination.Height);
                         Rectangle ClipTarget = ConvertCoordinateSpace(CoordinateSpace.UnscaledScreen, CoordinateSpace.Screen, UnscaledClipTarget);
-                        using (DA.DT.SetClipTargetTemporary(ClipTarget, true))
+                        using (DA.DT.SetClipTargetTemporary(DA.DT.MapScreenClip(ClipTarget), true))
                         {
                             DA.DT.FillTriangle(Origin, TriangleVertices[0], FillColor, TriangleVertices[1], FillColor, TriangleVertices[2], FillColor);
                             if (StrokeThickness > 0)

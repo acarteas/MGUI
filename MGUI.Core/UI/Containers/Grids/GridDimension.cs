@@ -98,6 +98,11 @@ namespace MGUI.Core.UI.Containers.Grids
             if (MinWidth.HasValue && MaxWidth.HasValue && MinWidth.Value > MaxWidth.Value)
                 throw new ArgumentException($"{nameof(MinWidth)} cannot be greater than {nameof(MaxWidth)}");
 
+            if (this.MinWidth == MinWidth && this.MaxWidth == MaxWidth)
+            {
+                return;
+            }
+
             this.MinWidth = MinWidth;
             this.MaxWidth = MaxWidth;
 
@@ -160,6 +165,11 @@ namespace MGUI.Core.UI.Containers.Grids
         {
             if (MinHeight.HasValue && MaxHeight.HasValue && MinHeight.Value > MaxHeight.Value)
                 throw new ArgumentException($"{nameof(MinHeight)} cannot be greater than {nameof(MaxHeight)}");
+
+            if (this.MinHeight == MinHeight && this.MaxHeight == MaxHeight)
+            {
+                return;
+            }
 
             this.MinHeight = MinHeight;
             this.MaxHeight = MaxHeight;

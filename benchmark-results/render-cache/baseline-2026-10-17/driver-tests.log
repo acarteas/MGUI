@@ -1,0 +1,12 @@
+test_phase_and_world_counter_summaries_remain_separate (test_benchmark.CaptureContractTests.test_phase_and_world_counter_summaries_remain_separate) ... ok
+test_rejects_incomplete_wrong_metadata_and_unproven_graphics (test_benchmark.CaptureContractTests.test_rejects_incomplete_wrong_metadata_and_unproven_graphics) ... ok
+test_valid_capture_has_stable_state_fingerprint_independent_of_timing (test_benchmark.CaptureContractTests.test_valid_capture_has_stable_state_fingerprint_independent_of_timing) ... ok
+test_existing_output_is_not_overwritten (test_benchmark.RunnerSafetyTests.test_existing_output_is_not_overwritten) ... ok
+test_native_process_timeout_is_reported (test_benchmark.RunnerSafetyTests.test_native_process_timeout_is_reported) ... ok
+test_nearest_rank_p95_and_even_median_have_known_answers (test_benchmark.StatisticsTests.test_nearest_rank_p95_and_even_median_have_known_answers) ... ok
+test_tail_is_preserved_and_invalid_measurements_rejected (test_benchmark.StatisticsTests.test_tail_is_preserved_and_invalid_measurements_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.100s
+
+OK

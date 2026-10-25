@@ -14,6 +14,7 @@ Each page lists the direct properties introduced by that type. Inherited members
 ## Foundations
 
 - [UI Scaling](./ui-scaling.md)
+- [Render Caching](./ui/render-caching.md)
 - [Shader Effects](./ui/effects.md)
 - [Element](./ui/element.md)
 - [SingleContentHost](./ui/single-content-host.md)

@@ -957,12 +957,16 @@ namespace MGUI.Core.UI
                 if (_TextEntryMode != value)
                 {
                     _TextEntryMode = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(TextEntryMode));
                 }
             }
         }
 
         public MGTextCaret Caret { get; }
+
+        protected internal override bool IsBuiltInRenderVolatile => base.IsBuiltInRenderVolatile ||
+            (Caret?.HasPosition == true && GetDesktop().FocusedKeyboardHandler == this);
 
         private StringClipboard Clipboard { get; } = new();
 
@@ -980,9 +984,12 @@ namespace MGUI.Core.UI
             get => _IsUserResizable;
             set
             {
-                _IsUserResizable = value;
-                ResizeGripElement.Visibility = IsUserResizable ? Visibility.Visible : Visibility.Collapsed;
-                NPC(nameof(IsUserResizable));
+                if (_IsUserResizable != value)
+                {
+                    _IsUserResizable = value;
+                    ResizeGripElement.Visibility = IsUserResizable ? Visibility.Visible : Visibility.Collapsed;
+                    NPC(nameof(IsUserResizable));
+                }
             }
         }
         #endregion Resizing
@@ -1010,6 +1017,7 @@ namespace MGUI.Core.UI
                 ResizeGripElement = new(Window);
                 ResizeGripComponent = MGComponentBase.Create(ResizeGripElement);
                 AddComponent(ResizeGripComponent);
+                ResizeGripElement.Visibility = Visibility.Collapsed;
                 this.IsUserResizable = IsUserResizable;
 
                 PlaceholderTextBlockElement = new(Window, "");
@@ -1178,7 +1186,12 @@ namespace MGUI.Core.UI
                     if (e.PreviousValue == this || e.NewValue == this)
                     {
                         LastKeyPress = null;
+                        string PreviousFormattedText = FormattedText;
                         UpdateFormattedText(true);
+                        if (PreviousFormattedText == FormattedText)
+                        {
+                            InvalidateRenderState(MGRenderInvalidationKind.Visual);
+                        }
                     }
                 };
 

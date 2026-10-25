@@ -161,13 +161,21 @@ namespace MGUI.Core.UI.Containers
             {
                 _Children = new();
 
+                IReadOnlyList<MGElement> PreviousChildren = Array.Empty<MGElement>();
                 _Children.CollectionChanged += (sender, e) =>
                 {
-                    if (e.Action is NotifyCollectionChangedAction.Remove or NotifyCollectionChangedAction.Replace or NotifyCollectionChangedAction.Reset && e.OldItems != null)
+                    IReadOnlyList<MGElement> Removed = e.Action == NotifyCollectionChangedAction.Reset
+                        ? PreviousChildren : e.OldItems?.Cast<MGElement>().ToArray() ?? Array.Empty<MGElement>();
+                    PreviousChildren = _Children.ToArray();
+                    ReconcileRenderPaintChildren();
+                    if (e.Action is NotifyCollectionChangedAction.Remove or NotifyCollectionChangedAction.Replace or NotifyCollectionChangedAction.Reset)
                     {
-                        foreach (MGElement Item in e.OldItems)
+                        foreach (MGElement Item in Removed)
                         {
-                            Item.SetParent(null);
+                            if (!_Children.Contains(Item))
+                            {
+                                Item.SetParent(null);
+                            }
                             InvokeContentRemoved(Item);
                         }
                     }
@@ -214,6 +222,7 @@ namespace MGUI.Core.UI.Containers
                     _Content.SetParent(this);
                     InvokeContentAdded(_Content);
                 }
+                ReconcileRenderPaintChildren();
                 LayoutChanged(this, true);
                 NPC(nameof(Content));
                 NPC(nameof(HasContent));
@@ -324,6 +333,7 @@ namespace MGUI.Core.UI.Containers
                     _Content.SetParent(this);
                     InvokeContentAdded(_Content);
                 }
+                ReconcileRenderPaintChildren();
                 LayoutChanged(this, true);
                 NPC(nameof(Content));
                 NPC(nameof(HasContent));

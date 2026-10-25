@@ -54,8 +54,7 @@ namespace MGUI.Core.UI
             {
                 if (_SelectedItem != value)
                 {
-                    _SelectedItem = value;
-                    NPC(nameof(SelectedItem));
+                    NotifyItemSelected(value);
                 }
             }
         }
@@ -71,6 +70,10 @@ namespace MGUI.Core.UI
                 if (_IndentSize != value)
                 {
                     _IndentSize = value;
+                    foreach (MGTreeViewItem Root in _Items)
+                    {
+                        UpdateItemIndentation(Root);
+                    }
                     NPC(nameof(IndentSize));
                 }
             }
@@ -87,6 +90,7 @@ namespace MGUI.Core.UI
                 if (_SelectionBackgroundBrush != value)
                 {
                     _SelectionBackgroundBrush = value;
+                    SelectedItem?.RefreshSelectedAppearance();
                     NPC(nameof(SelectionBackgroundBrush));
                 }
             }
@@ -103,6 +107,7 @@ namespace MGUI.Core.UI
                 if (_SelectionForeground != value)
                 {
                     _SelectionForeground = value;
+                    SelectedItem?.RefreshSelectedAppearance();
                     NPC(nameof(SelectionForeground));
                 }
             }
@@ -155,27 +160,56 @@ namespace MGUI.Core.UI
         /// </summary>
         private void ItemsSource_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
-            switch (e.Action)
+            if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Reset)
             {
-                case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
-                    if (e.NewItems != null)
+                GenerateItemsFromSource();
+                return;
+            }
+
+            List<object> Source = ItemsSource.Cast<object>().ToList();
+            if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Move)
+            {
+                int NewIndex = Source.Take(e.NewStartingIndex).Count(Value => Value != null);
+                Source.RemoveRange(e.NewStartingIndex, e.NewItems.Count);
+                Source.InsertRange(e.OldStartingIndex, e.OldItems.Cast<object>());
+                int OldIndex = Source.Take(e.OldStartingIndex).Count(Value => Value != null);
+                int Count = e.OldItems.Cast<object>().Count(Value => Value != null);
+                for (int Index = 0; Index < Count; Index++)
+                {
+                    if (OldIndex < NewIndex)
                     {
-                        foreach (var obj in e.NewItems)
-                        {
-                            if (obj != null)
-                            {
-                                var item = CreateItemFromData(obj, 0);
-                                AddItem(item);
-                            }
-                        }
+                        _Items.Move(OldIndex, NewIndex + Count - 1);
                     }
-                    break;
-                case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
-                    GenerateItemsFromSource();
-                    break;
-                case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
-                    GenerateItemsFromSource();
-                    break;
+                    else
+                    {
+                        _Items.Move(OldIndex + Index, NewIndex + Index);
+                    }
+                }
+                return;
+            }
+
+            int ItemIndex = Source.Take(e.NewStartingIndex >= 0 ? e.NewStartingIndex : e.OldStartingIndex).Count(Value => Value != null);
+            if (e.OldItems != null)
+            {
+                foreach (object Value in e.OldItems)
+                {
+                    if (Value != null)
+                    {
+                        RemoveItem(_Items[ItemIndex]);
+                    }
+                }
+            }
+            if (e.NewItems != null)
+            {
+                foreach (object Value in e.NewItems)
+                {
+                    if (Value != null)
+                    {
+                        MGTreeViewItem Item = CreateItemFromData(Value, 0);
+                        RegisterItemRecursive(Item);
+                        _Items.Insert(ItemIndex++, Item);
+                    }
+                }
             }
         }
 
@@ -190,6 +224,7 @@ namespace MGUI.Core.UI
                 if (_ChildrenPropertyName != value)
                 {
                     _ChildrenPropertyName = value;
+                    GenerateItemsFromSource();
                     NPC(nameof(ChildrenPropertyName));
                 }
             }
@@ -262,6 +297,15 @@ namespace MGUI.Core.UI
             }
         }
 
+        private static void UpdateItemIndentation(MGTreeViewItem Item)
+        {
+            Item.UpdateIndentation();
+            foreach (MGTreeViewItem Child in Item.Items)
+            {
+                UpdateItemIndentation(Child);
+            }
+        }
+
         /// <summary>
         /// Applies the default visual styles to the tree view.
         /// </summary>
@@ -286,9 +330,10 @@ namespace MGUI.Core.UI
                     case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
                         if (e.NewItems != null)
                         {
+                            int Index = e.NewStartingIndex;
                             foreach (MGTreeViewItem item in e.NewItems)
                             {
-                                ItemsPanel.TryAddChild(item);
+                                ItemsPanel.TryInsertChild(Index++, item);
                             }
                         }
                         break;
@@ -300,6 +345,11 @@ namespace MGUI.Core.UI
                                 ItemsPanel.TryRemoveChild(item);
                             }
                         }
+                        break;
+                    case System.Collections.Specialized.NotifyCollectionChangedAction.Move:
+                        MGTreeViewItem MovedItem = _Items[e.NewStartingIndex];
+                        ItemsPanel.TryRemoveChild(MovedItem);
+                        ItemsPanel.TryInsertChild(e.NewStartingIndex, MovedItem);
                         break;
                     case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
                         ItemsPanel.TryRemoveAll();
@@ -356,6 +406,17 @@ namespace MGUI.Core.UI
                 RegisterItemRecursive(child);
         }
 
+        internal void UnregisterItemRecursive(MGTreeViewItem Item)
+        {
+            Item.Expanded -= OnItemExpanded;
+            Item.Collapsed -= OnItemCollapsed;
+            Item._OwnerTreeView = null;
+            foreach (MGTreeViewItem Child in Item.Items)
+            {
+                UnregisterItemRecursive(Child);
+            }
+        }
+
         /// <summary>
         /// Handles the Expanded event of a tree view item.
         /// </summary>
@@ -386,9 +447,16 @@ namespace MGUI.Core.UI
         /// <param name="item">The item to remove.</param>
         public void RemoveItem(MGTreeViewItem item)
         {
+            if (!_Items.Contains(item))
+            {
+                return;
+            }
+            if (SelectedItem == item || item.IsAncestorOf(SelectedItem))
+            {
+                NotifyItemSelected(null);
+            }
             _Items.Remove(item);
-            if (item != null)
-                item._OwnerTreeView = null;
+            UnregisterItemRecursive(item);
         }
 
         /// <summary>

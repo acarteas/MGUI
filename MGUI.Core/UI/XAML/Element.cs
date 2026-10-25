@@ -86,6 +86,8 @@ namespace MGUI.Core.UI.XAML
         public bool? IsSelected { get; set; }
         [Category("Behavior")]
         public bool? IsEnabled { get; set; }
+        [Category("Behavior")]
+        public bool? IsRenderVolatile { get; set; }
 
         [Category("Appearance")]
         public Thickness? BackgroundRenderPadding { get; set; }
@@ -263,6 +265,11 @@ namespace MGUI.Core.UI.XAML
                     Element.IsSelected = IsSelected.Value;
                 if (IsEnabled.HasValue)
                     Element.IsEnabled = IsEnabled.Value;
+
+                if (IsRenderVolatile.HasValue)
+                {
+                    Element.IsRenderVolatile = IsRenderVolatile.Value;
+                }
 
                 if (BackgroundRenderPadding.HasValue)
                     Element.BackgroundRenderPadding = BackgroundRenderPadding.Value.ToThickness();

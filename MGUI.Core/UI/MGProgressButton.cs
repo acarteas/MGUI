@@ -52,6 +52,15 @@ namespace MGUI.Core.UI
     /// They are commonly used in clicker/incremental games (such as clicking a button, "Gather Wood" to obtain a resource, and waiting a few seconds before you can click it again), or for things like abilities with a cooldown period.</summary>
     public class MGProgressButton : MGSingleContentHost
     {
+        protected override IEnumerable<object> EnumerateControlRenderSources()
+        {
+            yield return ProgressBarBorderBrush;
+            yield return ProgressBarBackground;
+            yield return ProgressBarForeground;
+        }
+
+        protected internal override bool IsBuiltInRenderVolatile => !IsPaused && Duration.HasValue && !IsCompleted;
+
         #region Border
         /// <summary>Provides direct access to this element's border.</summary>
         public MGComponent<MGBorder> BorderComponent { get; }
@@ -178,6 +187,7 @@ namespace MGUI.Core.UI
                 if (_HideWhenPaused != value)
                 {
                     _HideWhenPaused = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(HideWhenPaused));
                     NPC(nameof(IsProgressBarVisible));
                     if (IsPaused)
@@ -197,6 +207,7 @@ namespace MGUI.Core.UI
                 if (_IsPaused != value)
                 {
                     _IsPaused = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
                     NPC(nameof(IsPaused));
                     NPC(nameof(IsProgressBarVisible));
                     if (IsPaused)
@@ -229,6 +240,7 @@ namespace MGUI.Core.UI
                 if (_Minimum != value)
                 {
                     _Minimum = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
                     NPC(nameof(Minimum));
                     NPC(nameof(ActualValue));
                     NPC(nameof(ValuePercent));
@@ -247,6 +259,7 @@ namespace MGUI.Core.UI
                 if (_Maximum != value)
                 {
                     _Maximum = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
                     NPC(nameof(Maximum));
                     NPC(nameof(ActualValue));
                     NPC(nameof(ValuePercent));
@@ -267,6 +280,7 @@ namespace MGUI.Core.UI
                     bool WasCompleted = IsCompleted;
                     float Previous = Value;
                     _Value = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
                     NPC(nameof(Value));
                     NPC(nameof(ActualValue));
                     NPC(nameof(ValuePercent));
@@ -327,6 +341,7 @@ namespace MGUI.Core.UI
                 if (_Duration != value)
                 {
                     _Duration = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
                     NPC(nameof(Duration));
                 }
             }
@@ -394,6 +409,7 @@ namespace MGUI.Core.UI
                 if (_IsReversed != value)
                 {
                     _IsReversed = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(IsReversed));
                 }
             }
@@ -521,6 +537,7 @@ namespace MGUI.Core.UI
                 if (!_ProgressBarBorderThickness.Equals(value))
                 {
                     _ProgressBarBorderThickness = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(ProgressBarBorderThickness));
                 }
             }
@@ -541,6 +558,8 @@ namespace MGUI.Core.UI
                 if (_ProgressBarBorderBrush != value)
                 {
                     _ProgressBarBorderBrush = value;
+                    RefreshBaseRenderSources();
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
                     NPC(nameof(ProgressBarBorderBrush));
                 }
             }
@@ -561,6 +580,8 @@ namespace MGUI.Core.UI
                 if (_ProgressBarBackground != value)
                 {
                     _ProgressBarBackground = value;
+                    RefreshBaseRenderSources();
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
                     NPC(nameof(ProgressBarBackground));
                 }
             }
@@ -579,6 +600,8 @@ namespace MGUI.Core.UI
                 if (_ProgressBarForeground != value)
                 {
                     _ProgressBarForeground = value;
+                    RefreshBaseRenderSources();
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
                     NPC(nameof(ProgressBarForeground));
                 }
             }

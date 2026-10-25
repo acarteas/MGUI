@@ -43,6 +43,7 @@ namespace MGUI.Core.UI.XAML
 
         private static readonly Dictionary<string, string> ElementNameAliases = new()
         {
+            { "RenderCache", nameof(RenderCache) },
             { "ContentPresenter", nameof(ContentPresenter) },
             { "HeaderedContentPresenter", nameof(HeaderedContentPresenter) },
 

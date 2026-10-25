@@ -40,7 +40,7 @@ namespace MGUI.Core.UI.Brushes.Fill_Brushes
     /// The consuming game owns shader compilation, backend compatibility, parameter naming, and the lifetime of <see cref="Effect"/>.
     /// When <see cref="Effect"/> is null, this brush draws the same white fill without applying an effect.
     /// </summary>
-    public class MGEffectFillBrush : IFillBrush
+    public partial class MGEffectFillBrush : IFillBrush
     {
         private readonly MGEffectBinding Binding;
 

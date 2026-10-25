@@ -122,6 +122,11 @@ namespace MGUI.Core.UI
 
     public class MGRadioButton : MGSingleContentHost
     {
+        protected override IEnumerable<object> EnumerateControlRenderSources()
+        {
+            yield return BubbleComponentBackground;
+        }
+
         /// <summary>Provides direct access to the button component that appears to the left of this radiobutton's content.</summary>
         public MGComponent<MGButton> ButtonComponent { get; }
         /// <summary>The checkable button portion of this <see cref="MGRadioButton"/></summary>
@@ -167,6 +172,7 @@ namespace MGUI.Core.UI
                 if (_BubbleComponentBorderColor != value)
                 {
                     _BubbleComponentBorderColor = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(BubbleComponentBorderColor));
                 }
             }
@@ -185,6 +191,7 @@ namespace MGUI.Core.UI
                 if (_BubbleComponentBorderThickness != value)
                 {
                     _BubbleComponentBorderThickness = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(BubbleComponentBorderThickness));
                 }
             }
@@ -203,6 +210,8 @@ namespace MGUI.Core.UI
                 if (_BubbleComponentBackground != value)
                 {
                     _BubbleComponentBackground = value;
+                    RefreshBaseRenderSources();
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
                     NPC(nameof(BubbleComponentBackground));
                 }
             }
@@ -221,6 +230,7 @@ namespace MGUI.Core.UI
                 if (_BubbleCheckedColor != value)
                 {
                     _BubbleCheckedColor = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(BubbleCheckedColor));
                 }
             }
@@ -256,6 +266,7 @@ namespace MGUI.Core.UI
 
         internal void HandleCheckStateChanged()
         {
+            InvalidateRenderState(MGRenderInvalidationKind.Visual);
             OnCheckStateChanged?.Invoke(this, IsChecked);
             if (IsChecked)
                 OnChecked?.Invoke(this, EventArgs.Empty);
@@ -303,6 +314,33 @@ namespace MGUI.Core.UI
         /// Recommended value: 32</summary>
         private const int CircleDetailLevel = 32; // 16 looks bad
 
+        private SecondaryVisualState BubbleVisualState;
+
+        public override void UpdateSelf(ElementUpdateArgs UA)
+        {
+            base.UpdateSelf(UA);
+            Point LayoutSpacePosition = ConvertCoordinateSpace(CoordinateSpace.Screen, CoordinateSpace.Layout, InputTracker.Mouse.CurrentPosition);
+            bool IsBubblePartPressed = false;
+            if (InputTracker.Mouse.RecentButtonPressedEvents[MouseButton.Left] != null)
+            {
+                Point PressPositionScreenSpace = InputTracker.Mouse.RecentButtonPressedEvents[MouseButton.Left].Position;
+                Point PressPositionLayoutSpace = ConvertCoordinateSpace(CoordinateSpace.Screen, CoordinateSpace.Layout, PressPositionScreenSpace);
+                IsBubblePartPressed = ButtonElement.LayoutBounds.ContainsInclusive(PressPositionLayoutSpace);
+            }
+            bool IsBubblePartHovered = ButtonElement.LayoutBounds.ContainsInclusive(LayoutSpacePosition);
+            SecondaryVisualState NextState = IsBubblePartPressed ? SecondaryVisualState.Pressed : IsBubblePartHovered ? SecondaryVisualState.Hovered : SecondaryVisualState.None;
+            SetBubbleVisualState(NextState);
+        }
+
+        internal void SetBubbleVisualState(SecondaryVisualState Value)
+        {
+            if (BubbleVisualState != Value)
+            {
+                BubbleVisualState = Value;
+                InvalidateRenderState(MGRenderInvalidationKind.Visual);
+            }
+        }
+
         public override void DrawSelf(ElementDrawArgs DA, Rectangle LayoutBounds)
         {
             DrawTransaction DT = DA.DT;
@@ -319,27 +357,11 @@ namespace MGUI.Core.UI
             DT.StrokeCircle(BubbleCenter.ToVector2(), BubbleComponentBorderColor * Opacity, BubbleRadius, BubbleComponentBorderThickness, CircleDetailLevel);
             //DT.StrokeAndFillCircle(BubbleCenter.ToVector2(), BubbleComponentBorderColor * Opacity, BubbleComponentFillColor * Opacity, BubbleRadius, BubbleComponentBorderThickness, CircleDetailLevel);
 
-            if (!ParentWindow.HasModalWindow)
+            Color? Overlay = ParentWindow.HasModalWindow ? null : BubbleComponentBackground.GetColorOverlay(BubbleVisualState);
+            if (Overlay.HasValue)
             {
-                Point LayoutSpacePosition = ConvertCoordinateSpace(CoordinateSpace.Screen, CoordinateSpace.Layout, InputTracker.Mouse.CurrentPosition);
-                bool IsBubblePartPressed;
-                if (InputTracker.Mouse.RecentButtonPressedEvents[MouseButton.Left] != null)
-                {
-                    Point PressPositionScreenSpace = InputTracker.Mouse.RecentButtonPressedEvents[MouseButton.Left].Position;
-                    Point PressPositionLayoutSpace = ConvertCoordinateSpace(CoordinateSpace.Screen, CoordinateSpace.Layout, PressPositionScreenSpace);
-                    IsBubblePartPressed = BubblePartBounds.ContainsInclusive(PressPositionLayoutSpace);
-                }
-                else
-                    IsBubblePartPressed = false;
-                bool IsBubblePartHovered = BubblePartBounds.ContainsInclusive(LayoutSpacePosition);
-
-                Color? Overlay = BubbleComponentBackground.GetColorOverlay(IsBubblePartPressed ? SecondaryVisualState.Pressed : IsBubblePartHovered ? SecondaryVisualState.Hovered : SecondaryVisualState.None);
-                if (Overlay.HasValue)
-                {
-                    DT.FillCircle(BubbleCenter.ToVector2(), Overlay.Value * Opacity, BubbleRadius - BubbleComponentBorderThickness / 2, CircleDetailLevel);
-                    DT.StrokeCircle(BubbleCenter.ToVector2(), Overlay.Value * Opacity, BubbleRadius, BubbleComponentBorderThickness, CircleDetailLevel);
-                    //DT.StrokeAndFillCircle(BubbleCenter.ToVector2(), Overlay.Value * Opacity, Overlay.Value * Opacity, BubbleRadius, BubbleComponentBorderThickness, CircleDetailLevel);
-                }
+                DT.FillCircle(BubbleCenter.ToVector2(), Overlay.Value * Opacity, BubbleRadius - BubbleComponentBorderThickness / 2, CircleDetailLevel);
+                DT.StrokeCircle(BubbleCenter.ToVector2(), Overlay.Value * Opacity, BubbleRadius, BubbleComponentBorderThickness, CircleDetailLevel);
             }
 
             if (IsChecked)

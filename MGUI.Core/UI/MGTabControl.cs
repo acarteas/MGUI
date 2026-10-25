@@ -30,6 +30,7 @@ namespace MGUI.Core.UI
                 //_Content?.SetParent(null);
                 //InvokeContentRemoved(_Content);
                 _Content = Value;
+                ReconcileRenderPaintChildren();
                 //_Content?.SetParent(this);
                 //InvokeContentAdded(_Content);
                 LayoutChanged(this, true);

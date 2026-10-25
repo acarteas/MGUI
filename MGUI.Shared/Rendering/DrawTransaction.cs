@@ -23,7 +23,7 @@ namespace MGUI.Shared.Rendering
         Primitives
     }
 
-    public class DrawTransaction : IDisposable
+    public partial class DrawTransaction : IDisposable
     {
         public MainRenderer Renderer { get; }
         [Obsolete("Access fonts through MainRenderer.TextEngine / ITextEngine instead.")]
@@ -63,6 +63,7 @@ namespace MGUI.Shared.Rendering
             {
                 BeginDraw(DefaultContext);
             }
+            RegisterLifetime();
         }
 
         /// <summary>Should only be invoked if you intend to make a draw-related call that isn't already funneled through <see cref="DrawTransaction"/>.<para/>
@@ -81,6 +82,7 @@ namespace MGUI.Shared.Rendering
                 if (CurrentContext != DrawContext.None)
                     EndDraw(CurrentContext);
 
+                DrawTransactionTrace.State("begin", Context, CurrentSettings, GD.ScissorRectangle);
                 switch (Context)
                 {
                     case DrawContext.Sprites: CurrentSettings.BeginDraw(SB); break;
@@ -96,6 +98,7 @@ namespace MGUI.Shared.Rendering
         {
             if (Context != DrawContext.None && CurrentContext == Context)
             {
+                DrawTransactionTrace.Marker("end-" + CurrentContext);
                 switch (CurrentContext)
                 {
                     case DrawContext.Sprites: SB.End(); break;
@@ -122,6 +125,7 @@ namespace MGUI.Shared.Rendering
                 return;
 
             BeginDraw(DrawContext.Sprites);
+            DrawTransactionTrace.Texture(Texture);
             SB.Draw(Texture, Destination, Source, ColorMask);
         }
 
@@ -133,6 +137,7 @@ namespace MGUI.Shared.Rendering
                 return;
 
             BeginDraw(DrawContext.Sprites);
+            DrawTransactionTrace.Texture(Texture);
             SB.Draw(Texture, Destination, Source, ColorMask, Rotation, Origin, Effects, Depth);
         }
 
@@ -146,6 +151,7 @@ namespace MGUI.Shared.Rendering
         public void DrawTextureAt(Texture2D Texture, Rectangle? Source, Vector2 Destination, Color ColorMask)
         {
             BeginDraw(DrawContext.Sprites);
+            DrawTransactionTrace.Texture(Texture);
             SB.Draw(Texture, Destination, Source, ColorMask);
         }
 
@@ -154,10 +160,15 @@ namespace MGUI.Shared.Rendering
             Vector2 Origin, float Rotation = 0f, float ScaleX = 1f, float ScaleY = 1f, float Depth = 0f, SpriteEffects Effects = SpriteEffects.None)
         {
             BeginDraw(DrawContext.Sprites);
+            DrawTransactionTrace.Texture(Texture);
             if (ScaleX == ScaleY)
+            {
                 SB.Draw(Texture, Destination, Source, ColorMask, Rotation, Origin, ScaleX, Effects, Depth);
+            }
             else
+            {
                 SB.Draw(Texture, Destination, Source, ColorMask, Rotation, Origin, new Vector2(ScaleX, ScaleY), Effects, Depth);
+            }
         }
         #endregion Draw Texture
 
@@ -194,6 +205,7 @@ namespace MGUI.Shared.Rendering
             if (string.IsNullOrEmpty(Text) || Font?.NativeFont == null)
                 return;
             BeginDraw(DrawContext.Sprites);
+            DrawTransactionTrace.Text(Text);
             TextEngine.DrawText(SB, Font, Text, Position, Color, Origin, Scale, Rotation, Depth, Effects);
         }
 
@@ -224,7 +236,9 @@ namespace MGUI.Shared.Rendering
             Vector2 suggested = TextEngine.MeasureText(resolved, Text);
 
             BeginDraw(DrawContext.Sprites);
+            DrawTransactionTrace.Text(Text);
             TextEngine.DrawText(SB, resolved, Text, Position + new Vector2(XOffset, YOffset), ShadowColor, resolved.DrawOrigin, scale);
+            DrawTransactionTrace.Text(Text);
             TextEngine.DrawText(SB, resolved, Text, Position, TextColor, resolved.DrawOrigin, scale);
 
             if (!Exact || resolved.SuggestedScale == resolved.ExactScale)
@@ -279,6 +293,7 @@ namespace MGUI.Shared.Rendering
             Vector2 suggested = TextEngine.MeasureText(resolved, Text);
 
             BeginDraw(DrawContext.Sprites);
+            DrawTransactionTrace.Text(Text);
             TextEngine.DrawText(SB, resolved, Text, Position, Color, resolved.DrawOrigin, scale);
 
             if (!Exact || resolved.SuggestedScale == resolved.ExactScale)
@@ -350,6 +365,7 @@ namespace MGUI.Shared.Rendering
             switch (Ctx)
             {
                 case DrawContext.Sprites:
+                    DrawTransactionTrace.Marker("solid-fill-submission");
                     SB.FillRectangle(Destination.GetTranslated(Origin), Color);
                     break;
                 case DrawContext.Primitives:
@@ -777,6 +793,7 @@ namespace MGUI.Shared.Rendering
         {
             if (New != null && New != CurrentSettings)
             {
+                DrawTransactionTrace.State("settings-change", CurrentContext, New, GD.ScissorRectangle);
                 PreviousSettings = CurrentSettings;
                 CurrentSettings = New;
                 EndDraw(CurrentContext);
@@ -821,6 +838,7 @@ namespace MGUI.Shared.Rendering
             if (Bounds != CurrentBounds || IsScissorTesting != ShouldScissorTest)
             {
                 EndDraw(CurrentContext);
+                DrawTransactionTrace.State("clip-change", CurrentContext, CurrentSettings, Bounds ?? Renderer.GetViewport(0));
                 SB.GraphicsDevice.ScissorRectangle = Bounds ?? Renderer.GetViewport(0);
                 if (ShouldScissorTest && !IsScissorTesting)
                     SetDrawSettings(CurrentSettings with { RasterizerType = RasterizerType.SolidScissorTest });
@@ -848,7 +866,14 @@ namespace MGUI.Shared.Rendering
 
         public void Dispose()
         {
-            EndDraw(CurrentContext);
+            try
+            {
+                EndDraw(CurrentContext);
+            }
+            finally
+            {
+                ReleaseLifetime();
+            }
         }
     }
 }

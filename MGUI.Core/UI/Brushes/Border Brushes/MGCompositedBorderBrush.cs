@@ -12,7 +12,7 @@ namespace MGUI.Core.UI.Brushes.Border_Brushes
 {
     /// <summary>An <see cref="IBorderBrush"/> that draws several nested <see cref="IBorderBrush"/>es in order.<para/>
     /// See also: <see cref="MGUniformBorderBrush"/>, <see cref="MGDockedBorderBrush"/>, <see cref="MGTexturedBorderBrush"/>, <see cref="MGBandedBorderBrush"/>, <see cref="MGHighlightBorderBrush"/></summary>
-    public class MGCompositedBorderBrush : IBorderBrush
+    public partial class MGCompositedBorderBrush : IBorderBrush
     {
         public readonly List<IBorderBrush> Brushes;
 

@@ -13,12 +13,22 @@ using System.Threading.Tasks;
 namespace MGUI.Core.UI
 {
     /// <summary>A wrapper class for the given <typeparamref name="TDataType"/> that controls the getter function, typically to return a copy of the value (to mimic treating class implementations as value-types)</summary>
-    public class ThemeManagedGetter<TDataType>
+    public partial class ThemeManagedGetter<TDataType>
         where TDataType : class, ICloneable
     {
         private TDataType _Value;
         /// <summary>This property intentionally has no getter. To get the value, use <see cref="GetValue(bool)"/></summary>
-        public TDataType Value { set => _Value = value; }
+        public TDataType Value
+        {
+            set
+            {
+                if (!ReferenceEquals(_Value, value))
+                {
+                    _Value = value;
+                    _RenderCacheSource?.Invalidate();
+                }
+            }
+        }
 
         /// <param name="Copy">If true, a copy of the underlying <see cref="Value"/> will be returned. If false, a direct reference to the underlying <see cref="Value"/> will be returned.<para/>
         /// Some implementations of <typeparamref name="TDataType"/> are structs (value-types) rather than classes (reference-types),<br/>
@@ -44,16 +54,76 @@ namespace MGUI.Core.UI
         public ThemeManagedVisualStateColorBrush(VisualStateColorBrush Value) : base(Value) { }
     }
 
-    public class ThemeFontSettings
+    public partial class ThemeFontSettings
     {
         /// <summary>The default fontsize for content inside an <see cref="MGContextMenu"/>, such as <see cref="MGContextMenuButton"/> and <see cref="MGContextMenuToggle"/></summary>
-        public int ContextMenuFontSize { get; set; } = 10;
+        private int _ContextMenuFontSize = 10;
+        public int ContextMenuFontSize
+        {
+            get => _ContextMenuFontSize;
+            set
+            {
+                if (!EqualityComparer<int>.Default.Equals(_ContextMenuFontSize, value))
+                {
+                    _ContextMenuFontSize = value;
+                    _RenderCacheSource?.Invalidate();
+                }
+            }
+        }
 
-        public int SmallFontSize { get; set; } = 10;
-        public int MediumFontSize { get; set; } = 12;
-        public int LargeFontSize { get; set; } = 14;
+        private int _SmallFontSize = 10;
+        public int SmallFontSize
+        {
+            get => _SmallFontSize;
+            set
+            {
+                if (!EqualityComparer<int>.Default.Equals(_SmallFontSize, value))
+                {
+                    _SmallFontSize = value;
+                    _RenderCacheSource?.Invalidate();
+                }
+            }
+        }
+        private int _MediumFontSize = 12;
+        public int MediumFontSize
+        {
+            get => _MediumFontSize;
+            set
+            {
+                if (!EqualityComparer<int>.Default.Equals(_MediumFontSize, value))
+                {
+                    _MediumFontSize = value;
+                    _RenderCacheSource?.Invalidate();
+                }
+            }
+        }
+        private int _LargeFontSize = 14;
+        public int LargeFontSize
+        {
+            get => _LargeFontSize;
+            set
+            {
+                if (!EqualityComparer<int>.Default.Equals(_LargeFontSize, value))
+                {
+                    _LargeFontSize = value;
+                    _RenderCacheSource?.Invalidate();
+                }
+            }
+        }
 
-        public int DefaultFontSize { get; set; } = 11;
+        private int _DefaultFontSize = 11;
+        public int DefaultFontSize
+        {
+            get => _DefaultFontSize;
+            set
+            {
+                if (!EqualityComparer<int>.Default.Equals(_DefaultFontSize, value))
+                {
+                    _DefaultFontSize = value;
+                    _RenderCacheSource?.Invalidate();
+                }
+            }
+        }
 
         /// <summary>Changes all font sizes by the given <paramref name="Offset"/></summary>
         public void AdjustAllFontSizes(int Offset)
@@ -71,17 +141,65 @@ namespace MGUI.Core.UI
         /// If <see cref="UseExactScale"/> is true: <see cref="MGTextBlock"/> would choose size=10, scale=1.9<br/>
         /// If <see cref="UseExactScale"/> is false: <see cref="MGTextBlock"/> would choose size=10, scale=2.0, preferring to scale by values such as 0.25, 0.5, 1.0, 2.0 etc<para/>
         /// Default value: false</summary>
-        public bool UseExactScale { get; set; } = false;
+        private bool _UseExactScale = false;
+        public bool UseExactScale
+        {
+            get => _UseExactScale;
+            set
+            {
+                if (!EqualityComparer<bool>.Default.Equals(_UseExactScale, value))
+                {
+                    _UseExactScale = value;
+                    _RenderCacheSource?.Invalidate();
+                }
+            }
+        }
 
         /// <summary>The name of the font that should be used by default in <see cref="MGTextBlock"/>s when no font family is explicitly specified.<para/>
         /// If null, uses <see cref="FontManager.DefaultFontFamily"/> instead.<para/>
         /// EX: "MyFont". If not null, the <see cref="FontManager"/> must contain a <see cref="FontSet"/> with <see cref="FontSet.Name"/> that matches this value.</summary>
-        public string DefaultFontFamily { get; set; }
+        private string _DefaultFontFamily;
+        public string DefaultFontFamily
+        {
+            get => _DefaultFontFamily;
+            set
+            {
+                if (!EqualityComparer<string>.Default.Equals(_DefaultFontFamily, value))
+                {
+                    _DefaultFontFamily = value;
+                    _RenderCacheSource?.Invalidate();
+                }
+            }
+        }
 
         /// <summary>The fallback value to use for <see cref="MGTextBlock.ShadowOffset"/> when <see cref="MGTextBlock.ShadowOffset"/> is null.</summary>
-        public Point DefaultFontShadowOffset { get; set; } = new(1, 1);
+        private Point _DefaultFontShadowOffset = new(1, 1);
+        public Point DefaultFontShadowOffset
+        {
+            get => _DefaultFontShadowOffset;
+            set
+            {
+                if (!EqualityComparer<Point>.Default.Equals(_DefaultFontShadowOffset, value))
+                {
+                    _DefaultFontShadowOffset = value;
+                    _RenderCacheSource?.Invalidate();
+                }
+            }
+        }
         /// <summary>The fallback value to use for <see cref="MGTextBlock.ShadowColor"/> when <see cref="MGTextBlock.ShadowColor"/> is null.</summary>
-        public Color DefaultFontShadowColor { get; set; } = Color.Black;
+        private Color _DefaultFontShadowColor = Color.Black;
+        public Color DefaultFontShadowColor
+        {
+            get => _DefaultFontShadowColor;
+            set
+            {
+                if (!EqualityComparer<Color>.Default.Equals(_DefaultFontShadowColor, value))
+                {
+                    _DefaultFontShadowColor = value;
+                    _RenderCacheSource?.Invalidate();
+                }
+            }
+        }
 
         public ThemeFontSettings(string FontFamily)
         {
@@ -89,7 +207,7 @@ namespace MGUI.Core.UI
         }
     }
 
-    public class MGTheme
+    public partial class MGTheme
     {
         #region Background
         private Dictionary<MGElementType, ThemeManagedVisualStateFillBrush> _Backgrounds { get; }
@@ -110,7 +228,11 @@ namespace MGUI.Core.UI
                 _Backgrounds.Add(Type, ManagedValue);
             }
             else
+            {
                 ManagedValue.Value = Value;
+                return;
+            }
+            _RenderCacheSource?.Invalidate();
         }
         #endregion Background
 
@@ -119,9 +241,33 @@ namespace MGUI.Core.UI
         public ThemeManagedVisualStateFillBrush ComboBoxDropdownItemBackground { get; }
 
         /// <summary>The default value to use for <see cref="MGCheckBox.CheckMarkColor"/></summary>
-        public Color CheckMarkColor { get; set; }
+        private Color _CheckMarkColor;
+        public Color CheckMarkColor
+        {
+            get => _CheckMarkColor;
+            set
+            {
+                if (!EqualityComparer<Color>.Default.Equals(_CheckMarkColor, value))
+                {
+                    _CheckMarkColor = value;
+                    _RenderCacheSource?.Invalidate();
+                }
+            }
+        }
 
-        public Color DropdownArrowColor { get; set; }
+        private Color _DropdownArrowColor;
+        public Color DropdownArrowColor
+        {
+            get => _DropdownArrowColor;
+            set
+            {
+                if (!EqualityComparer<Color>.Default.Equals(_DropdownArrowColor, value))
+                {
+                    _DropdownArrowColor = value;
+                    _RenderCacheSource?.Invalidate();
+                }
+            }
+        }
 
         public ThemeManagedVisualStateFillBrush GridSplitterForeground { get; }
 
@@ -133,26 +279,122 @@ namespace MGUI.Core.UI
         /// <summary>The default value to use for <see cref="MGTreeView.SelectionBackgroundBrush"/>.</summary>
         public ThemeManagedVisualStateFillBrush TreeViewSelectionBackground { get; }
         /// <summary>The default value to use for <see cref="MGTreeView.SelectionForeground"/>.</summary>
-        public Color TreeViewSelectionForeground { get; set; }
+        private Color _TreeViewSelectionForeground;
+        public Color TreeViewSelectionForeground
+        {
+            get => _TreeViewSelectionForeground;
+            set
+            {
+                if (!EqualityComparer<Color>.Default.Equals(_TreeViewSelectionForeground, value))
+                {
+                    _TreeViewSelectionForeground = value;
+                    _RenderCacheSource?.Invalidate();
+                }
+            }
+        }
         /// <summary>The default color to use for the expander arrow in <see cref="MGTreeViewItem"/>.</summary>
-        public Color TreeViewExpanderArrowColor { get; set; }
+        private Color _TreeViewExpanderArrowColor;
+        public Color TreeViewExpanderArrowColor
+        {
+            get => _TreeViewExpanderArrowColor;
+            set
+            {
+                if (!EqualityComparer<Color>.Default.Equals(_TreeViewExpanderArrowColor, value))
+                {
+                    _TreeViewExpanderArrowColor = value;
+                    _RenderCacheSource?.Invalidate();
+                }
+            }
+        }
         /// <summary>The default value to use for <see cref="MGTreeView.BorderBrush"/>.</summary>
-        public IBorderBrush TreeViewBorderBrush { get; set; }
+        private IBorderBrush _TreeViewBorderBrush;
+        public IBorderBrush TreeViewBorderBrush
+        {
+            get => _TreeViewBorderBrush;
+            set
+            {
+                if (!EqualityComparer<IBorderBrush>.Default.Equals(_TreeViewBorderBrush, value))
+                {
+                    _TreeViewBorderBrush = value;
+                    _RenderCacheSource?.Invalidate();
+                }
+            }
+        }
         /// <summary>The default value to use for <see cref="MGTreeView.BorderThickness"/>.</summary>
-        public MonoGame.Extended.Thickness TreeViewBorderThickness { get; set; }
+        private MonoGame.Extended.Thickness _TreeViewBorderThickness;
+        public MonoGame.Extended.Thickness TreeViewBorderThickness
+        {
+            get => _TreeViewBorderThickness;
+            set
+            {
+                if (!EqualityComparer<MonoGame.Extended.Thickness>.Default.Equals(_TreeViewBorderThickness, value))
+                {
+                    _TreeViewBorderThickness = value;
+                    _RenderCacheSource?.Invalidate();
+                }
+            }
+        }
         /// <summary>The default value to use for <see cref="MGTreeView.IndentSize"/>.</summary>
-        public int TreeViewIndentSize { get; set; }
+        private int _TreeViewIndentSize;
+        public int TreeViewIndentSize
+        {
+            get => _TreeViewIndentSize;
+            set
+            {
+                if (!EqualityComparer<int>.Default.Equals(_TreeViewIndentSize, value))
+                {
+                    _TreeViewIndentSize = value;
+                    _RenderCacheSource?.Invalidate();
+                }
+            }
+        }
         /// <summary>The default size of the expander button in <see cref="MGTreeViewItem"/>.</summary>
-        public int TreeViewExpanderButtonSize { get; set; }
+        private int _TreeViewExpanderButtonSize;
+        public int TreeViewExpanderButtonSize
+        {
+            get => _TreeViewExpanderButtonSize;
+            set
+            {
+                if (!EqualityComparer<int>.Default.Equals(_TreeViewExpanderButtonSize, value))
+                {
+                    _TreeViewExpanderButtonSize = value;
+                    _RenderCacheSource?.Invalidate();
+                }
+            }
+        }
 
         /// <summary>The default value to use for <see cref="MGProgressButton.ProgressBarForeground"/>.</summary>
         public ThemeManagedFillBrush ProgressButtonForeground { get; }
         public ThemeManagedVisualStateFillBrush ProgressBarCompletedBrush { get; }
         public ThemeManagedVisualStateFillBrush ProgressBarIncompleteBrush { get; }
 
-        public ThemeManagedVisualStateColorBrush RadioButtonBubbleBackground { get; set; }
+        private ThemeManagedVisualStateColorBrush _RadioButtonBubbleBackground;
+        public ThemeManagedVisualStateColorBrush RadioButtonBubbleBackground
+        {
+            get => _RadioButtonBubbleBackground;
+            set
+            {
+                if (!EqualityComparer<ThemeManagedVisualStateColorBrush>.Default.Equals(_RadioButtonBubbleBackground, value))
+                {
+                    _RadioButtonBubbleBackground = value;
+                    _RenderCacheSource?.Invalidate();
+                }
+            }
+        }
         /// <summary>The default value to use for <see cref="MGRadioButton.BubbleCheckedColor"/></summary>
-        public Color RadioButtonCheckedFillColor { get; set; }
+        private Color _RadioButtonCheckedFillColor;
+        public Color RadioButtonCheckedFillColor
+        {
+            get => _RadioButtonCheckedFillColor;
+            set
+            {
+                if (!EqualityComparer<Color>.Default.Equals(_RadioButtonCheckedFillColor, value))
+                {
+                    _RadioButtonCheckedFillColor = value;
+                    _RenderCacheSource?.Invalidate();
+                }
+            }
+        }
 
         public ThemeManagedVisualStateColorBrush ResizeGripForeground { get; }
 
@@ -169,13 +411,61 @@ namespace MGUI.Core.UI
         public ThemeManagedVisualStateFillBrush UnselectedTabHeaderBackground { get; }
 
         /// <summary>Default value to use for <see cref="MGTextBox.FocusedSelectionForegroundColor"/></summary>
-        public Color TextBoxFocusedSelectionForeground { get; set; }
+        private Color _TextBoxFocusedSelectionForeground;
+        public Color TextBoxFocusedSelectionForeground
+        {
+            get => _TextBoxFocusedSelectionForeground;
+            set
+            {
+                if (!EqualityComparer<Color>.Default.Equals(_TextBoxFocusedSelectionForeground, value))
+                {
+                    _TextBoxFocusedSelectionForeground = value;
+                    _RenderCacheSource?.Invalidate();
+                }
+            }
+        }
         /// <summary>Default value to use for <see cref="MGTextBox.FocusedSelectionBackgroundColor"/></summary>
-        public Color TextBoxFocusedSelectionBackground { get; set; }
+        private Color _TextBoxFocusedSelectionBackground;
+        public Color TextBoxFocusedSelectionBackground
+        {
+            get => _TextBoxFocusedSelectionBackground;
+            set
+            {
+                if (!EqualityComparer<Color>.Default.Equals(_TextBoxFocusedSelectionBackground, value))
+                {
+                    _TextBoxFocusedSelectionBackground = value;
+                    _RenderCacheSource?.Invalidate();
+                }
+            }
+        }
         /// <summary>Default value to use for <see cref="MGTextBox.UnfocusedSelectionForegroundColor"/></summary>
-        public Color TextBoxUnfocusedSelectionForeground { get; set; }
+        private Color _TextBoxUnfocusedSelectionForeground;
+        public Color TextBoxUnfocusedSelectionForeground
+        {
+            get => _TextBoxUnfocusedSelectionForeground;
+            set
+            {
+                if (!EqualityComparer<Color>.Default.Equals(_TextBoxUnfocusedSelectionForeground, value))
+                {
+                    _TextBoxUnfocusedSelectionForeground = value;
+                    _RenderCacheSource?.Invalidate();
+                }
+            }
+        }
         /// <summary>Default value to use for <see cref="MGTextBox.UnfocusedSelectionBackgroundColor"/></summary>
-        public Color TextBoxUnfocusedSelectionBackground { get; set; }
+        private Color _TextBoxUnfocusedSelectionBackground;
+        public Color TextBoxUnfocusedSelectionBackground
+        {
+            get => _TextBoxUnfocusedSelectionBackground;
+            set
+            {
+                if (!EqualityComparer<Color>.Default.Equals(_TextBoxUnfocusedSelectionBackground, value))
+                {
+                    _TextBoxUnfocusedSelectionBackground = value;
+                    _RenderCacheSource?.Invalidate();
+                }
+            }
+        }
 
         public ThemeManagedVisualStateFillBrush TitleBackground { get; }
 
@@ -185,9 +475,33 @@ namespace MGUI.Core.UI
         /// <summary>The default offset from the current mouse position to draw <see cref="MGToolTip"/>s at.<br/>
         /// This value is used to initialize <see cref="MGToolTip.DrawOffset"/><para/>
         /// Default value: (6, 6)</summary>
-        public Point ToolTipOffset { get; set; }
+        private Point _ToolTipOffset;
+        public Point ToolTipOffset
+        {
+            get => _ToolTipOffset;
+            set
+            {
+                if (!EqualityComparer<Point>.Default.Equals(_ToolTipOffset, value))
+                {
+                    _ToolTipOffset = value;
+                    _RenderCacheSource?.Invalidate();
+                }
+            }
+        }
 
-        public VisualStateSetting<Color?> ToolTipTextForeground { get; set; }
+        private VisualStateSetting<Color?> _ToolTipTextForeground;
+        public VisualStateSetting<Color?> ToolTipTextForeground
+        {
+            get => _ToolTipTextForeground;
+            set
+            {
+                if (!EqualityComparer<VisualStateSetting<Color?>>.Default.Equals(_ToolTipTextForeground, value))
+                {
+                    _ToolTipTextForeground = value;
+                    _RenderCacheSource?.Invalidate();
+                }
+            }
+        }
 
         public ThemeFontSettings FontSettings { get; }
 
@@ -223,6 +537,7 @@ namespace MGUI.Core.UI
                 MGElementType.Border,
                 MGElementType.CheckBox,
                 MGElementType.ContentPresenter,
+                MGElementType.RenderCache,
                 MGElementType.ContextMenuItem,
                 MGElementType.Custom,
                 MGElementType.Custom_2,

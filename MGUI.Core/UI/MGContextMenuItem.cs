@@ -103,10 +103,13 @@ namespace MGUI.Core.UI
                 if (_ComputeIsVisible != value)
                 {
                     _ComputeIsVisible = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(ComputeIsVisible));
                 }
             }
         }
+
+        internal override bool HasUnsupportedControlRenderState => ComputeIsVisible != null;
 
         protected MGContextMenuItem(MGContextMenu Menu, ContextMenuItemType MenuItemType)
             : base(Menu, MGElementType.ContextMenuItem)
@@ -454,6 +457,7 @@ namespace MGUI.Core.UI
                 if (_IsChecked != value)
                 {
                     _IsChecked = value;
+                    HeaderPresenter.InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(IsChecked));
                     OnToggled?.Invoke(this, IsChecked);
                 }
@@ -478,7 +482,7 @@ namespace MGUI.Core.UI
                 ContentWrapper = Menu.ButtonWrapperTemplate(Menu);
             };
 
-            HeaderPresenter.OnEndingDraw += (sender, e) =>
+            HeaderPresenter.OnEndingDrawBuiltIn += (sender, e) =>
             {
                 if (this.IsChecked)
                 {
@@ -537,6 +541,7 @@ namespace MGUI.Core.UI
                 if (_IsChecked != value)
                 {
                     _IsChecked = value;
+                    HeaderPresenter.InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(IsChecked));
                     OnToggled?.Invoke(this, IsChecked);
                 }
@@ -582,7 +587,7 @@ namespace MGUI.Core.UI
                 ContentWrapper = Menu.ButtonWrapperTemplate(Menu);
             };
 
-            HeaderPresenter.OnEndingDraw += (sender, e) =>
+            HeaderPresenter.OnEndingDrawBuiltIn += (sender, e) =>
             {
                 // Draw a radio bullet circle in the header area
                 Rectangle Bounds = HeaderPresenter.LayoutBounds;

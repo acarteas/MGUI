@@ -74,6 +74,7 @@ namespace MGUI.Core.UI.Containers.Grids
                 if (_TickSize != value)
                 {
                     _TickSize = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(TickSize));
                 }
             }
@@ -90,6 +91,8 @@ namespace MGUI.Core.UI.Containers.Grids
                 if (_Foreground != value)
                 {
                     _Foreground = value;
+                    RefreshBaseRenderSources();
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
                     NPC(nameof(Foreground));
                 }
             }
@@ -107,6 +110,7 @@ namespace MGUI.Core.UI.Containers.Grids
                 if (_IsDragging != value)
                 {
                     _IsDragging = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(IsDragging));
                 }
             }
@@ -481,6 +485,11 @@ namespace MGUI.Core.UI.Containers.Grids
                     break;
                 default: throw new NotImplementedException($"Unrecognized {nameof(Orientation)}: {Orientation}");
             }
+        }
+
+        protected override IEnumerable<object> EnumerateControlRenderSources()
+        {
+            yield return Foreground;
         }
 
         public override Thickness MeasureSelfOverride(Size AvailableSize, out Thickness SharedSize)

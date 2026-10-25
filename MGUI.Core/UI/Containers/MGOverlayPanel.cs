@@ -52,8 +52,8 @@ namespace MGUI.Core.UI.Containers
 
             if (!_Children.Contains(Item))
             {
-                _Children.Add(Item);
                 PanelChildren.Add(new OverlayPanelChild(Item, Offset, ZIndex));
+                _Children.Add(Item);
                 return true;
             }
             else
@@ -67,10 +67,11 @@ namespace MGUI.Core.UI.Containers
             if (!CanChangeContent)
                 return false;
 
-            if (_Children.Remove(Item))
+            if (_Children.Contains(Item))
             {
                 OverlayPanelChild ToRemove = PanelChildren.First(x => x.Item == Item);
                 PanelChildren.Remove(ToRemove);
+                _Children.Remove(Item);
                 return true;
             }
             else
@@ -89,10 +90,27 @@ namespace MGUI.Core.UI.Containers
             if (Index < 0)
                 return false;
 
-            _Children[Index] = New;
             OverlayPanelChild ToRemove = PanelChildren.First(x => x.Item == Old);
+            if (ToRemove == new OverlayPanelChild(New, Offset, ZIndex))
+            {
+                return true;
+            }
+
             PanelChildren.Remove(ToRemove);
             PanelChildren.Add(new OverlayPanelChild(New, Offset, ZIndex));
+            if (ReferenceEquals(Old, New))
+            {
+                ReconcileRenderPaintChildren();
+                if (!ToRemove.Offset.Equals(Offset))
+                {
+                    LayoutChanged(this, true);
+                }
+            }
+            else
+            {
+                _Children[Index] = New;
+            }
+
             return true;
         }
 

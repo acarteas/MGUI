@@ -97,6 +97,7 @@ namespace MGUI.Core.UI
                 if (_ContentViewport != value)
                 {
                     _ContentViewport = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(ContentViewport));
                 }
             }
@@ -113,6 +114,7 @@ namespace MGUI.Core.UI
                 {
                     Rectangle? Previous = VSBBounds;
                     _VSBBounds = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(VSBBounds));
                     NPC(nameof(PaddedVSBBounds));
                     VerticalScrollBarBoundsChanged?.Invoke(Previous, VSBBounds);
@@ -135,6 +137,7 @@ namespace MGUI.Core.UI
                 {
                     Rectangle? Previous = HSBBounds;
                     _HSBBounds = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(HSBBounds));
                     NPC(nameof(PaddedHSBBounds));
                     HorizontalScrollBarBoundsChanged?.Invoke(Previous, HSBBounds);
@@ -167,6 +170,7 @@ namespace MGUI.Core.UI
                 {
                     float Previous = VerticalOffset;
                     _VerticalOffset = ClampedValue;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     ParentWindow.InvalidatePressedAndHoveredElements = true;
                     NPC(nameof(VerticalOffset));
                     VerticalOffsetChanged?.Invoke(this, new(Previous, VerticalOffset));
@@ -189,6 +193,7 @@ namespace MGUI.Core.UI
                 {
                     float Previous = MaxVerticalOffset;
                     _MaxVerticalOffset = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     VerticalOffset = Math.Clamp(VerticalOffset, 0, MaxVerticalOffset);
                     NPC(nameof(MaxVerticalOffset));
                     MaxVerticalOffsetChanged?.Invoke(this, new(Previous, MaxVerticalOffset));
@@ -230,6 +235,7 @@ namespace MGUI.Core.UI
                 {
                     float Previous = HorizontalOffset;
                     _HorizontalOffset = ClampedValue;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     ParentWindow.InvalidatePressedAndHoveredElements = true;
                     NPC(nameof(HorizontalOffset));
                     HorizontalOffsetChanged?.Invoke(this, new(Previous, HorizontalOffset));
@@ -251,6 +257,7 @@ namespace MGUI.Core.UI
                 {
                     float Previous = MaxHorizontalOffset;
                     _MaxHorizontalOffset = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(MaxHorizontalOffset));
                     HorizontalOffset = Math.Clamp(HorizontalOffset, 0, MaxHorizontalOffset);
                     MaxHorizontalOffsetChanged?.Invoke(this, new(Previous, MaxHorizontalOffset));
@@ -261,12 +268,60 @@ namespace MGUI.Core.UI
         public event EventHandler<EventArgs<float>> MaxHorizontalOffsetChanged;
         #endregion Offset
 
-        private bool IsHoveringVSB { get; set; }
-        private bool IsDraggingVSB { get; set; }
+        private bool _IsHoveringVSB;
+        private bool IsHoveringVSB
+        {
+            get => _IsHoveringVSB;
+            set
+            {
+                if (_IsHoveringVSB != value)
+                {
+                    _IsHoveringVSB = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
+                }
+            }
+        }
+        private bool _IsDraggingVSB;
+        private bool IsDraggingVSB
+        {
+            get => _IsDraggingVSB;
+            set
+            {
+                if (_IsDraggingVSB != value)
+                {
+                    _IsDraggingVSB = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
+                }
+            }
+        }
         private bool IsVSBFocused => !VisualState.IsDisabled && (IsHoveringVSB || IsDraggingVSB);
 
-        private bool IsHoveringHSB { get; set; }
-        private bool IsDraggingHSB { get; set; }
+        private bool _IsHoveringHSB;
+        private bool IsHoveringHSB
+        {
+            get => _IsHoveringHSB;
+            set
+            {
+                if (_IsHoveringHSB != value)
+                {
+                    _IsHoveringHSB = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
+                }
+            }
+        }
+        private bool _IsDraggingHSB;
+        private bool IsDraggingHSB
+        {
+            get => _IsDraggingHSB;
+            set
+            {
+                if (_IsDraggingHSB != value)
+                {
+                    _IsDraggingHSB = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
+                }
+            }
+        }
         private bool IsHSBFocused => !VisualState.IsDisabled && (IsHoveringHSB || IsDraggingHSB);
 
         /// <summary>Must always be true for <see cref="MGScrollViewer"/> to avoid content that is out of the <see cref="ContentViewport"/>'s bounds from being visible.</summary>
@@ -297,6 +352,8 @@ namespace MGUI.Core.UI
                 if (_ScrollBarOuterBrush != value)
                 {
                     _ScrollBarOuterBrush = value;
+                    RefreshBaseRenderSources();
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
                     NPC(nameof(ScrollBarOuterBrush));
                 }
             }
@@ -315,9 +372,17 @@ namespace MGUI.Core.UI
                 if (_ScrollBarInnerBrush != value)
                 {
                     _ScrollBarInnerBrush = value;
+                    RefreshBaseRenderSources();
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
                     NPC(nameof(ScrollBarInnerBrush));
                 }
             }
+        }
+
+        protected override IEnumerable<object> EnumerateControlRenderSources()
+        {
+            yield return ScrollBarOuterBrush;
+            yield return ScrollBarInnerBrush;
         }
 
         protected override bool CanCacheSelfMeasurement => false; // The self measurement depends on the measurement of the children, so it must be re-calculated each time it's requested
@@ -755,7 +820,7 @@ namespace MGUI.Core.UI
         protected override void DrawContents(ElementDrawArgs DA)
         {
             Rectangle ScreenBounds = ConvertCoordinateSpace(CoordinateSpace.UnscaledScreen, CoordinateSpace.Screen, ContentViewport.GetTranslated(DA.Offset));
-            using (DA.DT.SetClipTargetTemporary(ScreenBounds, true))
+            using (DA.DT.SetClipTargetTemporary(DA.DT.MapScreenClip(ScreenBounds), true))
             {
                 Point NewOffset = DA.Offset - new Point((int)HorizontalOffset, (int)VerticalOffset);
                 base.DrawContents(DA with { Offset = NewOffset });

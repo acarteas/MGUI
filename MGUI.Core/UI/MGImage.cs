@@ -72,8 +72,10 @@ namespace MGUI.Core.UI
 
         private void Resources_OnTextureAddedRemoved(object sender, (string Name, MGTextureData Data) e)
         {
-            if (Name == SourceName)
-                UpdateActualSource();
+            if (e.Name == SourceName)
+            {
+                UpdateActualSource(GetResources().CurrentTextureRenderMutation);
+            }
         }
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -95,14 +97,23 @@ namespace MGUI.Core.UI
             }
         }
 
-        private void UpdateActualSource()
+        private MGTextureData? ResolveActualSource()
         {
             if (Source != null)
-                _ActualSource = Source;
-            else if (GetResources().TryGetTexture(SourceName, out MGTextureData Texture))
-                _ActualSource = Texture;
-            else
-                _ActualSource = null;
+            {
+                return Source;
+            }
+            return GetResources().TryGetTexture(SourceName, out MGTextureData Texture) ? Texture : null;
+        }
+
+        private void UpdateActualSource(MGRenderMutationStamp? Stamp = null) => SetActualSource(ResolveActualSource(), Stamp);
+
+        protected override void OnVisualInvalidated()
+        {
+            base.OnVisualInvalidated();
+
+            // Explicit opaque resource changes refresh painting without requesting layout.
+            _ActualSource = ResolveActualSource();
         }
 
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -111,16 +122,32 @@ namespace MGUI.Core.UI
         public MGTextureData? ActualSource
         {
             get => _ActualSource;
-            private set
+            private set => SetActualSource(value, null);
+        }
+
+        private void SetActualSource(MGTextureData? Value, MGRenderMutationStamp? Stamp)
+        {
+            if (ActualSource != Value)
             {
-                if (ActualSource != value)
+                Size? PreviousSize = ActualSource?.RenderSize;
+                _ActualSource = Value;
+                RefreshBaseRenderSources();
+                if (ActualSource?.RenderSize != PreviousSize)
                 {
-                    Size? PreviousSize = ActualSource?.RenderSize;
-                    _ActualSource = value;
-                    NPC(nameof(ActualSource));
-                    if (ActualSource?.RenderSize != PreviousSize)
+                    if (Stamp.HasValue)
+                    {
+                        LayoutChangedForRenderMutation(Stamp.Value);
+                    }
+                    else
+                    {
                         LayoutChanged(this, true);
+                    }
                 }
+                else
+                {
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual, Stamp ?? MGRenderRevisionClock.NextMutation());
+                }
+                NPC(nameof(ActualSource));
             }
         }
 
@@ -135,6 +162,7 @@ namespace MGUI.Core.UI
                 if (_TextureColor != value)
                 {
                     _TextureColor = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(TextureColor));
                 }
             }
@@ -149,6 +177,7 @@ namespace MGUI.Core.UI
                 if (_HoveredTextureColor != value)
                 {
                     _HoveredTextureColor = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(HoveredTextureColor));
                 }
             }
@@ -163,6 +192,7 @@ namespace MGUI.Core.UI
                 if (_PressedTextureColor != value)
                 {
                     _PressedTextureColor = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(PressedTextureColor));
                 }
             }
@@ -177,6 +207,7 @@ namespace MGUI.Core.UI
                 if (_SelectedTextureColor != value)
                 {
                     _SelectedTextureColor = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(SelectedTextureColor));
                 }
             }
@@ -191,6 +222,7 @@ namespace MGUI.Core.UI
                 if (_DisabledTextureColor != value)
                 {
                     _DisabledTextureColor = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(DisabledTextureColor));
                 }
             }
@@ -250,12 +282,33 @@ namespace MGUI.Core.UI
                 if (_SamplerType != value)
                 {
                     _SamplerType = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(SamplerType));
                 }
             }
         }
 
         private readonly MGEffectBinding Binding = new(null);
+        private bool IsEffectBindingObserved;
+
+        private void InvalidateUnobservedEffectBinding()
+        {
+            if (!IsEffectBindingObserved)
+            {
+                InvalidateRenderState(MGRenderInvalidationKind.Visual);
+            }
+        }
+
+        protected override IEnumerable<object> EnumerateControlRenderSources()
+        {
+            foreach (object Source in base.EnumerateControlRenderSources())
+            {
+                yield return Source;
+            }
+            yield return ActualSource;
+            IsEffectBindingObserved = true;
+            yield return Binding;
+        }
 
         /// <summary>
         /// The caller-owned MonoGame effect applied while this image draws. When null, the image draws without
@@ -270,6 +323,7 @@ namespace MGUI.Core.UI
                 if (Binding.Effect != value)
                 {
                     Binding.Effect = value;
+                    InvalidateUnobservedEffectBinding();
                     NPC(nameof(Effect));
                 }
             }
@@ -287,6 +341,7 @@ namespace MGUI.Core.UI
                 if (Binding.ConfigureEffect != value)
                 {
                     Binding.ConfigureEffect = value;
+                    InvalidateUnobservedEffectBinding();
                     NPC(nameof(ConfigureEffect));
                 }
             }
@@ -301,6 +356,7 @@ namespace MGUI.Core.UI
                 if (Binding.UseStandardParameters != value)
                 {
                     Binding.UseStandardParameters = value;
+                    InvalidateUnobservedEffectBinding();
                     NPC(nameof(UseStandardParameters));
                 }
             }
@@ -316,6 +372,7 @@ namespace MGUI.Core.UI
                 if (!Binding.Parameters.SequenceEqual(NewParameters))
                 {
                     Binding.Parameters = NewParameters;
+                    InvalidateUnobservedEffectBinding();
                     NPC(nameof(Parameters));
                 }
             }

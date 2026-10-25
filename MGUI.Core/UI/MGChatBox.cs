@@ -60,6 +60,16 @@ namespace MGUI.Core.UI
                 {
                     string Previous = TimestampFormat;
                     _TimestampFormat = value;
+                    if (MessagesContainer?.ListBoxItems != null)
+                    {
+                        foreach (MGListBoxItem<ChatBoxMessageData> Item in MessagesContainer.ListBoxItems)
+                        {
+                            if (Item.Content is MGChatBoxMessage MessageElement)
+                            {
+                                MessageElement.TimestampTextBlock.SetText(MessageElement.Timestamp.ToString(value));
+                            }
+                        }
+                    }
                     NPC(nameof(TimestampFormat));
                     TimestampFormatChanged?.Invoke(this, new(Previous, TimestampFormat));
                 }

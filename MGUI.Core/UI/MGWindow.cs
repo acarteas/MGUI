@@ -32,7 +32,7 @@ namespace MGUI.Core.UI
         }
     }
 
-    public class MGWindow : MGSingleContentHost
+    public partial class MGWindow : MGSingleContentHost
     {
         public MGDesktop Desktop { get; }
 
@@ -58,6 +58,7 @@ namespace MGUI.Core.UI
                 if (_Left != value)
                 {
                     _Left = value;
+                    InvalidateRenderContextSubtree(MGRenderInvalidationKind.Visual);
                     NPC(nameof(Left));
                     NPC(nameof(TopLeft));
                 }
@@ -74,6 +75,7 @@ namespace MGUI.Core.UI
                 if (_Top != value)
                 {
                     _Top = value;
+                    InvalidateRenderContextSubtree(MGRenderInvalidationKind.Visual);
                     NPC(nameof(Top));
                     NPC(nameof(TopLeft));
                 }
@@ -255,6 +257,7 @@ namespace MGUI.Core.UI
                 {
                     float Previous = Scale;
                     _Scale = value;
+                    InvalidateRenderContextSubtree(MGRenderInvalidationKind.Visual);
                     UpdateScaleTransforms();
 #if NEVER
                     UpdateRenderTarget();
@@ -450,6 +453,8 @@ namespace MGUI.Core.UI
                 {
                     MGWindow Previous = ModalWindow;
                     _ModalWindow = value;
+                    InvalidateRenderContextSubtree(MGRenderInvalidationKind.Visual);
+                    Desktop.ReconcileRenderRootAttachments();
                     NPC(nameof(ModalWindow));
                     NPC(nameof(HasModalWindow));
                     Previous?.NPC(nameof(IsModalWindow));
@@ -478,8 +483,18 @@ namespace MGUI.Core.UI
             if (NestedWindow == this)
                 throw new ArgumentException("Cannot add a window as a nested window to itself as this would create an infinite recursive dependency.");
             _NestedWindows.Add(NestedWindow);
+            Desktop.ReconcileRenderRootAttachments();
         }
-        public bool RemoveNestedWindow(MGWindow NestedWindow) => _NestedWindows.Remove(NestedWindow);
+        public bool RemoveNestedWindow(MGWindow NestedWindow)
+        {
+            if (!_NestedWindows.Remove(NestedWindow))
+            {
+                return false;
+            }
+
+            Desktop.ReconcileRenderRootAttachments();
+            return true;
+        }
 
         /// <summary>Moves the given <paramref name="NestedWindow"/> to the end of <see cref="NestedWindows"/> list.<br/>
         /// It will typically be rendered overtop of all other <see cref="NestedWindows"/>, unless another nested window is Topmost (See: <see cref="IsTopmost"/>).<para/>
@@ -767,6 +782,8 @@ namespace MGUI.Core.UI
                 if (_Theme != value)
                 {
                     _Theme = value;
+                    RefreshBaseRenderSources();
+                    InvalidateRenderContextSubtree(MGRenderInvalidationKind.Visual);
                     NPC(nameof(Theme));
                 }
             }
@@ -1721,6 +1738,7 @@ namespace MGUI.Core.UI
 
         public override void Draw(ElementDrawArgs DA)
         {
+            DA = DA.ObserveInheritedRasterizer();
             if (!IsWindowScaled && !ParentWindows.Any(x => x.IsWindowScaled))
                 base.Draw(DA);
             else

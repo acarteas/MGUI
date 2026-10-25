@@ -100,6 +100,7 @@ namespace MGUI.Core.UI
         #region Templated Items
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private ObservableCollection<TemplatedElement<TItemType, MGButton>> _TemplatedItems;
+        private IReadOnlyList<MGButton> PreviousTemplatedElements = Array.Empty<MGButton>();
         private ObservableCollection<TemplatedElement<TItemType, MGButton>> TemplatedItems
         {
             get => _TemplatedItems;
@@ -113,10 +114,15 @@ namespace MGUI.Core.UI
                         TemplatedItems.CollectionChanged -= TemplatedItems_CollectionChanged;
                     }
                     _TemplatedItems = value;
+                    PreviousTemplatedElements = TemplatedItems?.Select(Item => Item.Element).ToArray() ?? Array.Empty<MGButton>();
                     if (TemplatedItems != null)
                         TemplatedItems.CollectionChanged += TemplatedItems_CollectionChanged;
 
                     DropdownContentChanged();
+                    if (SelectedTemplatedItem != null)
+                    {
+                        SelectedTemplatedItem = TemplatedItems?.FirstOrDefault(Item => Comparer.Equals(Item.SourceData, SelectedItem));
+                    }
                     HoveredItem = null;
                 }
             }
@@ -134,11 +140,19 @@ namespace MGUI.Core.UI
         private void TemplatedItems_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             DropdownContentChanged();
-
-            if (e.Action is NotifyCollectionChangedAction.Remove or NotifyCollectionChangedAction.Replace && e.OldItems != null)
+            if (SelectedTemplatedItem != null && !TemplatedItems.Contains(SelectedTemplatedItem))
             {
-                HandleTemplatedContentRemoved(e.OldItems.Cast<TemplatedElement<TItemType, MGButton>>().Select(x => x.Element));
+                SelectedTemplatedItem = null;
             }
+            if (HoveredItem != null && !TemplatedItems.Contains(HoveredItem))
+            {
+                HoveredItem = null;
+            }
+            NPC(nameof(SelectedIndex));
+
+            HashSet<MGButton> CurrentElements = new(TemplatedItems.Select(Item => Item.Element));
+            HandleTemplatedContentRemoved(PreviousTemplatedElements.Where(Item => !CurrentElements.Contains(Item)));
+            PreviousTemplatedElements = TemplatedItems.Select(Item => Item.Element).ToArray();
         }
 
         #region Selected Item
@@ -264,7 +278,6 @@ namespace MGUI.Core.UI
             {
                 if (e.Action is NotifyCollectionChangedAction.Reset)
                 {
-                    HandleTemplatedContentRemoved(TemplatedItems.Select(x => x.Element));
                     TemplatedItems.Clear();
                 }
                 else if (e.Action is NotifyCollectionChangedAction.Add && e.NewItems != null)
@@ -299,7 +312,7 @@ namespace MGUI.Core.UI
                 }
                 else if (e.Action is NotifyCollectionChangedAction.Move)
                 {
-                    throw new NotImplementedException();
+                    TemplatedItems.Move(e.OldStartingIndex, e.NewStartingIndex);
                 }
             }
         }
@@ -397,14 +410,66 @@ namespace MGUI.Core.UI
         #endregion Item Template
 
         #region Dropdown
+        private int _MinDropdownWidth = 180;
         /// <summary>When the dropdown is opened, it will attempt to use the <see cref="MGElement.ActualWidth"/> of this <see cref="MGComboBox{TItemType}"/>,<br/>
         /// but the width will be clamped to the range [<see cref="MinDropdownWidth"/>, <see cref="MaxDropdownWidth"/>]</summary>
-        public int MinDropdownWidth { get; set; } = 180;
+        public int MinDropdownWidth
+        {
+            get => _MinDropdownWidth;
+            set
+            {
+                if (_MinDropdownWidth != value)
+                {
+                    _MinDropdownWidth = value;
+                    DropdownContentChanged();
+                    NPC(nameof(MinDropdownWidth));
+                }
+            }
+        }
+        private int _MaxDropdownWidth = 1000;
         /// <summary>When the dropdown is opened, it will attempt to use the <see cref="MGElement.ActualWidth"/> of this <see cref="MGComboBox{TItemType}"/>,<br/>
         /// but the width will be clamped to the range [<see cref="MinDropdownWidth"/>, <see cref="MaxDropdownWidth"/>]</summary>
-        public int MaxDropdownWidth { get; set; } = 1000;
-        public int MinDropdownHeight { get; set; } = 100;
-        public int MaxDropdownHeight { get; set; } = 360;
+        public int MaxDropdownWidth
+        {
+            get => _MaxDropdownWidth;
+            set
+            {
+                if (_MaxDropdownWidth != value)
+                {
+                    _MaxDropdownWidth = value;
+                    DropdownContentChanged();
+                    NPC(nameof(MaxDropdownWidth));
+                }
+            }
+        }
+        private int _MinDropdownHeight = 100;
+        public int MinDropdownHeight
+        {
+            get => _MinDropdownHeight;
+            set
+            {
+                if (_MinDropdownHeight != value)
+                {
+                    _MinDropdownHeight = value;
+                    DropdownContentChanged();
+                    NPC(nameof(MinDropdownHeight));
+                }
+            }
+        }
+        private int _MaxDropdownHeight = 360;
+        public int MaxDropdownHeight
+        {
+            get => _MaxDropdownHeight;
+            set
+            {
+                if (_MaxDropdownHeight != value)
+                {
+                    _MaxDropdownHeight = value;
+                    DropdownContentChanged();
+                    NPC(nameof(MaxDropdownHeight));
+                }
+            }
+        }
 
         /// <summary>The floating <see cref="MGWindow"/> used to display the content inside of the dropdown when <see cref="IsDropdownOpen"/> is true.<para/>
         /// Warning - be careful when editing properties on this object. Some changes could break the combobox's functionality,<br/>
@@ -423,6 +488,7 @@ namespace MGUI.Core.UI
         private void DropdownContentChanged()
         {
             IsDropdownContentValid = false;
+            Dropdown?.InvalidateRenderState(MGRenderInvalidationKind.Visual);
         }
 
         private void UpdateDropdownContent()
@@ -512,6 +578,7 @@ namespace MGUI.Core.UI
                 if (_DropdownArrowColor != value)
                 {
                     _DropdownArrowColor = value;
+                    DropdownArrowElement?.InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(DropdownArrowColor));
                 }
             }
@@ -598,7 +665,7 @@ namespace MGUI.Core.UI
                 DropdownArrowElement.Margin = new(DefaultDropdownArrowLeftMargin, 0, DefaultDropdownArrowRightMargin, 0);
                 DropdownArrowColor = GetTheme().DropdownArrowColor;
 
-                DropdownArrowElement.OnEndingDraw += (sender, e) =>
+                DropdownArrowElement.OnEndingDrawBuiltIn += (sender, e) =>
                 {
                     Rectangle ArrowElementFullBounds = DropdownArrowElement.LayoutBounds;
                     Rectangle ArrowPartBounds = ApplyAlignment(ArrowElementFullBounds, HorizontalAlignment.Center, VerticalAlignment.Center, EffectiveDropdownArrowSize);

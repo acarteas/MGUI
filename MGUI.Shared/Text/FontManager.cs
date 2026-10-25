@@ -20,11 +20,28 @@ namespace MGUI.Shared.Text
         public void AddFontSet(FontSet Set)
         {
             _FontsByFamily.Add(Set.Name, Set);
-            DefaultFontFamily ??= Set.Name;
+            _DefaultFontFamily ??= Set.Name;
+            FontsChanged?.Invoke(this, EventArgs.Empty);
         }
 
         /// <summary>The name of the font family that should be used by default when no font has been explicitly specified for text content.</summary>
-        public string DefaultFontFamily { get; set; }
+        private string _DefaultFontFamily;
+        public string DefaultFontFamily
+        {
+            get => _DefaultFontFamily;
+            set
+            {
+                if (_DefaultFontFamily != value)
+                {
+                    _DefaultFontFamily = value;
+                    FontsChanged?.Invoke(this, EventArgs.Empty);
+                }
+            }
+        }
+
+        /// <summary>Notifies consumers when the registry/resolver changes. External glyph/texture writes
+        /// require explicit visual invalidation before the next draw.</summary>
+        public event EventHandler FontsChanged;
         public FontSet GetFontFamilyOrDefault(string FamilyName)
         {
             if (_FontsByFamily.TryGetValue(FamilyName, out FontSet FS))

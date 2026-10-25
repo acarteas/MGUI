@@ -44,11 +44,25 @@ namespace MGUI.Core.UI
             {
                 if (_PressedContentOffset != value)
                 {
+                    Point PreviousOffset = CalculateContentDrawOffset(Point.Zero, VisualState, PressedContentOffset, EffectiveScaleSettings);
                     _PressedContentOffset = value;
+                    if (PreviousOffset != CalculateContentDrawOffset(Point.Zero, VisualState, PressedContentOffset, EffectiveScaleSettings))
+                    {
+                        InvalidateRenderContextSubtree(MGRenderInvalidationKind.Visual);
+                    }
+                    else
+                    {
+                        InvalidateRenderState(MGRenderInvalidationKind.Visual);
+                    }
                     NPC(nameof(PressedContentOffset));
                 }
             }
         }
+
+        protected override bool DoesVisualStateChangeDescendantRenderContext(VisualState Previous, VisualState Current)
+            => base.DoesVisualStateChangeDescendantRenderContext(Previous, Current)
+                || CalculateContentDrawOffset(Point.Zero, Previous, PressedContentOffset, EffectiveScaleSettings)
+                    != CalculateContentDrawOffset(Point.Zero, Current, PressedContentOffset, EffectiveScaleSettings);
 
         internal Point GetContentDrawOffset(ElementDrawArgs DA)
             => CalculateContentDrawOffset(DA.Offset, DA.VisualState, PressedContentOffset, EffectiveScaleSettings);

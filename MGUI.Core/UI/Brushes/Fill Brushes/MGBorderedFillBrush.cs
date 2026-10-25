@@ -11,14 +11,62 @@ using System.Threading.Tasks;
 namespace MGUI.Core.UI.Brushes.Fill_Brushes
 {
     /// <summary>An <see cref="IFillBrush"/> that combines the functionality of an <see cref="IFillBrush"/> and an <see cref="IBorderBrush"/></summary>
-    public class MGBorderedFillBrush : IFillBrush
+    public partial class MGBorderedFillBrush : IFillBrush
     {
-        public Thickness BorderThickness { get; set; }
-        public IBorderBrush BorderBrush { get; set; }
-        public IFillBrush FillBrush { get; set; }
+        private Thickness _BorderThickness;
+        public Thickness BorderThickness
+        {
+            get => _BorderThickness;
+            set
+            {
+                if (!EqualityComparer<Thickness>.Default.Equals(_BorderThickness, value))
+                {
+                    _BorderThickness = value;
+                    _RenderCacheSource?.Invalidate();
+                }
+            }
+        }
+        private IBorderBrush _BorderBrush;
+        public IBorderBrush BorderBrush
+        {
+            get => _BorderBrush;
+            set
+            {
+                if (!EqualityComparer<IBorderBrush>.Default.Equals(_BorderBrush, value))
+                {
+                    _BorderBrush = value;
+                    _RenderCacheSource?.Invalidate();
+                }
+            }
+        }
+        private IFillBrush _FillBrush;
+        public IFillBrush FillBrush
+        {
+            get => _FillBrush;
+            set
+            {
+                if (!EqualityComparer<IFillBrush>.Default.Equals(_FillBrush, value))
+                {
+                    _FillBrush = value;
+                    _RenderCacheSource?.Invalidate();
+                }
+            }
+        }
         /// <summary>If true, <see cref="FillBrush"/> will not be drawn to the entire bounds and will instead be compressed by the <see cref="BorderThickness"/>,<br/>
         /// only filling the portion of the bounds that don't intersect the border.</summary>
-        public bool PadFillBoundsByBorderThickness { get; set; }
+        private bool _PadFillBoundsByBorderThickness;
+        public bool PadFillBoundsByBorderThickness
+        {
+            get => _PadFillBoundsByBorderThickness;
+            set
+            {
+                if (!EqualityComparer<bool>.Default.Equals(_PadFillBoundsByBorderThickness, value))
+                {
+                    _PadFillBoundsByBorderThickness = value;
+                    _RenderCacheSource?.Invalidate();
+                }
+            }
+        }
 
         /// <param name="PadFillBoundsByBorderThickness">If true, <paramref name="FillBrush"/> will not be drawn to the entire bounds and will instead be compressed by the <paramref name="BorderThickness"/>,<br/>
         /// only filling the portion of the bounds that don't intersect the border.</param>

@@ -26,6 +26,8 @@ namespace MGUI.Core.UI
                 {
                     IBorderBrush Previous = BorderBrush;
                     _BorderBrush = value;
+                    RefreshBaseRenderSources();
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
                     NPC(nameof(BorderBrush));
                     OnBorderBrushChanged?.Invoke(this, new(Previous, BorderBrush));
                 }

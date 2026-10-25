@@ -16,6 +16,11 @@ namespace MGUI.Core.UI
 {
     public class MGRectangle : MGElement
     {
+        protected override IEnumerable<object> EnumerateControlRenderSources()
+        {
+            yield return Fill;
+        }
+
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private int _Width;
         public int Width
@@ -60,6 +65,7 @@ namespace MGUI.Core.UI
                 if (_Stroke != value)
                 {
                     _Stroke = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(Stroke));
                 }
             }
@@ -77,6 +83,7 @@ namespace MGUI.Core.UI
                 if (_StrokeThickness != value)
                 {
                     _StrokeThickness = value;
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual);
                     NPC(nameof(StrokeThickness));
                 }
             }
@@ -94,6 +101,8 @@ namespace MGUI.Core.UI
                 if (_Fill != value)
                 {
                     _Fill = value;
+                    RefreshBaseRenderSources();
+                    InvalidateRenderState(MGRenderInvalidationKind.Visual | MGRenderInvalidationKind.Dependencies);
                     NPC(nameof(Fill));
                 }
             }
