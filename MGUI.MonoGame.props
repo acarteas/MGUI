@@ -14,7 +14,8 @@
       <_MGUIProjectFileWrites Include="@(FileWrites)"
                              Condition="$([System.String]::Copy('%(FileWrites.Identity)').StartsWith('$(MSBuildProjectDirectory)$([System.IO.Path]::DirectorySeparatorChar)'))" />
       <FileWrites Remove="@(_MGUIProjectFileWrites)" />
-      <FileWrites Include="$([MSBuild]::MakeRelative('$(MSBuildProjectDirectory)', '%(_MGUIProjectFileWrites.Identity)'))" />
+      <FileWrites Include="$([MSBuild]::MakeRelative('$(MSBuildProjectDirectory)', '%(_MGUIProjectFileWrites.Identity)'))"
+                  Condition="'@(_MGUIProjectFileWrites)' != ''" />
       <_MGUIProjectFileWrites Remove="@(_MGUIProjectFileWrites)" />
     </ItemGroup>
   </Target>

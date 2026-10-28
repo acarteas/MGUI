@@ -31,6 +31,46 @@ def check_restore_graph(consumer_project, run_root, name):
     print(f"PASS {name} restore graph has one MGUI.Shared identity", flush=True)
 
 
+def check_empty_project_file_writes(props, run_root):
+    project_root = run_root / "isolated"
+    project_root.mkdir()
+    project = project_root / "EmptyFileWrites.csproj"
+    project.write_text("""<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="%s" />
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+  </PropertyGroup>
+  <Target Name="VerifyExternalFileWrites" AfterTargets="MGUIUseProjectRelativeFileWritesForClean">
+    <ItemGroup>
+      <ProjectOwnedWrites Include="@(FileWrites)"
+                          Condition="$([System.String]::Copy('%%(FileWrites.Identity)').StartsWith('$(MSBuildProjectDirectory)$([System.IO.Path]::DirectorySeparatorChar)'))" />
+    </ItemGroup>
+    <Error Condition="'@(ProjectOwnedWrites)' != ''" Text="Expected no project-owned FileWrites with isolated artifacts." />
+    <Error Condition="'@(FileWrites)' == ''" Text="External FileWrites must remain available to SDK cleanup." />
+    <WriteLinesToFile File="$(MSBuildProjectDirectory)/verified-file-writes.txt" Lines="@(FileWrites)" Overwrite="true" />
+  </Target>
+</Project>
+""" % escape(str(props), {'"': '&quot;'}), encoding="utf-8")
+    (project_root / "Class1.cs").write_text("public sealed class Class1 { }\n", encoding="utf-8")
+    artifacts = run_root / "isolated-artifacts"
+    command = ["dotnet", "build", str(project), "-c", "Release", "-m:1",
+               "--artifacts-path", str(artifacts)]
+    log_path = run_root / "empty-project-file-writes.log"
+    with log_path.open("w", encoding="utf-8") as log:
+        result = subprocess.run(command, cwd=run_root, stdout=log, stderr=subprocess.STDOUT,
+                                timeout=120, check=False)
+    if result.returncode:
+        raise AssertionError(f"Isolated artifacts build failed; see {log_path}")
+    for relative_path in ["bin/EmptyFileWrites/release/EmptyFileWrites.dll",
+                          "bin/EmptyFileWrites/release/EmptyFileWrites.deps.json",
+                          "obj/EmptyFileWrites/release/ref/EmptyFileWrites.dll"]:
+        if not (artifacts / relative_path).is_file():
+            raise AssertionError(f"Isolated build removed current output {relative_path}; see {log_path}")
+    if not (project_root / "verified-file-writes.txt").is_file():
+        raise AssertionError(f"FileWrites assertions did not execute; see {log_path}")
+    print("PASS isolated artifacts build retains external writes with no project-owned writes", flush=True)
+
+
 def check_build_path_identity(props, artifact_root, consumer_project=None):
     artifact_root.mkdir(parents=True, exist_ok=True)
     run_root = Path(tempfile.mkdtemp(prefix="build-path-identity-", dir=artifact_root)).resolve()
@@ -71,6 +111,7 @@ def check_build_path_identity(props, artifact_root, consumer_project=None):
         ("real-build-again", project, []),
     ]
     print(f"Artifacts: {run_root}", flush=True)
+    check_empty_project_file_writes(props, run_root)
     if consumer_project is not None:
         check_restore_graph(consumer_project, run_root, "before-builds")
     for index, (name, project_path, arguments) in enumerate(steps):
