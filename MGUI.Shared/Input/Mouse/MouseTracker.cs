@@ -83,7 +83,7 @@ namespace MGUI.Shared.Input.Mouse
 
         public InputTracker InputTracker { get; }
 
-        private List<MouseHandler> _Handlers { get; }
+        private InputHandlerRegistry<MouseHandler> _Handlers { get; }
         /// <summary>To create a <see cref="MouseHandler"/>, use <see cref="CreateHandler{T}(T, double?, bool, bool, bool)"/> or <see cref="CreateHandler{T}(T, InputUpdatePriority, bool, bool)"/></summary>
         public IReadOnlyList<MouseHandler> Handlers => _Handlers;
 
@@ -117,7 +117,7 @@ namespace MGUI.Shared.Input.Mouse
             where T : IMouseHandlerHost => CreateHandler(Owner, (int)UpdatePriority, AlwaysHandlesEvents, InvokeEvenIfHandled);
 
         /// <param name="UpdatePriority">The priority with which the handler receives mouse events. A higher priority means this handler will have the first chance to receive and handle events.<para/>
-        /// If null, the caller is expected to manually call <see cref="MouseHandler.ManualUpdate"/> themselves.<br/>
+        /// If null, the caller must retain the handler for its lifetime and manually call <see cref="MouseHandler.ManualUpdate"/> themselves.<br/>
         /// If not null, <see cref="MouseHandler.AutoUpdate"/> will automatically be invoked when updating this <see cref="MouseTracker"/><para/>
         /// Minimum Value = 0. Maximum Value = 100. Recommended to use preset values from <see cref="InputUpdatePriority"/>.</param>
         /// <param name="AlwaysHandlesEvents">If true, the handler will always set <see cref="HandledByEventArgs{THandlerType}.HandledBy"/> to <paramref name="Owner"/> when receiving the mouse event.</param>
@@ -128,7 +128,7 @@ namespace MGUI.Shared.Input.Mouse
             where T : IMouseHandlerHost
         {
             MouseHandler Handler = new(this, Owner, UpdatePriority, AlwaysHandlesEvents, InvokeEvenIfHandled, InvokeIfHandledBySelf);
-            _Handlers.Add(Handler);
+            _Handlers.Add(Handler, Handler.IsManualUpdate);
             return Handler;
         }
 

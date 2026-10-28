@@ -1530,14 +1530,18 @@ namespace MGUI.Core.UI
                 NameScopeMode = NameScopeMode.Inherit;
                 NameScopeLabel = null;
 
-                SelfOrParentWindow.WindowDataContextChanged += (sender, e) =>
-                {
-                    if (DataContextOverride == null)
+                MGWindow ContextWindow = SelfOrParentWindow;
+                _ = new WeakEventSubscription<MGElement, MGWindow, object>(this, ContextWindow,
+                    static (Element, sender, e) =>
                     {
-                        NPC(nameof(DataContext));
-                        InvokeDataContextChanged();
-                    }
-                };
+                        if (Element.DataContextOverride == null)
+                        {
+                            Element.NPC(nameof(DataContext));
+                            Element.InvokeDataContextChanged();
+                        }
+                    },
+                    static (Window, Handler) => Window.WindowDataContextChanged += Handler,
+                    static (Window, Handler) => Window.WindowDataContextChanged -= Handler);
 
                 MGTheme ActualTheme = Theme ?? ParentWindow?.Theme ?? Desktop.Theme;
 
@@ -1560,11 +1564,14 @@ namespace MGUI.Core.UI
                 ClipToBounds = true;
                 Opacity = 1.0f;
 
-                SelfOrParentWindow.OnWindowPositionChanged += (sender, e) =>
-				{
-					Point Offset = new(e.NewValue.Left - e.PreviousValue.Left, e.NewValue.Top - e.PreviousValue.Top);
-                    TranslateAllBounds(Offset);
-				};
+                _ = new WeakEventSubscription<MGElement, MGWindow, EventArgs<(int Left, int Top)>>(this, ContextWindow,
+                    static (Element, sender, e) =>
+                    {
+                        Point Offset = new(e.NewValue.Left - e.PreviousValue.Left, e.NewValue.Top - e.PreviousValue.Top);
+                        Element.TranslateAllBounds(Offset);
+                    },
+                    static (Window, Handler) => Window.OnWindowPositionChanged += Handler,
+                    static (Window, Handler) => Window.OnWindowPositionChanged -= Handler);
             }
 		}
 

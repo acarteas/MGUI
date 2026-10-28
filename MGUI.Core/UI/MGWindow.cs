@@ -1153,17 +1153,20 @@ namespace MGUI.Core.UI
                 //  Nested windows inherit their WindowDataContext from the parent if they don't have their own explicit value
                 if (ParentWindow != null)
                 {
-                    ParentWindow.WindowDataContextChanged += (sender, e) =>
-                    {
-                        if (_WindowDataContext == null)
+                    _ = new WeakEventSubscription<MGWindow, MGWindow, object>(this, ParentWindow,
+                        static (Window, sender, e) =>
                         {
-                            NPC(nameof(WindowDataContext));
-                            NPC(nameof(DataContextOverride));
-                            NPC(nameof(DataContext));
-                            WindowDataContextChanged?.Invoke(this, WindowDataContext);
-                            RevalidateSizeToContent(false);
-                        }
-                    };
+                            if (Window._WindowDataContext == null)
+                            {
+                                Window.NPC(nameof(WindowDataContext));
+                                Window.NPC(nameof(DataContextOverride));
+                                Window.NPC(nameof(DataContext));
+                                Window.WindowDataContextChanged?.Invoke(Window, Window.WindowDataContext);
+                                Window.RevalidateSizeToContent(false);
+                            }
+                        },
+                        static (Parent, Handler) => Parent.WindowDataContextChanged += Handler,
+                        static (Parent, Handler) => Parent.WindowDataContextChanged -= Handler);
                 }
 
                 MakeDraggable();

@@ -30,7 +30,7 @@ namespace MGUI.Shared.Input.Keyboard
 
         public InputTracker InputTracker { get; }
 
-        private List<KeyboardHandler> _Handlers { get; }
+        private InputHandlerRegistry<KeyboardHandler> _Handlers { get; }
         /// <summary>To create a <see cref="KeyboardHandler"/>, use <see cref="CreateHandler{T}(T, double?, bool, bool)"/> or <see cref="CreateHandler{T}(T, InputUpdatePriority, bool, bool)"/></summary>
         public IReadOnlyList<KeyboardHandler> Handlers => _Handlers;
 
@@ -52,7 +52,7 @@ namespace MGUI.Shared.Input.Keyboard
             where T : IKeyboardHandlerHost => CreateHandler(Owner, (int)UpdatePriority, AlwaysHandlesEvents, InvokeEvenIfHandled);
 
         /// <param name="UpdatePriority">The priority with which the handler receives keyboard events. A higher priority means this handler will have the first chance to receive and handle events.<para/>
-        /// If null, the caller is expected to manually call <see cref="KeyboardHandler.ManualUpdate"/> themselves.<br/>
+        /// If null, the caller must retain the handler for its lifetime and manually call <see cref="KeyboardHandler.ManualUpdate"/> themselves.<br/>
         /// If not null, <see cref="KeyboardHandler.AutoUpdate"/> will automatically be invoked when updating this <see cref="KeyboardTracker"/><para/>
         /// Minimum Value = 0. Maximum Value = 100. Recommended to use preset values from <see cref="InputUpdatePriority"/>.</param>
         /// <param name="AlwaysHandlesEvents">If true, the handler will always set <see cref="HandledByEventArgs{THandlerType}.HandledBy"/> to <paramref name="Owner"/> when receiving the keyboard event.</param>
@@ -61,7 +61,7 @@ namespace MGUI.Shared.Input.Keyboard
             where T : IKeyboardHandlerHost
         {
             KeyboardHandler Handler = new(this, Owner, UpdatePriority, AlwaysHandlesEvents, InvokeEvenIfHandled);
-            _Handlers.Add(Handler);
+            _Handlers.Add(Handler, Handler.IsManualUpdate);
             return Handler;
         }
 
