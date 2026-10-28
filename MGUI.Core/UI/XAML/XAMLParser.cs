@@ -266,6 +266,15 @@ namespace MGUI.Core.UI.XAML
             return sw.ToString();
         }
 
+        /// <summary>Activates pending XAML bindings on a completely loaded subtree and its nested bindable objects.
+        /// Establish the subtree's name scopes and attach it to its intended parent before calling this method.
+        /// Existing bindings are preserved; repeated calls process only pending bindings.</summary>
+        public static void ActivateBindings(MGElement subtreeRoot)
+        {
+            ArgumentNullException.ThrowIfNull(subtreeRoot);
+            Element.ProcessBindings(subtreeRoot, true, null);
+        }
+
         /// <param name="SanitizeXAMLString">If true, the given <paramref name="XAMLString"/> will be pre-processed via the following logic:<para/>
         /// 1. Trim leading and trailing whitespace<br/>
         /// 2. Insert required XML namespaces (such as "xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation")<br/>
