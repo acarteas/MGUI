@@ -6,4 +6,16 @@
   <ItemGroup Condition="'$(MGUIUseMonoGameNative)' == 'true'">
     <ProjectReference Include="$(MGUIMonoGameNativeProject)" />
   </ItemGroup>
+
+  <!-- SDK cleanup tasks resolve relative paths through the physical working directory.
+       Keep project-owned writes relative so symlink builds use the same cleanup identity. -->
+  <Target Name="MGUIUseProjectRelativeFileWritesForClean" BeforeTargets="_CleanGetCurrentAndPriorFileWrites">
+    <ItemGroup>
+      <_MGUIProjectFileWrites Include="@(FileWrites)"
+                             Condition="$([System.String]::Copy('%(FileWrites.Identity)').StartsWith('$(MSBuildProjectDirectory)$([System.IO.Path]::DirectorySeparatorChar)'))" />
+      <FileWrites Remove="@(_MGUIProjectFileWrites)" />
+      <FileWrites Include="$([MSBuild]::MakeRelative('$(MSBuildProjectDirectory)', '%(_MGUIProjectFileWrites.Identity)'))" />
+      <_MGUIProjectFileWrites Remove="@(_MGUIProjectFileWrites)" />
+    </ItemGroup>
+  </Target>
 </Project>

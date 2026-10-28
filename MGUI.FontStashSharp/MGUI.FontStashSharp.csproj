@@ -2,7 +2,7 @@
   <Import Project="../MGUI.MonoGame.props" />
 
   <ItemGroup>
-    <ProjectReference Include="..\MGUI.Shared\MGUI.Shared.csproj" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\MGUI.Shared\MGUI.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>

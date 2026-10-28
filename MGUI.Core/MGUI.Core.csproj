@@ -41,6 +41,6 @@
     <PackageReference Include="Prism.Core" Version="8.1.97" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MGUI.Shared\MGUI.Shared.csproj" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\MGUI.Shared\MGUI.Shared.csproj" />
   </ItemGroup>
 </Project>
