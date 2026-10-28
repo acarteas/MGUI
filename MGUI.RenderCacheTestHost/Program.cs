@@ -35,6 +35,10 @@ internal static class Program
             {
                 return CollectionControlTests.RunAllNative();
             }
+            if (args.Length == 1 && args[0] == "--password-input")
+            {
+                return PasswordInputTests.RunAllNative();
+            }
             if (args.Length == 1 && args[0] == "--interactive")
             {
                 return InteractiveTests.RunAllNative();

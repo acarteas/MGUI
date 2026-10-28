@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Security;
+using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
@@ -12,6 +14,9 @@ using MGUI.Shared.Helpers;
 
 namespace MGUI.Core.UI
 {
+    /// <summary>A synchronous consumer of a temporary password view. The view is valid only during the callback.</summary>
+    public delegate void PasswordReadCallback(ReadOnlySpan<char> Password);
+
     public class MGPasswordBox : MGTextBox
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -26,8 +31,10 @@ namespace MGUI.Core.UI
 				if (_PasswordCharacter != value)
 				{
 					_PasswordCharacter = value;
-					if (!string.IsNullOrEmpty(Text))
-						_ = base.SetText(ReplaceNormalCharactersWith(Text, PasswordCharacter));
+                    if (!string.IsNullOrEmpty(Text))
+                    {
+                        _ = base.SetText(ReplaceNormalCharactersWith(Text, PasswordCharacter), true);
+                    }
 					NPC(nameof(PasswordCharacter));
 				}
 			}
@@ -41,23 +48,29 @@ namespace MGUI.Core.UI
 			NPC(nameof(Password));
         }
 
-		protected override bool SetText(string Value, bool ExecuteEvenIfSameValue)
-		{
+        private int SecretGeneration;
+
+        protected override bool SetText(string Value, bool ExecuteEvenIfSameValue)
+        {
+            int EditGeneration = ++SecretGeneration;
             SecureString Temp = Value?.AsSecureString();
-            Value = ReplaceNormalCharactersWith(Value, PasswordCharacter);
-            if (base.SetText(Value, true))
+            try
             {
-                //Debug.WriteLine($"{nameof(MGPasswordBox)}: Password changed from: \"{Password}\" to \"{Temp?.AsPlainString()}\"");
+                string MaskedValue = ReplaceNormalCharactersWith(Value, PasswordCharacter);
+                if (!base.SetText(MaskedValue, true) || EditGeneration != SecretGeneration)
+                {
+                    return false;
+                }
                 _Password?.Dispose();
                 _Password = Temp;
-				NPC(nameof(Password));
-				PasswordChanged?.Invoke(this, EventArgs.Empty);
-                return true;
+                Temp = null;
+                NPC(nameof(Password));
+                PasswordChanged?.Invoke(this, EventArgs.Empty);
+                return EditGeneration == SecretGeneration;
             }
-            else
+            finally
             {
                 Temp?.Dispose();
-                return false;
             }
         }
 
@@ -82,7 +95,79 @@ namespace MGUI.Core.UI
 
 		private SecureString _Password;
 		/// <summary>Decodes the <see cref="SecureString"/> holding this <see cref="MGPasswordBox"/>'s Password into a plain-text string and returns the result.</summary>
-		public string Password => _Password.AsPlainString();
+        public string Password
+        {
+            get
+            {
+                string Result = string.Empty;
+                ReadPassword(Value => Result = new string(Value));
+                return Result;
+            }
+        }
+
+        /// <summary>Invokes a synchronous callback with the exact password. Owned temporary memory is zeroed even if the callback throws.
+        /// Existing editing operations and the legacy Password property still create managed strings that cannot be erased.</summary>
+        public void ReadPassword(PasswordReadCallback Reader)
+        {
+            ArgumentNullException.ThrowIfNull(Reader);
+            char[] Buffer = new char[_Password?.Length ?? 0];
+            ReadPasswordCore(_Password, Buffer, Reader);
+        }
+
+        private static void ReadPasswordCore(SecureString Secret, char[] Buffer, PasswordReadCallback Reader)
+        {
+            IntPtr NativeBuffer = IntPtr.Zero;
+            try
+            {
+                if (Secret != null && Buffer.Length > 0)
+                {
+                    NativeBuffer = Marshal.SecureStringToGlobalAllocUnicode(Secret);
+                    Marshal.Copy(NativeBuffer, Buffer, 0, Buffer.Length);
+                }
+                Reader(Buffer);
+            }
+            finally
+            {
+                try
+                {
+                    ZeroPasswordBuffers(Buffer, NativeBuffer);
+                }
+                finally
+                {
+                    if (NativeBuffer != IntPtr.Zero)
+                    {
+                        Marshal.FreeHGlobal(NativeBuffer);
+                    }
+                }
+            }
+        }
+
+        private static void ZeroPasswordBuffers(char[] Buffer, IntPtr NativeBuffer)
+        {
+            CryptographicOperations.ZeroMemory(MemoryMarshal.AsBytes(Buffer.AsSpan()));
+            if (NativeBuffer != IntPtr.Zero)
+            {
+                Marshal.Copy(Buffer, 0, NativeBuffer, Buffer.Length);
+            }
+        }
+
+        /// <summary>Clears the secret, masked display, history, selection, caret and pending editing state.
+        /// Cleanup cannot be cancelled by TextChanging and may be called repeatedly.</summary>
+        public void ClearPassword()
+        {
+            SecretGeneration++;
+            bool Changed = (_Password?.Length ?? 0) > 0 || Text.Length > 0;
+            _Password?.Dispose();
+            _Password = new SecureString();
+            ClearTextAndEditingState();
+            if (Changed)
+            {
+                NPC(nameof(Password));
+                PasswordChanged?.Invoke(this, EventArgs.Empty);
+            }
+        }
+
+        protected sealed override bool SupportsUndoRedo => false;
 
 		public event EventHandler<EventArgs> PasswordChanged;
 
@@ -96,6 +181,7 @@ namespace MGUI.Core.UI
         {
 			using (BeginInitializing())
 			{
+                UndoRedoHistorySize = 0;
 				PasswordCharacter = '*';
 				AcceptsReturn = false;
 				AcceptsTab = false;

@@ -80,6 +80,7 @@ namespace MGUI.Core.UI
         /// <returns>True if <see cref="Text"/> value was changed.</returns>
         protected virtual bool SetText(string Value, bool ExecuteEvenIfSameValue)
         {
+            int EditGeneration = EditingStateGeneration;
             if (!AcceptsReturn && (Value.Contains('\n') || Value.Contains('\r')))
                 return false;
 
@@ -96,30 +97,57 @@ namespace MGUI.Core.UI
                         return false;
                 }
 
-                string Previous = Text;
-
-                _Text = Value;
-                NPC(nameof(Text));
-
-                if (!IsExecutingUndoRedo)
-                    ClearRedoStack();
-
-                UpdateCharacterCountText();
-                UpdatePlaceholderVisibility();
-                UpdateFormattedText(false);
-
-                TextChanged?.Invoke(this, new(Previous, Text));
-
-                //if (Caret.HasPosition && Caret.Position.Value.IndexInOriginalText >= Text.Length)
-                //    Caret.MoveToStartOfLine(TextRenderInfo.Lines.FirstOrDefault());
-
-                if (Caret.HasPosition && string.IsNullOrEmpty(Text))
-                    Caret.MoveToStartOfLine(TextRenderInfo.Lines.FirstOrDefault());
+                if (EditGeneration != EditingStateGeneration)
+                {
+                    return false;
+                }
+                ApplyTextChange(Value);
 
                 return true;
             }
             else
                 return false;
+        }
+
+        private void ApplyTextChange(string Value)
+        {
+            string Previous = Text;
+            _Text = Value;
+            NPC(nameof(Text));
+            if (!IsExecutingUndoRedo)
+            {
+                ClearRedoStack();
+            }
+            UpdateCharacterCountText();
+            UpdatePlaceholderVisibility();
+            UpdateFormattedText(false);
+            TextChanged?.Invoke(this, new(Previous, Text));
+            if (Caret.HasPosition && string.IsNullOrEmpty(Text))
+            {
+                Caret.MoveToStartOfLine(TextRenderInfo.Lines.FirstOrDefault());
+            }
+        }
+
+        private int EditingStateGeneration;
+
+        /// <summary>Clears displayed text and pending editing state without allowing TextChanging to cancel cleanup.</summary>
+        protected void ClearTextAndEditingState()
+        {
+            EditingStateGeneration++;
+            LastKeyPress = null;
+            IsDraggingSelection = false;
+            MousePressHistory.Clear();
+            CurrentSelection = null;
+            Caret.Position = null;
+            ClearUndoRedoHistory();
+            if (Text.Length > 0)
+            {
+                ApplyTextChange(string.Empty);
+            }
+            else
+            {
+                UpdateFormattedText(false);
+            }
         }
 
         /// <summary>Invoked when <see cref="Text"/> is about to change.</summary>
@@ -678,19 +706,18 @@ namespace MGUI.Core.UI
             /// <param name="Value"></param>
             public void SetLimit(int Value)
             {
-                if (Value <= 0)
-                    throw new ArgumentOutOfRangeException($"{nameof(LimitedStack<T>)}.{nameof(Limit)} cannot be <= 0.");
+                if (Value < 0)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(Value));
+                }
 
                 if (Value != Limit)
                 {
-                    if (Value > Count)
+                    if (Value < Count)
                     {
-                        Limit = Value;
+                        Stack.RemoveRange(0, Count - Value);
                     }
-                    else
-                    {
-                        Stack = new(Stack.Skip(Count - Value));
-                    }
+                    Limit = Value;
                 }
             }
 
@@ -706,8 +733,14 @@ namespace MGUI.Core.UI
 
             public void Push(T Item)
             {
-                if (Stack.Count == Limit) 
+                if (Limit == 0)
+                {
+                    return;
+                }
+                if (Stack.Count == Limit)
+                {
                     Stack.RemoveAt(0);
+                }
                 Stack.Add(Item);
             }
 
@@ -738,17 +771,26 @@ namespace MGUI.Core.UI
         public const int DefaultUndoRedoHistorySize = 20;
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private int _UndoRedoHistorySize;
+        private int _UndoRedoHistorySize = DefaultUndoRedoHistorySize;
+        protected virtual bool SupportsUndoRedo => true;
+        private bool IsUndoRedoEnabled => SupportsUndoRedo && UndoRedoHistorySize > 0;
+
         /// <summary>The maximum number of undo or redo states that will be kept in memory. Decreasing this value may result in the oldest undo or redo states being lost.<para/>
+        /// Zero disables history and clears retained states. Password boxes always disable history.<para/>
         /// Default value: <see cref="DefaultUndoRedoHistorySize"/></summary>
         public int UndoRedoHistorySize
         {
-            get => _UndoRedoHistorySize;
+            get => SupportsUndoRedo ? _UndoRedoHistorySize : 0;
             set
             {
-                if (_UndoRedoHistorySize != value)
+                if (value < 0)
                 {
-                    _UndoRedoHistorySize = value;
+                    throw new ArgumentOutOfRangeException(nameof(value));
+                }
+                int EffectiveValue = SupportsUndoRedo ? value : 0;
+                if (_UndoRedoHistorySize != EffectiveValue)
+                {
+                    _UndoRedoHistorySize = EffectiveValue;
                     UndoStack.SetLimit(UndoRedoHistorySize);
                     RedoStack.SetLimit(UndoRedoHistorySize);
                     NPC(nameof(UndoRedoHistorySize));
@@ -757,25 +799,41 @@ namespace MGUI.Core.UI
         }
 
         private record struct RestorableState(MGTextCaret.CaretPosition? CaretPosition, TextSelection? Selection, string Text);
-        private RestorableState CreateRestorableState() => new(Caret.Position, CurrentSelection, GetTextBackingField());
+        private RestorableState? CreateRestorableState() => IsUndoRedoEnabled
+            ? new(Caret.Position, CurrentSelection, GetTextBackingField()) : null;
+
+        /// <summary>Releases all retained undo and redo states.</summary>
+        public void ClearUndoRedoHistory()
+        {
+            UndoStack.Clear();
+            RedoStack.Clear();
+        }
 
         private readonly LimitedStack<RestorableState> UndoStack = new(DefaultUndoRedoHistorySize);
 
-        private void AddUndoState(RestorableState State) => UndoStack.Push(State);
+        private void AddUndoState(RestorableState? State)
+        {
+            if (IsUndoRedoEnabled && State.HasValue)
+            {
+                UndoStack.Push(State.Value);
+            }
+        }
 
         private bool IsExecutingUndoRedo = false;
 
         public bool TryUndo()
         {
-            if (IsReadonly || !IsEnabled)
+            if (!IsUndoRedoEnabled || IsReadonly || !IsEnabled)
+            {
                 return false;
+            }
 
             try
             {
                 IsExecutingUndoRedo = true;
                 if (UndoStack.TryPop(out RestorableState State))
                 {
-                    RestorableState RedoState = CreateRestorableState();
+                    RestorableState? RedoState = CreateRestorableState();
                     if (SetText(State.Text))
                     {
                         Caret.Position = State.CaretPosition;
@@ -792,20 +850,28 @@ namespace MGUI.Core.UI
 
         private readonly LimitedStack<RestorableState> RedoStack = new(DefaultUndoRedoHistorySize);
 
-        private void AddRedoState(RestorableState State) => RedoStack.Push(State);
+        private void AddRedoState(RestorableState? State)
+        {
+            if (IsUndoRedoEnabled && State.HasValue)
+            {
+                RedoStack.Push(State.Value);
+            }
+        }
         private void ClearRedoStack() => RedoStack.Clear();
 
         public bool TryRedo()
         {
-            if (IsReadonly || !IsEnabled)
+            if (!IsUndoRedoEnabled || IsReadonly || !IsEnabled)
+            {
                 return false;
+            }
 
             try
             {
                 IsExecutingUndoRedo = true;
                 if (RedoStack.TryPop(out RestorableState State))
                 {
-                    RestorableState UndoState = CreateRestorableState();
+                    RestorableState? UndoState = CreateRestorableState();
                     if (SetText(State.Text))
                     {
                         Caret.Position = State.CaretPosition;
@@ -1218,7 +1284,7 @@ namespace MGUI.Core.UI
 
         private void HandleKeyPress(BaseKeyPressedEventArgs e)
         {
-            //Debug.WriteLine($"{e.PrintableValue} {e.IsHandled}");
+            int EditGeneration = EditingStateGeneration;
             if (!e.IsPrintableKey)
             {
                 //  Handle non-printable keys such as arrow keys
@@ -1257,7 +1323,7 @@ namespace MGUI.Core.UI
                     case Keys.Back or Keys.Delete when !IsReadonly:
                         if (CurrentSelection.HasValue && CurrentSelection.Value.ActualLength(Text) > 0)
                         {
-                            RestorableState UndoState = CreateRestorableState();
+                            RestorableState? UndoState = CreateRestorableState();
                             int SelectionStart = CurrentSelection.Value.ActualStartIndex(Text);
                             int SelectionEnd = CurrentSelection.Value.ActualEndIndex(Text);
                             string CurrentText = GetTextBackingField();
@@ -1318,7 +1384,7 @@ namespace MGUI.Core.UI
                                 //  Cut
                                 if (CurrentSelection.HasValue && CurrentSelection.Value.ActualLength(Text) > 0)
                                 {
-                                    RestorableState UndoState = CreateRestorableState();
+                                    RestorableState? UndoState = CreateRestorableState();
                                     int SelectionStart = CurrentSelection.Value.ActualStartIndex(Text);
                                     int SelectionEnd = CurrentSelection.Value.ActualEndIndex(Text);
                                     string SelectedText = Text.Substring(SelectionStart, SelectionEnd - SelectionStart); // Could use CurrentText instead of Text to allow PasswordBoxes to copy the underlying text instead of the password characters *
@@ -1351,7 +1417,7 @@ namespace MGUI.Core.UI
                                 {
                                     if (CurrentSelection.HasValue && CurrentSelection.Value.ActualLength(Text) > 0)
                                     {
-                                        RestorableState UndoState = CreateRestorableState();
+                                        RestorableState? UndoState = CreateRestorableState();
                                         int SelectionStart = CurrentSelection.Value.ActualStartIndex(Text);
                                         int SelectionEnd = CurrentSelection.Value.ActualEndIndex(Text);
                                         string NewValue = CurrentText.Substring(0, SelectionStart) + ClipboardText + CurrentText.Substring(SelectionEnd);
@@ -1371,7 +1437,7 @@ namespace MGUI.Core.UI
                                     }
                                     else if (Caret.HasPosition)
                                     {
-                                        RestorableState UndoState = CreateRestorableState();
+                                        RestorableState? UndoState = CreateRestorableState();
                                         int CaretIndex = Caret.Position.Value.IndexInOriginalText;
                                         string NewValue = CurrentText.Substring(0, CaretIndex) + ClipboardText + CurrentText.Substring(CaretIndex);
                                         if (SetText(NewValue))
@@ -1407,7 +1473,7 @@ namespace MGUI.Core.UI
                                 //  Duplicate current line
                                 if (Caret.HasPosition && TextRenderInfo.TryGetCharAtScreenPosition(Caret.Position.Value.Bounds.Center.ToVector2(), out CharRenderInfo CharInfo))
                                 {
-                                    RestorableState UndoState = CreateRestorableState();
+                                    RestorableState? UndoState = CreateRestorableState();
                                     int LineStart = CharInfo.Line.FirstCharacter.IndexInOriginalText;
                                     int LineEnd = CharInfo.Line.LastCharacter.IndexInOriginalText + 1;
                                     if (CurrentText.Substring(LineStart).Length >= (LineEnd - LineStart))
@@ -1437,7 +1503,7 @@ namespace MGUI.Core.UI
 
                     if (CurrentSelection.HasValue && CurrentSelection.Value.ActualLength(Text) > 0)
                     {
-                        RestorableState UndoState = CreateRestorableState();
+                        RestorableState? UndoState = CreateRestorableState();
                         int SelectionStart = CurrentSelection.Value.ActualStartIndex(Text);
                         int SelectionEnd = CurrentSelection.Value.ActualEndIndex(Text);
                         string CurrentText = GetTextBackingField();
@@ -1479,7 +1545,13 @@ namespace MGUI.Core.UI
 
                         //Debug.WriteLine($"{nameof(MGTextBox)}: Insert key - {e.PrintableValue}");
                         if (SetText(NewText))
+                        {
                             TextBlockElement.UpdateLines();
+                        }
+                        if (EditGeneration != EditingStateGeneration)
+                        {
+                            return;
+                        }
                         int NumCharactersInserted = IsTab ? MGTextRun.TabSpacesCount : 1;
                         if (IsEnter)
                             _ = Caret.MoveToOriginalCharacterIndexOrLeft(Caret.Position.Value.IndexInOriginalText + NumCharactersInserted, true);

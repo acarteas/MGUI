@@ -2232,6 +2232,7 @@ namespace MGUI.Core.UI.XAML
         [Category("Behavior")]
         public bool? AllowsTextSelection { get; set; }
 
+        /// <summary>Zero disables history. PasswordBox always disables history regardless of this setting.</summary>
         [Category("Behavior")]
         public int? UndoRedoHistorySize { get; set; }
 
@@ -2303,7 +2304,9 @@ namespace MGUI.Core.UI.XAML
                 TextBox.AllowsTextSelection = AllowsTextSelection.Value;
 
             if (UndoRedoHistorySize.HasValue)
+            {
                 TextBox.UndoRedoHistorySize = UndoRedoHistorySize.Value;
+            }
 
             if (IsReadonly.HasValue)
                 TextBox.IsReadonly = IsReadonly.Value;
