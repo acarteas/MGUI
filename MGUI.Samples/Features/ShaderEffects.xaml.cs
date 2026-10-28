@@ -10,29 +10,32 @@ namespace MGUI.Samples.Features
 {
     public class ShaderEffectsSamples : SampleBase
     {
-        private const string UiEffectName = "SampleUiEffect";
         private const string OrnamentalFrameTextureName = "ShaderOrnamentalFrame";
 
         public string ShaderStatusText { get; private set; }
         public Color ShaderStatusColor { get; private set; }
+        public string FailureStatusText { get; private set; }
+        public string ShaderPreviewTitle { get; private set; }
 
         public ShaderEffectsSamples(ContentManager Content, MGDesktop Desktop)
-            : base(Content, Desktop, $"{nameof(Features)}", "ShaderEffects.xaml", () => RegisterShaderResources(Content, Desktop.Resources))
+            : this(Content, Desktop, new ShaderEffectsSampleSetup(Desktop.Resources,
+                () => Content.Load<Effect>(Path.Combine("Shaders", "UiEffects"))))
         {
-            bool HasEffect = Resources.TryGetEffect(UiEffectName, out _);
-            ShaderStatusText = HasEffect
-                ? "Loaded and registered the sample project's caller-owned DesktopGL effect and ornamental frame texture."
-                : "Shader resources were not registered.";
-            ShaderStatusColor = HasEffect ? Color.LightGreen : Color.LightCoral;
+        }
 
+        private ShaderEffectsSamples(ContentManager Content, MGDesktop Desktop, ShaderEffectsSampleSetup Setup)
+            : base(Content, Desktop, $"{nameof(Features)}", "ShaderEffects.xaml",
+                () => RegisterTextureResources(Content, Desktop.Resources), Setup.PrepareXaml)
+        {
+            ShaderStatusText = Setup.StatusText;
+            ShaderStatusColor = Setup.HasEffect ? Color.LightGreen : Color.LightCoral;
+            FailureStatusText = Setup.FailureStatusText;
+            ShaderPreviewTitle = Setup.HasEffect ? "Loaded effect: action states" : "Effect unavailable: fallback action states";
             Window.WindowDataContext = this;
         }
 
-        private static void RegisterShaderResources(ContentManager Content, MGResources Resources)
+        private static void RegisterTextureResources(ContentManager Content, MGResources Resources)
         {
-            Effect Effect = Content.Load<Effect>(Path.Combine("Shaders", "UiEffects"));
-            Resources.AddOrReplaceEffect(UiEffectName, Effect);
-
             Texture2D OrnamentalFrame = Content.Load<Texture2D>(Path.Combine("Brush Textures", "9SliceTexture-1"));
             if (!Resources.TryGetTexture(OrnamentalFrameTextureName, out _))
             {

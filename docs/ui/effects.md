@@ -198,6 +198,8 @@ Shader-backed controls can be compared with conventional image/button states:
 
 The sample at `MGUI.Samples/Features/ShaderEffects.xaml` demonstrates shader normal, primary, selected, and disabled actions; an image-local source-texture emissive icon treatment; a nonshader comparison; and effect-backed ornamental nine-slices with both a texture-backed center and a separate `InteriorBrush`, predominantly in XAML.
 
+Open **Features → Shaders** to compare the loaded-effect row with **Load failure: fallback action states**. The failure preview deliberately throws a content-load exception through the same registration path, leaves its effect name unregistered, and materializes the declared fallback fills. Both rows remain visible when the real shader loads. If the real load fails, the status includes the error, fill brushes select their fallbacks, and image/nine-slice examples retain ordinary texture rendering. Hover, press, and toggle both rows to compare input feedback without changing assets or registrations.
+
 ## Backend Compatibility
 
 MonoGame effects are backend-specific runtime objects. DesktopGL, Vulkan, DirectX, mobile, and other targets may need different profiles, bytecode, sampler declarations, or artifacts. Register an effect compiled for the active backend. The sample's `s0` convention has been executed and validated on this repository's DesktopGL backend; it is not a claim that compiled MGFX bytecode is portable to other backends.

@@ -87,8 +87,9 @@ public class ShaderEffectsSampleTests
     {
         string Source = ReadResource("ShaderEffects.xaml.cs");
 
-        Assert.Contains("\"ShaderEffects.xaml\", () => RegisterShaderResources(Content, Desktop.Resources)", Source);
-        Assert.Contains("AddOrReplaceEffect", Source);
+        Assert.Contains("new ShaderEffectsSampleSetup(Desktop.Resources", Source);
+        Assert.Contains("RegisterTextureResources(Content, Desktop.Resources), Setup.PrepareXaml", Source);
+        Assert.Contains("Content.Load<Effect>", Source);
         Assert.Contains("Path.Combine(\"Brush Textures\", \"9SliceTexture-1\")", Source);
         Assert.Contains("AddTexture(OrnamentalFrameTextureName", Source);
         Assert.DoesNotContain("GetElementByName", Source);

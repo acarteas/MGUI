@@ -44,7 +44,8 @@ namespace MGUI.Samples
 
         /// <param name="Initialize">Optional. This delegate is invoked before the XAML content is parsed,
         /// so you may wish to use this delegate to add resources to <see cref="MGDesktop.Resources"/> that may be required in order to parse the XAML.</param>
-        protected SampleBase(ContentManager Content, MGDesktop Desktop, string ProjectFolderName, string XAMLFilename, Action Initialize = null)
+        /// <param name="PrepareXAML">Optional sample-specific preparation before materialization, such as removing unavailable optional effects.</param>
+        protected SampleBase(ContentManager Content, MGDesktop Desktop, string ProjectFolderName, string XAMLFilename, Action Initialize = null, Func<string, string> PrepareXAML = null)
         {
             this.Content = Content;
             this.Desktop = Desktop;
@@ -52,6 +53,7 @@ namespace MGUI.Samples
             string ResourceName = $"{nameof(MGUI)}.{nameof(Samples)}.{(ProjectFolderName == null ? "" : ProjectFolderName + ".")}{XAMLFilename}";
             string XAML = GeneralUtils.ReadEmbeddedResourceAsString(Assembly.GetExecutingAssembly(), ResourceName);
             Initialize?.Invoke();
+            XAML = PrepareXAML?.Invoke(XAML) ?? XAML;
             try
             {
                 Window = XAMLParser.LoadRootWindow(Desktop, XAML, false, true);

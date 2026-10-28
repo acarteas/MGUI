@@ -81,6 +81,7 @@
     </Content>
     <EmbeddedResource Include="..\MGUI.Samples\Features\RenderCaching.xaml" LogicalName="MGUI.Tests.Fixtures.RenderCaching.xaml" />
     <EmbeddedResource Include="..\MGUI.Samples\Features\ShaderEffects.xaml" Link="Fixtures\ShaderEffects.xaml" />
+    <Compile Include="..\MGUI.Samples\Features\ShaderEffectsSampleSetup.cs" Link="Fixtures\ShaderEffectsSampleSetup.cs" />
     <EmbeddedResource Include="..\MGUI.Samples\Features\ShaderEffects.xaml.cs" Link="Fixtures\ShaderEffects.xaml.cs" />
     <EmbeddedResource Include="..\MGUI.Samples\Content\Shaders\UiEffects.fx" Link="Fixtures\UiEffects.fx" />
   </ItemGroup>
