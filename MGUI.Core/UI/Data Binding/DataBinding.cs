@@ -64,6 +64,10 @@ namespace MGUI.Core.UI.Data_Binding
 
         public readonly BindingConfig Config;
 
+        internal readonly object RegistrationTarget;
+        private readonly IObservableDataContext DataContextHost;
+        private readonly EventHandler<object> DataContextChangedHandler;
+
         public readonly object TargetObject;
         public readonly string TargetPropertyName;
         public readonly PropertyInfo TargetProperty;
@@ -257,16 +261,16 @@ namespace MGUI.Core.UI.Data_Binding
             return Current;
         }
 
-        private static readonly Dictionary<object, Dictionary<string, PropertyInfo>> CachedProperties = new();
+        private static readonly Dictionary<Type, Dictionary<string, PropertyInfo>> CachedProperties = new();
         private static PropertyInfo GetPublicProperty(object Parent, string PropertyName)
         {
             if (Parent == null || string.IsNullOrEmpty(PropertyName))
                 return null;
 
-            if (!CachedProperties.TryGetValue(Parent, out Dictionary<string, PropertyInfo> PropertiesByName))
+            if (!CachedProperties.TryGetValue(Parent.GetType(), out Dictionary<string, PropertyInfo> PropertiesByName))
             {
                 PropertiesByName = new();
-                CachedProperties.Add(Parent, PropertiesByName);
+                CachedProperties.Add(Parent.GetType(), PropertiesByName);
             }
 
             if (!PropertiesByName.TryGetValue(PropertyName, out PropertyInfo PropInfo))
@@ -287,6 +291,7 @@ namespace MGUI.Core.UI.Data_Binding
         internal DataBinding(BindingConfig Config, object Object)
         {
             this.Config = Config;
+            RegistrationTarget = Object;
             ConvertSettings = Config.Converter == null ? null : new(Config.Converter, Config.ConverterParameter, false);
             ConvertBackSettings = Config.Converter == null ? null : new(Config.Converter, Config.ConverterParameter, true);
 
@@ -318,7 +323,15 @@ namespace MGUI.Core.UI.Data_Binding
                         string DataContextPropertyName = DataContextHost.DataContextPropertyName;
                         PropertyInfo DataContextProperty = GetPublicProperty(InitialSourceRoot, DataContextPropertyName);
                         SourceRoot = DataContextProperty?.GetValue(InitialSourceRoot);
-                        DataContextHost.DataContextChanged += (sender, e) => { SourceRoot = DataContextProperty.GetValue(InitialSourceRoot); };
+                        this.DataContextHost = DataContextHost;
+                        DataContextChangedHandler = (sender, e) =>
+                        {
+                            if (!IsDisposed)
+                            {
+                                SourceRoot = DataContextProperty?.GetValue(InitialSourceRoot);
+                            }
+                        };
+                        DataContextHost.DataContextChanged += DataContextChangedHandler;
                     }
                     else
                     {
@@ -667,6 +680,11 @@ namespace MGUI.Core.UI.Data_Binding
             if (!IsDisposed)
             {
                 IsDisposed = true;
+                DataBindingManager.UnregisterBinding(this);
+                if (DataContextHost != null)
+                {
+                    DataContextHost.DataContextChanged -= DataContextChangedHandler;
+                }
 
                 //  Unsubscribe from PropertyChanged events
                 if (IsSubscribedToTargetObjectPropertyChanged && TargetObject is INotifyPropertyChanged ObservableTargetObject)
