@@ -890,6 +890,10 @@ namespace MGUI.Core.UI
         /// <summary>Attempts to set this element as the value for <see cref="MGDesktop.FocusedKeyboardHandler"/> at the end of the next update tick.</summary>
         public void RequestFocus() => GetDesktop().QueuedFocusedKeyboardHandler = this;
 
+        /// <summary>Releases current and queued keyboard focus owned by this text box without changing another element's focus.</summary>
+        public void ReleaseFocus() => GetDesktop().ReleaseKeyboardFocus(this);
+
+
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private bool _IsReadonly;
         public bool IsReadonly

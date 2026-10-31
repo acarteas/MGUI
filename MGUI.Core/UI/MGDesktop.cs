@@ -366,6 +366,18 @@ namespace MGUI.Core.UI
             }
         }
 
+        internal void ReleaseKeyboardFocus(MGElement Element)
+        {
+            if (QueuedFocusedKeyboardHandler == Element)
+            {
+                QueuedFocusedKeyboardHandler = null;
+            }
+            if (FocusedKeyboardHandler == Element)
+            {
+                FocusedKeyboardHandler = null;
+            }
+        }
+
         private void TextBox_ReadonlyChanged(object sender, bool IsReadonly)
         {
             if (sender is MGTextBox TextBox && IsReadonly && FocusedKeyboardHandler == TextBox)
